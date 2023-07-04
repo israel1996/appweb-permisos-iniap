@@ -1,0 +1,140 @@
+CREATE VIEW vw_users AS
+SELECT u.id_user,
+	e.id_employee,
+	u.id_userType,
+	e.ci_employee,
+	CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+	u.name_user,
+	u.password_user,
+	u.state_user,
+	u.createdDate_user,
+	u.lastSession_user 
+FROM tb_user u INNER JOIN tb_employee e
+ON u.id_employee=e.id_employee;
+
+
+CREATE VIEW view_vacationperiod AS
+SELECT 
+    v.id_vacationPeriod,
+    v.id_employee,
+    CONCAT(e.name_employee, ' ', e.lastName_employee) AS full_name,
+    v.startDate_vacationPeriod,
+    v.endDate_vacationPeriod,
+    v.earnedDays_vacationPeriod,
+    v.balanceDays_vacationPeriod,
+    v.balanceWorkingDays_vacationPeriod,
+    v.balanceWeekendDays_vacationPeriod,
+    v.state_vacationPeriod
+FROM tb_vacationperiod v
+INNER JOIN tb_employee e ON v.id_employee = e.id_employee;
+
+
+CREATE VIEW vw_permissVacation AS
+SELECT
+  p.id_permission,
+  e.id_employee,
+  CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+  p.id_reason,
+  DATE_FORMAT(p.issueDate_permission, '%d-%m-%Y') AS issueDate_permission,
+  p.state_permission,
+  p.workingDays_permission,
+  p.weekendDays_permission,
+  p.workingDays_permission + p.weekendDays_permission AS total,
+  p.observation_permission
+FROM
+  tb_permission p
+INNER JOIN
+  tb_employee e ON p.id_employee = e.id_employee;
+
+
+CREATE VIEW vw_permissAdmin AS
+SELECT
+  p.id_permission,
+  p.issueNumber_permission,
+  e.id_employee,
+  CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+  r.name_reason,
+  DATE_FORMAT(p.issueDate_permission, '%d-%m-%Y') AS issueDate_permission,
+  p.state_permission,
+  IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d-%m-%Y'), DATE_FORMAT(p.startDateTime_permission, '%d-%m-%Y %H:%i:%s')) AS startDateTime_permission,
+  IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d-%m-%Y'), DATE_FORMAT(p.endDateTime_permission, '%d-%m-%Y %H:%i:%s')) AS endDateTime_permission,
+  p.workingDays_permission,
+  p.weekendDays_permission,
+  p.workingDays_permission + p.weekendDays_permission AS total,
+  p.observation_permission
+FROM
+  tb_permission p
+INNER JOIN
+  tb_employee e ON p.id_employee = e.id_employee
+INNER JOIN 
+  tb_reason r ON r.id_reason = p.id_reason;
+
+
+
+CREATE VIEW vw_permissEmployeeReport AS
+SELECT 
+p.id_permission,
+p.issueNumber_permission,
+DATE_FORMAT(p.issueDate_permission, '%d-%m-%Y') AS issueDate_permission,
+e.ci_employee,
+e.name_employee,
+e.lastName_employee,
+d.name_departament,
+r.name_reason,
+p.observation_permission,
+IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d-%m-%Y'), DATE_FORMAT(p.startDateTime_permission, '%d-%m-%Y %H:%i:%s')) AS startDateTime_permission,
+IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d-%m-%Y'), DATE_FORMAT(p.endDateTime_permission, '%d-%m-%Y %H:%i:%s')) AS endDateTime_permission,
+p.workingDays_permission,
+p.weekendDays_permission,
+SUM(v.balanceWorkingDays_vacationPeriod) AS balanceWorkingDays_vacationPeriod,
+SUM(v.balanceWeekendDays_vacationPeriod) AS balanceWeekendDays_vacationPeriod ,
+p.state_permission,
+p.adminObservation_permission
+FROM tb_permission p
+INNER JOIN tb_employee e ON p.id_employee = e.id_employee
+INNER JOIN tb_departament d ON d.id_departament = e.id_departament
+INNER JOIN tb_reason r ON r.id_reason = p.id_reason
+INNER JOIN tb_vacationperiod v ON v.id_employee = p.id_employee
+GROUP BY p.id_permission;
+
+
+  
+
+CREATE VIEW vw_permissBack AS
+SELECT pb.id_permissionBack,
+pb.id_employee,
+CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+DATE_FORMAT(pb.issueDate_permissionBack, '%d-%m-%Y %H:%i:%s') AS issueDate_permissionBack,
+DATE_FORMAT(pb.minDate_permissionBack, '%d-%m-%Y') AS minDate_permissionBack,
+pb.state_permissionBack 
+FROM tb_permissionback pb
+INNER JOIN tb_employee e ON pb.id_employee = e.id_employee;
+
+
+
+
+CREATE VIEW vw_Employees AS
+SELECT
+e.id_employee,
+ct.id_codeType,
+    ct.name_codeType,
+    tc.id_typeContract,
+    tc.name_typeContract,
+    d.id_departament,
+    jt.id_jobTitle,
+    jt.name_jobTitle,
+    d.name_departament,
+    e.ci_employee,
+    e.name_employee,
+    e.lastName_employee,
+    DATE_FORMAT(e.startDate_employee, '%d/%m/%Y') AS startDate_employee,
+    e.phoneNumber_employee,
+    e.address_employee,
+    e.email_employee,
+    e.salary_employee
+ FROM tb_employee e 
+INNER JOIN tb_codetype ct ON e.id_codeType = ct.id_codeType
+INNER JOIN tb_typecontract tc ON e.id_typeContract = tc.id_typeContract
+INNER JOIN tb_departament d ON e.id_departament = d.id_departament
+INNER JOIN tb_jobtitle jt ON e.id_jobTitle = jt.id_jobTitle;
+  

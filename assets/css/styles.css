@@ -1,0 +1,145 @@
+/* Posicionamiento de footer en la parte de abajo*/
+html {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background-color: aquamarine;
+}
+
+footer {
+  margin-top: auto;
+}
+
+
+.nav-link.active.custom {
+  background-color: #049453 !important;
+  color: white !important;
+}
+.nav-link.custom {
+  color: #049453 !important;
+  font-weight: bold !important;
+}
+
+
+/* Header */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-brand img {
+  height: 40px;
+  margin-right: 20px;
+}
+
+/* Tira de color negro */
+#brace {
+  margin-top: auto;
+  
+}
+/*Central Elementos*/
+.abs-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+
+.custom-footer {
+  background-color: #0f7a2f;
+}
+
+ /* Margen para los botones */
+ .btn {
+  margin: 2px;
+}
+
+/* Cambio de color al pasar el ratón sobre las filas de la tabla */
+.table-hover tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* Tamaño de las imágenes en los botones */
+.btn img {
+  width: 20px;
+}
+
+
+
+.custom-table thead th {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+/* Para el primer y último th, necesitamos eliminar manualmente el borde izquierdo y derecho, respectivamente */
+.custom-table thead th:first-child {
+  border-left: none;
+}
+.custom-table thead th:last-child {
+  border-right: none;
+}
+
+table tbody tr td {
+  vertical-align: middle;
+}
+
+
+
+#toast-container.toast-center {
+  width: 100%;
+  left: 0;
+  margin-left: 0;
+  pointer-events: none;
+}
+
+#toast-container.toast-center .toast {
+  pointer-events: auto;
+  width: auto;
+  margin: auto;
+}
+/* Centrar texto en div*/
+.centered-heading {
+  display: flex;
+  justify-content: center;
+}
+
+
+/*Validacion*/
+.emailValidation {
+  color: red;
+}
+
+/*Lista verde*/
+.dropdown-menu-green {
+  background-color: green;
+  border-color: darkgreen;
+}
+
+.dropdown-menu-green .dropdown-item {
+  color: white;
+}
+
+.dropdown-menu-green .dropdown-item:hover,
+.dropdown-menu-green .dropdown-item:focus {
+  color: white;
+  background-color: darkgreen;
+}
+
+
+/* Cambiar el color de fondo y de texto del elemento de página activo */
+    .pagination .page-item.active .page-link {
+        background-color: #24242c; /* dark background */
+        color: #ffffff; /* white text */
+    }
+    /* Cambiar el color de texto de los números de página inactivos */
+    .pagination .page-item .page-link {
+        color: #24242c; /* dark text */
+    }
+
+
+    

@@ -1,0 +1,172 @@
+CREATE TABLE `tb_user` (
+  `id_user` int PRIMARY KEY AUTO_INCREMENT,
+  `id_userType` int,
+  `id_employee` int,
+  `name_user` varchar(100) UNIQUE,
+  `password_user` varchar(200),
+  `state_user` bool,
+  `createdDate_user` datetime,
+  `lastSession_user` datetime
+);
+
+CREATE TABLE `tb_employee` (
+  `id_employee` int PRIMARY KEY AUTO_INCREMENT,
+  `id_codeType` int,
+  `id_typeContract` int,
+  `id_departament` int,
+  `id_jobTitle` int,
+  `ci_employee` varchar(13),
+  `name_employee` varchar(100),
+  `lastName_employee` varchar(150),
+  `startDate_employee` date,
+  `phoneNumber_employee` varchar(13),
+  `address_employee` text,
+  `email_employee` varchar(100),
+  `salary_employee` decimal(10,2)
+);
+
+CREATE TABLE `tb_departament` (
+  `id_departament` int PRIMARY KEY AUTO_INCREMENT,
+  `name_departament` text
+);
+
+CREATE TABLE `tb_userType` (
+  `id_userType` int PRIMARY KEY AUTO_INCREMENT,
+  `name_userType` text
+);
+
+CREATE TABLE `tb_permission` (
+  `id_permission` int PRIMARY KEY AUTO_INCREMENT,
+  `id_employee` int,
+  `id_reason` int,
+  `id_numberPeriod` int,
+  `issueNumber_permission` int,
+  `issueDate_permission` date,
+  `state_permission` char(1),
+  `startDateTime_permission` datetime,
+  `endDateTime_permission` datetime,
+  `workingDays_permission` decimal(10,2),
+  `weekendDays_permission` decimal(10,2),
+  `carry_permission` decimal(10,2),
+  `observation_permission` text,
+  `adminObservation_permission` text
+);
+
+CREATE TABLE `tb_permissionBack` (
+  `id_permissionBack` int PRIMARY KEY AUTO_INCREMENT,
+  `id_employee` int,
+  `issueDate_permissionBack` datetime,
+  `minDate_permissionBack` date,
+  `state_permissionBack` bool
+);
+
+
+CREATE TABLE `tb_typeContract` (
+  `id_typeContract` int PRIMARY KEY AUTO_INCREMENT,
+  `name_typeContract` text
+);
+
+CREATE TABLE `tb_reason` (
+  `id_reason` int PRIMARY KEY AUTO_INCREMENT,
+  `name_reason` text
+);
+
+CREATE TABLE `tb_codeType` (
+  `id_codeType` int PRIMARY KEY AUTO_INCREMENT,
+  `name_codeType` text
+);
+
+CREATE TABLE `tb_jobTitle` (
+  `id_jobTitle` int PRIMARY KEY AUTO_INCREMENT,
+  `name_jobTitle` text
+);
+
+CREATE TABLE `tb_paymentRole` (
+  `id_paymentRole` int PRIMARY KEY AUTO_INCREMENT,
+  `id_employee` int,
+  `issueDate_paymentRole` date,
+  `year_paymentRole` char(4)
+);
+
+CREATE TABLE `tb_paymentRole_detail` (
+  `id_paymentRole_detail` int PRIMARY KEY AUTO_INCREMENT,
+  `id_paymentRole` int,
+  `rmu_nominal` decimal(10,2),
+  `rmu` decimal(10,2),
+  `sueldo_encargo` decimal(10,2),
+  `mes_decimos` decimal(10,2),
+  `total_ingresos` decimal(10,2),
+  `aporte_iess` decimal(10,2),
+  `prestamo_quirografario` decimal(10,2),
+  `prestamo_hipotecario` decimal(10,2),
+  `impuesto_renta_mes` decimal(10,2),
+  `anticipo` decimal(10,2),
+  `viaticos_inj` decimal(10,2),
+  `aso_empleados` decimal(10,2),
+  `juzg_ninez` decimal(10,2),
+  `cob_salud` decimal(10,2),
+  `sindicato` decimal(10,2),
+  `sancion_pecuniaria` decimal(10,2),
+  `sub_enfermedad` decimal(10,2),
+  `ley_con_sol` decimal(10,2),
+  `uniformes` decimal(10,2),
+  `total_egresos` decimal(10,2),
+  `total_recibir` decimal(10,2)
+);
+
+CREATE TABLE `tb_vacationPeriod` (
+  `id_vacationPeriod` int PRIMARY KEY AUTO_INCREMENT,
+  `id_employee` int,
+  `startDate_vacationPeriod` date,
+  `endDate_vacationPeriod` date,
+  `earnedDays_vacationPeriod` decimal(10,2),
+  `balanceDays_vacationPeriod` decimal(10,2),
+  `balanceWorkingDays_vacationPeriod` decimal(10,2),
+  `balanceWeekendDays_vacationPeriod` decimal(10,2),
+  `state_vacationPeriod` bool
+);
+
+CREATE TABLE `tb_audit` (
+  `id_audit` int PRIMARY KEY AUTO_INCREMENT,
+  `id_user` int,
+  `dateTime_audit` datetime,
+  `table_audit` text,
+  `action_audit` text,
+  `newData_audit` text
+);
+
+CREATE TABLE `tb_numberPeriod` (
+  `id_numberPeriod` int PRIMARY KEY AUTO_INCREMENT,
+  `year_numberPeriod` YEAR,
+  `count_numberPeriod` int,
+  `countCertificate_numberPeriod` int,
+  `state_numberPeriod` bool
+);
+
+ALTER TABLE `tb_user` ADD FOREIGN KEY (`id_userType`) REFERENCES `tb_userType` (`id_userType`);
+
+ALTER TABLE `tb_user` ADD FOREIGN KEY (`id_employee`) REFERENCES `tb_employee` (`id_employee`);
+
+ALTER TABLE `tb_employee` ADD FOREIGN KEY (`id_codeType`) REFERENCES `tb_codeType` (`id_codeType`);
+
+ALTER TABLE `tb_employee` ADD FOREIGN KEY (`id_typeContract`) REFERENCES `tb_typeContract` (`id_typeContract`);
+
+ALTER TABLE `tb_employee` ADD FOREIGN KEY (`id_departament`) REFERENCES `tb_departament` (`id_departament`);
+
+ALTER TABLE `tb_employee` ADD FOREIGN KEY (`id_jobTitle`) REFERENCES `tb_jobTitle` (`id_jobTitle`);
+
+ALTER TABLE `tb_permission` ADD FOREIGN KEY (`id_employee`) REFERENCES `tb_employee` (`id_employee`);
+
+ALTER TABLE `tb_permission` ADD FOREIGN KEY (`id_reason`) REFERENCES `tb_reason` (`id_reason`);
+
+ALTER TABLE `tb_permission` ADD FOREIGN KEY (`id_numberPeriod`) REFERENCES `tb_numberPeriod` (`id_numberPeriod`);
+
+ALTER TABLE `tb_permissionBack` ADD FOREIGN KEY (`id_employee`) REFERENCES `tb_employee` (`id_employee`);
+
+ALTER TABLE `tb_paymentRole` ADD FOREIGN KEY (`id_employee`) REFERENCES `tb_employee` (`id_employee`);
+
+ALTER TABLE `tb_paymentRole_detail` ADD FOREIGN KEY (`id_paymentRole`) REFERENCES `tb_paymentRole` (`id_paymentRole`);
+
+ALTER TABLE `tb_vacationPeriod` ADD FOREIGN KEY (`id_employee`) REFERENCES `tb_employee` (`id_employee`);
+
+ALTER TABLE `tb_audit` ADD FOREIGN KEY (`id_user`) REFERENCES `tb_user` (`id_user`);
