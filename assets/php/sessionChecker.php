@@ -21,7 +21,8 @@ if (!isset($_SESSION["user"])) {
 
 // Define la lista de páginas a las que cada tipo de usuario puede acceder
 $pages_user_can_access = array(
-    ADMIN => array("admin_datamaster.php", "admin_discount.php", "admin_employee.php", "admin_periods.php", "admin_permise.php", "admin_permissBack.php", "admin_user.php", "admin_vacation.php", "index.php"),
+    ADMIN => array("admin_datamaster.php", "admin_discount.php", "admin_employee.php", "admin_periods.php", 
+    "admin_permise.php", "admin_permissBack.php", "admin_user.php", "admin_vacation.php", "logos.php", "index.php"),
     EMPLEADO => array("employee_balance.php", "employee_permise.php", "index.php")
 );
 

@@ -5,10 +5,17 @@ require_once "./assets/php/dom.php";
 
 
 ?>
+<style>
+.logo {
+  filter: grayscale(100%);
+}
+</style>
+
 <header>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark p-0 m-0 fixed-top">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#"><img src="assets/images/Logo_blanco.png" alt="DBK Logo" height="72"></a>
+      
+      <a class="navbar-brand" href="#"><img src="assets/images/Logo.png" alt="DBK Logo" height="72"  class="logo"></a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
         aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -119,3 +126,4 @@ require_once "./assets/php/dom.php";
     </div>
   </div>
 </div>
+
