@@ -295,6 +295,13 @@ function addToInputContractType(datos) {
     $('#btnAddContractType').hide();
     $('#btnUpdateContractType').show();
 }
+function addToInputJobTitle(datos) {
+    d = datos.split('||');
+    $('#idJobTitle').val(d[0]);
+    $('#nameJobTitle').val(d[1]);
+    $('#btnAddJobTitle').hide();
+    $('#btnUpdateJobTitle').show();
+}
 
 
 //Alertas de Si o No
@@ -332,6 +339,19 @@ function yesOrNoQuestionContractType(id) {
     alertify.confirm('Eliminar Tipo de Contrato', '¿Esta seguro de eliminar este Tipo de Contrato?',
         function () {
             deleteContractType(id);
+        },
+        function () {
+            toastr.error('Se canceló', "MENSAJE");
+        });
+}
+function yesOrNoQuestionJobTitle(id) {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    alertify.confirm('Eliminar Cargo', '¿Esta seguro de eliminar este Cargo?',
+        function () {
+            deleteJobTitle(id);
         },
         function () {
             toastr.error('Se canceló', "MENSAJE");
@@ -856,6 +876,101 @@ function deleteContractType(id) {
                 alertify.success(message);
             } else {
                 alertify.error(message);
+            }
+        },
+        error: function (xhr, status, error) {
+            // Manejar errores de la solicitud Ajax
+            console.log("Error en la solicitud Ajax:", error);
+        }
+    });
+}
+
+//Gestión de Cargos
+function insertJobTitle(name) {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    operation = 'INSERT';
+    cadena = "id=" +
+        "&name=" + name +
+        "&operation=" + operation;
+
+    $.ajax({
+        type: "POST",
+        url: "assets/php/manageJobTitle.php",
+        data: cadena,
+        dataType: "json",
+        success: function (response) {
+            var success = response.success;
+            var message = response.message;
+            if (success == true) {
+                getData("jobTitle");
+                toastr.success(message, "MENSAJE");
+            } else {
+                toastr.error(message, "MENSAJE");
+            }
+        },
+        error: function (xhr, status, error) {
+            // Manejar errores de la solicitud Ajax
+            console.log("Error en la solicitud Ajax:", error);
+        }
+    });
+}
+function updateJobTitle(id, name) {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    operation = 'UPDATE';
+    cadena = "id=" + id +
+        "&name=" + name +
+        "&operation=" + operation;
+
+    $.ajax({
+        type: "POST",
+        url: "assets/php/manageJobTitle.php",
+        data: cadena,
+        dataType: "json",
+        success: function (response) {
+            var success = response.success;
+            var message = response.message;
+            if (success == true) {
+                getData("jobTitle");
+                toastr.success(message, "MENSAJE");
+            } else {
+                toastr.error(message, "MENSAJE");
+            }
+        },
+        error: function (xhr, status, error) {
+            // Manejar errores de la solicitud Ajax
+            console.log("Error en la solicitud Ajax:", error);
+        }
+    });
+}
+function deleteJobTitle(id) {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    operation = 'DELETE';
+    cadena = "id=" + id +
+        "&name=" +
+        "&operation=" + operation;
+
+    $.ajax({
+        type: "POST",
+        url: "assets/php/manageJobTitle.php",
+        data: cadena,
+        dataType: "json",
+        success: function (response) {
+            var success = response.success;
+            var message = response.message;
+            if (success == true) {
+                getData("jobTitle");
+                toastr.success(message, "MENSAJE");
+            } else {
+                toastr.error(message, "MENSAJE");
             }
         },
         error: function (xhr, status, error) {

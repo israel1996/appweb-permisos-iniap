@@ -449,6 +449,36 @@ $(document).ready(function () {
     $('#btnAddContractType').show();
     $('#btnUpdateContractType').hide();
   });
+  //Enviar datos para Gestión de Cargos
+  $('#btnAddJobTitle').click(function () {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    var name = $('#nameJobTitle').val();
+
+    if (name !== '') {
+      insertJobTitle(name);
+    } else {
+      toastr.error("Ingrese un nombre de Cargo", "MENSAJE");
+    }
+  });
+  $('#btnUpdateJobTitle').click(function () {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    var id = $('#idJobTitle').val();
+    var name = $('#nameJobTitle').val();
+
+    if (name !== '') {
+      updateJobTitle(id, name);
+      $('#btnAddJobTitle').show();
+      $('#btnUpdateJobTitle').hide();
+    } else {
+      toastr.error("Ingrese un nombre de Cargo", "MENSAJE");
+    }
+  });
 
   //Enviar datos para Gestion de permisos - EMPLEADO
   $('#btnSendRequestPermissDate').click(function () {

@@ -334,6 +334,7 @@ include 'assets/php/sessionChecker.php';
     initializeData("departament");
     initializeData("reason");
     initializeData("contractType");
+    initializeData("jobTitle");
 
     function initializeData(dataType) {
       addInputEventListeners(dataType);
@@ -348,6 +349,7 @@ include 'assets/php/sessionChecker.php';
       }, false);
 
       document.getElementById(`num_registros_${dataType}`).addEventListener("change", function () {
+        document.getElementById(`pagina_${dataType}`).value = 1;
         getData(dataType);
       }, false);
     }
@@ -406,6 +408,10 @@ include 'assets/php/sessionChecker.php';
     function nextPageReason(pagina) {
       document.getElementById('pagina_reason').value = pagina;
       getData("reason");
+    }
+    function nextPageJobTitle(pagina) {
+      document.getElementById('pagina_jobTitle').value = pagina;
+      getData("jobTitle");
     }
 
     function ordenar(e, dataType) {

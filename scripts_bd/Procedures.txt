@@ -866,6 +866,87 @@ DELIMITER ;
 
 
 -- ----------------------------------------------------------------------------------
+DELIMITER $$
+CREATE PROCEDURE pa_manageJobTitle(
+    IN p_id_jobTitle INT,
+    IN p_name_jobTitle TEXT,
+    IN p_operation VARCHAR(10),
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE num_occurrences_job INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(NEW.MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+
+    START TRANSACTION;
+
+    IF p_operation = 'INSERT' THEN
+        IF p_name_jobTitle IS NULL OR p_name_jobTitle = '' THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el nombre del título del trabajo para la operación de inserción';
+        ELSE
+            INSERT INTO tb_jobTitle (name_jobTitle)
+            VALUES (p_name_jobTitle);
+
+            SET p_success = TRUE;
+            SET p_message = 'Inserción exitosa';
+        END IF;
+
+    ELSEIF p_operation = 'UPDATE' THEN
+        IF p_id_jobTitle IS NULL THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el ID del título del trabajo para la operación de actualización';
+        ELSEIF p_name_jobTitle IS NULL OR p_name_jobTitle = '' THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el nombre del título del trabajo para la operación de actualización';
+        ELSE
+            UPDATE tb_jobTitle
+            SET name_jobTitle = p_name_jobTitle
+            WHERE id_jobTitle = p_id_jobTitle;
+
+            SET p_success = TRUE;
+            SET p_message = 'Actualización exitosa';
+        END IF;
+
+    ELSEIF p_operation = 'DELETE' THEN
+        IF p_id_jobTitle IS NULL THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el ID del título del trabajo para la operación de eliminación';
+        ELSE
+            -- Validar si el ID está presente en la tabla tb_jobTitle
+            SET num_occurrences_job = (SELECT COUNT(*) FROM tb_jobTitle WHERE id_jobTitle = p_id_jobTitle);
+            
+            IF num_occurrences_job = 0 THEN
+                SET p_success = FALSE;
+                SET p_message = 'El título del trabajo con el ID proporcionado no existe en la tabla tb_jobTitle';
+            ELSE
+                DELETE FROM tb_jobTitle
+                WHERE id_jobTitle = p_id_jobTitle;
+
+                SET p_success = TRUE;
+                SET p_message = 'Eliminación exitosa';
+            END IF;
+        END IF;
+
+    ELSE
+        SET p_success = FALSE;
+        SET p_message = 'Operación no válida';
+
+    END IF;
+
+    COMMIT;
+    
+END $$
+DELIMITER ;
+
+
+-- ------------------------------------------------------------------------------------
 
 CREATE EVENT AssignVacationDaysEvent
     ON SCHEDULE EVERY 1 DAY -- Se ejecuta cada dia

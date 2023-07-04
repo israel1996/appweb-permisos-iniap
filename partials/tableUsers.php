@@ -145,7 +145,7 @@ if ($num_rows > 0) {
         <img src="./assets/icons/edit-3.svg" alt="Editar">
         </button> </td>';
         $output['data'] .= '<td><button class="btn btn-danger">
-        <img src="./assets/icons/trash-2.svg" alt="Desactivar">
+        <img src="./assets/icons/delete.svg" alt="Desactivar">
         </button></td>';
 
         $output['data'] .= '</tr>';
