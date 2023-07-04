@@ -638,8 +638,7 @@ function insertDepartament(name) {
             var success = response.success;
             var message = response.message;
             if (success == true) {
-                getDataDepartament();
-                $('#tableDepartament').load('./partials/tableDepartaments.php');
+                getData("departament");
                 toastr.success(message, "MENSAJE");
             } else {
                 toastr.error(message, "MENSAJE");
@@ -670,8 +669,7 @@ function updateDepartament(id, name) {
             var success = response.success;
             var message = response.message;
             if (success == true) {
-                getDataDepartament();
-                $('#tableDepartament').load('./partials/tableDepartaments.php');
+                getData("departament");
                 toastr.success(message, "MENSAJE");
             } else {
                 toastr.error(message, "MENSAJE");
@@ -702,8 +700,7 @@ function deleteDepartament(id) {
             var success = response.success;
             var message = response.message;
             if (success == true) {
-                getDataDepartament();
-                $('#tableDepartament').load('./partials/tableDepartaments.php');
+                getData("departament");
                 toastr.success(message, "MENSAJE");
             } else {
                 toastr.error(message, "MENSAJE");
@@ -733,10 +730,10 @@ function insertReason(name) {
             var success = response.success;
             var message = response.message;
             if (success == true) {
-                $('#tableReason').load('./partials/tableReasons.php');
-                alertify.success(message);
+                getData("reason");
+                toastr.success(message, "MENSAJE");
             } else {
-                alertify.error(message);
+                toastr.error(message, "MENSAJE");
             }
         },
         error: function (xhr, status, error) {
@@ -760,10 +757,10 @@ function updateReason(id, name) {
             var success = response.success;
             var message = response.message;
             if (success == true) {
-                $('#tableReason').load('./partials/tableReasons.php');
-                alertify.success(message);
+                getData("reason");
+                toastr.success(message, "MENSAJE");
             } else {
-                alertify.error(message);
+                toastr.error(message, "MENSAJE");
             }
         },
         error: function (xhr, status, error) {
@@ -788,10 +785,10 @@ function deleteReason(id) {
             var success = response.success;
             var message = response.message;
             if (success == true) {
-                $('#tableReason').load('./partials/tableReasons.php');
-                alertify.success(message);
+                getData("reason");
+                toastr.success(message, "MENSAJE");
             } else {
-                alertify.error(message);
+                toastr.error(message, "MENSAJE");
             }
         },
         error: function (xhr, status, error) {
@@ -818,10 +815,10 @@ function insertContractType(name) {
             var success = response.success;
             var message = response.message;
             if (success == true) {
-                $('#tableContractType').load('./partials/tableContractTypes.php');
-                alertify.success(message);
+                getData("contractType");
+                toastr.success(message, "MENSAJE");
             } else {
-                alertify.error(message);
+                toastr.error(message, "MENSAJE");
             }
         },
         error: function (xhr, status, error) {
@@ -845,10 +842,10 @@ function updateContractType(id, name) {
             var success = response.success;
             var message = response.message;
             if (success == true) {
-                $('#tableContractType').load('./partials/tableContractTypes.php');
-                alertify.success(message);
+                getData("contractType");
+                toastr.success(message, "MENSAJE");
             } else {
-                alertify.error(message);
+                toastr.error(message, "MENSAJE");
             }
         },
         error: function (xhr, status, error) {
@@ -872,10 +869,10 @@ function deleteContractType(id) {
             var success = response.success;
             var message = response.message;
             if (success == true) {
-                $('#tableContractType').load('./partials/tableContractTypes.php');
-                alertify.success(message);
+                getData("contractType");
+                toastr.success(message, "MENSAJE");
             } else {
-                alertify.error(message);
+                toastr.error(message, "MENSAJE");
             }
         },
         error: function (xhr, status, error) {

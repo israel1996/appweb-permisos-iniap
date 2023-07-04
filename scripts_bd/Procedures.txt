@@ -876,6 +876,7 @@ CREATE PROCEDURE pa_manageJobTitle(
 )
 BEGIN
     DECLARE num_occurrences_job INT;
+    DECLARE num_occurrences_emp INT;
     
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -926,11 +927,19 @@ BEGIN
                 SET p_success = FALSE;
                 SET p_message = 'El título del trabajo con el ID proporcionado no existe en la tabla tb_jobTitle';
             ELSE
-                DELETE FROM tb_jobTitle
-                WHERE id_jobTitle = p_id_jobTitle;
+                -- Validar si el ID está presente en la tabla tb_employee
+                SET num_occurrences_emp = (SELECT COUNT(*) FROM tb_employee WHERE id_jobTitle = p_id_jobTitle);
+                
+                IF num_occurrences_emp > 0 THEN
+                    SET p_success = FALSE;
+                    SET p_message = 'No se puede eliminar el título del trabajo porque está siendo utilizado en la tabla tb_employee';
+                ELSE
+                    DELETE FROM tb_jobTitle
+                    WHERE id_jobTitle = p_id_jobTitle;
 
-                SET p_success = TRUE;
-                SET p_message = 'Eliminación exitosa';
+                    SET p_success = TRUE;
+                    SET p_message = 'Eliminación exitosa';
+                END IF;
             END IF;
         END IF;
 
