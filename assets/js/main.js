@@ -144,6 +144,7 @@ $(document).ready(function () {
         autoUpdateInput: false,
         timePicker: false,
         startDate: moment(),
+        drops: 'auto', // Esta línea permite al plugin decidir donde mostrar el calendario.
         locale: {
           format: 'DD/MM/YYYY',
           separator: ' - ',
@@ -192,6 +193,7 @@ $(document).ready(function () {
         $(this).val('');
       });
     }
+
 
   });
 
@@ -255,7 +257,7 @@ $(document).ready(function () {
       fechaInicioLaboral !== '' &&
       telefonoEmpleado !== '' &&
       direccionEmpleado !== '' &&
-      emailEmpleado !== '' && 
+      emailEmpleado !== '' &&
       salary !== ''
     ) {
       if (validateCedula(cedulaEmpleado.trim())) {
@@ -631,6 +633,8 @@ $(document).ready(function () {
 
     if (idPeriod !== '' && startDate !== '' && endDate !== '' && earndDays !== '' &&
       balanceDays !== '' && workingDays !== '' && weekendDays !== '') {
+      startDate = moment(startDate.trim(), 'DD/MM/YYYY').format('YYYY-MM-DD');
+      endDate = moment(endDate.trim(), 'DD/MM/YYYY').format('YYYY-MM-DD');
       // Validar fecha de inicio anterior a la fecha final
       startDateObj = new Date(startDate);
       endDateObj = new Date(endDate);

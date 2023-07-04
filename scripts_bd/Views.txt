@@ -18,8 +18,8 @@ SELECT
     v.id_vacationPeriod,
     v.id_employee,
     CONCAT(e.name_employee, ' ', e.lastName_employee) AS full_name,
-    v.startDate_vacationPeriod,
-    v.endDate_vacationPeriod,
+    DATE_FORMAT(v.startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod,
+    DATE_FORMAT(v.endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
     v.earnedDays_vacationPeriod,
     v.balanceDays_vacationPeriod,
     v.balanceWorkingDays_vacationPeriod,
@@ -35,7 +35,7 @@ SELECT
   e.id_employee,
   CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
   p.id_reason,
-  DATE_FORMAT(p.issueDate_permission, '%d-%m-%Y') AS issueDate_permission,
+  DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
   p.state_permission,
   p.workingDays_permission,
   p.weekendDays_permission,
@@ -47,6 +47,7 @@ INNER JOIN
   tb_employee e ON p.id_employee = e.id_employee;
 
 
+
 CREATE VIEW vw_permissAdmin AS
 SELECT
   p.id_permission,
@@ -54,10 +55,10 @@ SELECT
   e.id_employee,
   CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
   r.name_reason,
-  DATE_FORMAT(p.issueDate_permission, '%d-%m-%Y') AS issueDate_permission,
+  DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
   p.state_permission,
-  IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d-%m-%Y'), DATE_FORMAT(p.startDateTime_permission, '%d-%m-%Y %H:%i:%s')) AS startDateTime_permission,
-  IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d-%m-%Y'), DATE_FORMAT(p.endDateTime_permission, '%d-%m-%Y %H:%i:%s')) AS endDateTime_permission,
+  IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
+  IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
   p.workingDays_permission,
   p.weekendDays_permission,
   p.workingDays_permission + p.weekendDays_permission AS total,
@@ -70,20 +71,19 @@ INNER JOIN
   tb_reason r ON r.id_reason = p.id_reason;
 
 
-
 CREATE VIEW vw_permissEmployeeReport AS
 SELECT 
 p.id_permission,
 p.issueNumber_permission,
-DATE_FORMAT(p.issueDate_permission, '%d-%m-%Y') AS issueDate_permission,
+DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
 e.ci_employee,
 e.name_employee,
 e.lastName_employee,
 d.name_departament,
 r.name_reason,
 p.observation_permission,
-IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d-%m-%Y'), DATE_FORMAT(p.startDateTime_permission, '%d-%m-%Y %H:%i:%s')) AS startDateTime_permission,
-IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d-%m-%Y'), DATE_FORMAT(p.endDateTime_permission, '%d-%m-%Y %H:%i:%s')) AS endDateTime_permission,
+IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
+IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
 p.workingDays_permission,
 p.weekendDays_permission,
 SUM(v.balanceWorkingDays_vacationPeriod) AS balanceWorkingDays_vacationPeriod,
@@ -97,19 +97,17 @@ INNER JOIN tb_reason r ON r.id_reason = p.id_reason
 INNER JOIN tb_vacationperiod v ON v.id_employee = p.id_employee
 GROUP BY p.id_permission;
 
-
   
 
 CREATE VIEW vw_permissBack AS
 SELECT pb.id_permissionBack,
 pb.id_employee,
 CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
-DATE_FORMAT(pb.issueDate_permissionBack, '%d-%m-%Y %H:%i:%s') AS issueDate_permissionBack,
-DATE_FORMAT(pb.minDate_permissionBack, '%d-%m-%Y') AS minDate_permissionBack,
+DATE_FORMAT(pb.issueDate_permissionBack, '%d/%m/%Y %H:%i:%s') AS issueDate_permissionBack,
+DATE_FORMAT(pb.minDate_permissionBack, '%d/%m/%Y') AS minDate_permissionBack,
 pb.state_permissionBack 
 FROM tb_permissionback pb
 INNER JOIN tb_employee e ON pb.id_employee = e.id_employee;
-
 
 
 

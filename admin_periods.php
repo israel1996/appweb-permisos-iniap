@@ -192,10 +192,10 @@ include_once "assets/php/database.php";
                   class="form-control" disabled>
 
                 <label for="cedulaEmployeeVacation" class="form-label fw-bold">Inicio de Periodo</label>
-                <input type="date" id="startDatePeriod" class="form-control">
+                <input type="text" name="datesingleAdmin" id="startDatePeriod" class="form-control">
 
                 <label for="nameEmployeeVacation" class="form-label fw-bold">Fin de Periodo</label>
-                <input type="date" id="endDatePeriod" class="form-control">
+                <input type="text"  name="datesingleAdmin" id="endDatePeriod" class="form-control">
 
               </div>
 
