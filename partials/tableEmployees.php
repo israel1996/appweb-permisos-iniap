@@ -139,6 +139,10 @@ if ($num_rows > 0) {
         <img src="./assets/icons/edit-3.svg" alt="Editar">
         </button> </td>';
 
+        $output['data'] .= '<td><button class="btn btn-danger" onclick="yesOrNoQuestionDisableEmployee(' . $idEmployee . ')">
+        <img src="./assets/icons/user-x.svg" alt="Desactivar">
+        </button></td>';
+
         $output['data'] .= '</tr>';
     }
 } else {

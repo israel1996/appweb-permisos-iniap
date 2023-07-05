@@ -127,6 +127,17 @@ if ($num_rows > 0) {
         $output['data'] .= '<td>' . $nameUser . '</td>';
         $output['data'] .= '<td>' . $userTypes[$idUserType] . '</td>';
         $output['data'] .= '<td>' . $fullname . '</td>';
+
+        $output['data'] .= '<td><button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalEmployeeUseru" 
+        onclick="addToModalUser(\'' . $datos . '\')">
+        <img src="./assets/icons/edit-3.svg" alt="Editar">
+        </button> </td>';
+        
+        $passEncryp = password_hash($ciEmployee, PASSWORD_BCRYPT);
+        $output['data'] .= '<td><button class="btn btn-primary" onclick="preguntarSiNoReset(' . $idUser . ',\'' . $passEncryp . '\')">
+        <img src="./assets/icons/key.svg" alt="Resetear">
+        </button> </td>';
+        
         if ($stateUser == 1) {
             $output['data'] .= '<td> <button class="btn btn-success" onclick="preguntarSiNo(' . $idUser . ')">
             <img src="./assets/icons/user.svg" alt="user">
@@ -136,17 +147,6 @@ if ($num_rows > 0) {
             <img src="./assets/icons/user-x.svg" alt="Enable">
             </button></td>';
         }
-        $passEncryp = password_hash($ciEmployee, PASSWORD_BCRYPT);
-        $output['data'] .= '<td><button class="btn btn-primary" onclick="preguntarSiNoReset(' . $idUser . ',\'' . $passEncryp . '\')">
-        <img src="./assets/icons/key.svg" alt="Resetear">
-        </button> </td>';
-        $output['data'] .= '<td><button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalEmployeeUseru" 
-        onclick="addToModalUser(\'' . $datos . '\')">
-        <img src="./assets/icons/edit-3.svg" alt="Editar">
-        </button> </td>';
-        $output['data'] .= '<td><button class="btn btn-danger">
-        <img src="./assets/icons/delete.svg" alt="Desactivar">
-        </button></td>';
 
         $output['data'] .= '</tr>';
     }

@@ -85,6 +85,7 @@ require_once "assets/php/database.php";
               <th class="align-middle">Cargo</th>
               <th class="align-middle">F. Inicio Laboral</th>
               <th class="align-middle">Editar</th>
+              <th class="align-middle">Desactivar</th>
             </tr>
           </thead>
           <tbody id="content">

@@ -363,7 +363,7 @@ function preguntarSiNo(id) {
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
-    alertify.confirm('Desactivar Usuario', '¿Esta seguro de desactivar este usuario?',
+    alertify.confirm('Bloquear Acceso', '¿Esta seguro de bloquear el acceso a este usuario?',
         function () {
             disableUser(id);
         },
@@ -376,7 +376,7 @@ function yesOrNoQuestionEnableUser(id) {
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
     
-    alertify.confirm('Activar Usuario', '¿Esta seguro de activar este usuario?',
+    alertify.confirm('Habilitar Acceso', '¿Esta seguro de habilitar el acceso a este usuario?',
         function () {
             enableUser(id);
         },
@@ -392,6 +392,19 @@ function preguntarSiNoReset(id, password) {
     alertify.confirm('Resetear clave', '¿Esta seguro de resetear la clave?',
         function () {
             resetPassword(id, password);
+        },
+        function () {
+            toastr.error('Se canceló', "MENSAJE");
+        });
+}
+function yesOrNoQuestionDisableEmployee(id) {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    alertify.confirm('Desactivar Empleado', '¿Esta seguro borrar todos los valores de periodos del Empleado?',
+        function () {
+            disableEmployee(id);
         },
         function () {
             toastr.error('Se canceló', "MENSAJE");
@@ -600,6 +613,33 @@ function changePasswordUser(passwordNow, passwordNew, confirmPasswordNew) {
         type: "POST",
         url: "assets/php/changePasswordUser.php",
         data: data,
+        dataType: "json",
+        success: function (response) {
+            var success = response.success;
+            var message = response.message;
+            if (success == true) {
+                toastr.success(message, "MENSAJE");
+            } else {
+                toastr.error(message, "MENSAJE");
+            }
+        },
+        error: function (xhr, status, error) {
+            // Manejar errores de la solicitud Ajax
+            console.log("Error en la solicitud Ajax:", error);
+        }
+    });
+}
+function disableEmployee(id) {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    cadena = "id=" + id;
+
+    $.ajax({
+        type: "POST",
+        url: "assets/php/disableEmployee.php",
+        data: cadena,
         dataType: "json",
         success: function (response) {
             var success = response.success;

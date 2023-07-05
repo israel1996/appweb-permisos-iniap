@@ -93,10 +93,9 @@ if (isset($_SESSION['user'])) {
               <th class="align-middle">Usuario</th>
               <th class="align-middle">Tipo de Usuario</th>
               <th class="align-middle">Nombres y Apellidos</th>
-              <th class="align-middle">Estado</th>
-              <th class="align-middle">Resetear</th>
               <th class="align-middle">Editar</th>
-              <th class="align-middle">Eliminar</th>
+              <th class="align-middle">Resetear</th>
+              <th class="align-middle">Acceso</th>
             </tr> 
           </thead>
           <tbody id="content_user">

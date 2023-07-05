@@ -285,6 +285,60 @@ END $$
 DELIMITER ;
 
 
+DELIMITER $$
+CREATE PROCEDURE pa_disableEmployee(
+    IN p_employee_id INT,
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE v_user_id INT;
+    DECLARE v_exists INT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+
+    START TRANSACTION;
+    
+    -- Verificar si hay registros de vacationPeriod para el id_employee
+    SELECT COUNT(*) INTO v_exists FROM tb_vacationPeriod WHERE id_employee = p_employee_id;
+
+    IF v_exists > 0 THEN
+        -- Deshabilitar usuario
+        UPDATE tb_vacationPeriod
+        SET 
+            earnedDays_vacationPeriod = 0,
+            balanceDays_vacationPeriod = 0,
+            balanceWorkingDays_vacationPeriod = 0,
+            balanceWeekendDays_vacationPeriod = 0,
+            state_vacationPeriod = 0
+        WHERE id_employee = p_employee_id;
+        
+        -- Verificar si se actualizó algún registro
+        IF ROW_COUNT() = 0 THEN
+            SET p_success = FALSE;
+            SET p_message = 'No se pudo deshabilitar el empleado';
+            ROLLBACK;
+        ELSE
+            COMMIT;
+            SET p_success = TRUE;
+            SET p_message = 'Empleado deshabilitado exitosamente';
+        END IF;
+    ELSE
+        SET p_success = FALSE;
+        SET p_message = 'No se encontraron registros de periodos de vacaciones para este empleado';
+        ROLLBACK;
+    END IF;
+    
+END $$
+DELIMITER ;
+
+
+
 
 DELIMITER $$
 CREATE PROCEDURE pa_updateUser(
