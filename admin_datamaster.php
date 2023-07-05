@@ -433,6 +433,12 @@ include 'assets/php/sessionChecker.php';
     }
   </script>
 
+  <script>
+    var titulo = "Nueva Información";
+    document.getElementById("institucion").innerHTML = "<span>" + titulo.toUpperCase() + "</span>";
+    document.title = titulo;
+  </script>
+
 </body>
 
 </html>

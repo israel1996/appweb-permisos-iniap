@@ -1383,6 +1383,43 @@ function validateCedula(cedula) {
         return false;
     }
 }
+function uploadImage(file, nameFile) {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    var url = 'index.php';
+
+    var data = new FormData();
+    data.append('file', file);
+    data.append('nameFile', nameFile);
+
+    $.ajax({
+        type: "POST",
+        url: "assets/php/uploadImage.php",
+        data: data,
+        processData: false,  // Impide que jQuery transforme la data en string
+        contentType: false,  // Impide que jQuery establezca el contentType
+        dataType: "json",
+        success: function (response) {
+            var success = response.success;
+            var message = response.message;
+            if (success == true) {
+                toastr.success(message, "MENSAJE");
+                setTimeout(function () {
+                    window.location.href = url;
+                }, 1000);    
+            } else {
+                toastr.error(message, "MENSAJE");
+            }
+        },
+        error: function (xhr, status, error) {
+            // Manejar errores de la solicitud Ajax
+            console.log("Error en la solicitud Ajax:", error);
+        }
+    });
+}
+
 
 //PDF Reportes
 function generatePDFPermiss(idPermiss) {
@@ -1396,5 +1433,7 @@ function generatePDFPermiss(idPermiss) {
     $('#modalPDFPermiss').modal('show');
 
 }
+
+
 
 

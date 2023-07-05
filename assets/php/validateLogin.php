@@ -129,7 +129,7 @@ if (!empty($recd_username) && !empty($recd_pass)) {
 
                 $subTab11 = new MenuItem('Nueva Información', $url . $nombreCarpeta . '/admin_datamaster.php');
                 $tab5->addSubmenu($subTab11);
-                $subTab12 = new MenuItem('Logos de Aplicación', $url . $nombreCarpeta . '/logos.php');
+                $subTab12 = new MenuItem('Logos de Aplicación', $url . $nombreCarpeta . '/admin_logos.php');
                 $tab5->addSubmenu($subTab12);
 
                 $_SESSION['menu'] = serialize($menu);

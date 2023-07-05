@@ -751,5 +751,50 @@ $(document).ready(function () {
 
   });
 
+  //Enviar datos para subir logos
+
+  $('#btnUploadMainLogo').click(function () {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    var file = $('#fileMainLogo').prop('files')[0]; // Obtenemos el primer archivo seleccionado
+    var nameFile = 'Logo';
+
+    if (file) {
+      uploadImage(file, nameFile);
+    } else {
+      toastr.error("Seleccione una imagen", "MENSAJE");
+    }
+  });
+  $('#btnUploadLogoHeader').click(function () {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    var file = $('#fileLogoHeader').prop('files')[0]; // Obtenemos el primer archivo seleccionado
+    var nameFile = 'Logo_header';
+
+    if (file) {
+      uploadImage(file, nameFile);
+    } else {
+      toastr.error("Seleccione una imagen", "MENSAJE");
+    }
+  });
+  $('#btnUploadLogoFooter').click(function () {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    var file = $('#fileLogoFooter').prop('files')[0]; // Obtenemos el primer archivo seleccionado
+    var nameFile = 'Logo_footer';
+
+    if (file) {
+      uploadImage(file, nameFile);
+    } else {
+      toastr.error("Seleccione una imagen", "MENSAJE");
+    }
+  });
+
 
 });

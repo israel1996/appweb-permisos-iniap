@@ -52,6 +52,11 @@ include_once "assets/php/database.php";
   <script src="assets/js/main.js"></script>
   <script src="assets/js/functions.js"></script>
   <script src="assets/js/sessionLogout.js"></script>
+  <script>
+    var titulo = "Saldos de Vacaciones";
+    document.getElementById("institucion").innerHTML = "<span>" + titulo.toUpperCase() + "</span>";
+    document.title = titulo;
+  </script>
 
 </body>
 

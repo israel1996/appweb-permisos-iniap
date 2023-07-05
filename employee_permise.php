@@ -44,7 +44,7 @@ if (isset($_SESSION['user'])) {
 
   <section class="container-fluid" style="margin-top: 100px;">
 
-  <input type="hidden" id="idEmployee" value="<?php echo $idEmployee ?>">
+    <input type="hidden" id="idEmployee" value="<?php echo $idEmployee ?>">
 
     <!-- Modal -->
     <div class="modal fade" id="modalPDFPermiss" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -305,6 +305,12 @@ if (isset($_SESSION['user'])) {
   <script src="assets/js/main.js"></script>
   <script src="assets/js/functions.js"></script>
   <script src="assets/js/sessionLogout.js"></script>
+
+  <script>
+    var titulo = "Solicitar Permiso";
+    document.getElementById("institucion").innerHTML = "<span>" + titulo.toUpperCase() + "</span>";
+    document.title = titulo;
+  </script>
 
   <script>
     // Initialize
