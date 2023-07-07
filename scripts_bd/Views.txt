@@ -86,16 +86,14 @@ IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_pe
 IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
 p.workingDays_permission,
 p.weekendDays_permission,
-SUM(v.balanceWorkingDays_vacationPeriod) AS balanceWorkingDays_vacationPeriod,
-SUM(v.balanceWeekendDays_vacationPeriod) AS balanceWeekendDays_vacationPeriod ,
+COALESCE((SELECT SUM(v.balanceWorkingDays_vacationPeriod) FROM tb_vacationPeriod v WHERE v.id_employee = p.id_employee), 0) AS balanceWorkingDays_vacationPeriod,
+COALESCE((SELECT SUM(v.balanceWeekendDays_vacationPeriod) FROM tb_vacationPeriod v WHERE v.id_employee = p.id_employee), 0) AS balanceWeekendDays_vacationPeriod,
 p.state_permission,
 p.adminObservation_permission
 FROM tb_permission p
 INNER JOIN tb_employee e ON p.id_employee = e.id_employee
 INNER JOIN tb_departament d ON d.id_departament = e.id_departament
-INNER JOIN tb_reason r ON r.id_reason = p.id_reason
-INNER JOIN tb_vacationperiod v ON v.id_employee = p.id_employee
-GROUP BY p.id_permission;
+INNER JOIN tb_reason r ON r.id_reason = p.id_reason;
 
   
 
@@ -143,12 +141,17 @@ SELECT
 e.id_employee,
 e.ci_employee,
 CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
-ct.name_codeType,
-SUM(vp.balanceDays_vacationPeriod) AS balanceDays_vacationPeriod
+e.startDate_employee,
+d.name_departament,
+vp.startDate_vacationPeriod,
+vp.endDate_vacationPeriod,
+vp.balanceWorkingDays_vacationPeriod,
+vp.balanceWeekendDays_vacationPeriod,
+vp.balanceDays_vacationPeriod
 FROM tb_employee e INNER JOIN tb_vacationperiod vp
-ON e.id_employee = vp.id_employee INNER JOIN tb_codetype ct 
-ON ct.id_codeType = e.id_codeType
-GROUP BY e.id_employee, e.ci_employee, fullname, ct.name_codeType;
+ON e.id_employee = vp.id_employee INNER JOIN tb_departament d 
+ON d.id_departament = e.id_departament
+WHERE vp.state_vacationPeriod = 1;
 
 
 CREATE VIEW vw_reportPermiss AS

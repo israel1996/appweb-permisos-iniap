@@ -6,9 +6,20 @@ $columns = [
     'id_employee',
     'ci_employee',
     'fullname',
-    'name_codeType',
+    'startDate_employee',
+    'name_departament',
+    'startDate_vacationPeriod',
+    'endDate_vacationPeriod',
+    'balanceWorkingDays_vacationPeriod',
+    'balanceWeekendDays_vacationPeriod',
     'balanceDays_vacationPeriod'
 ];
+$columnsSearch = [
+    'ci_employee',
+    'fullname',
+    'name_departament'
+];
+
 
 $table = "vw_reportGeneral";
 $id = 'id_employee';
@@ -21,9 +32,9 @@ $params = [];
 if (!is_null($campo)) {
     $where = "WHERE (";
 
-    $cont = count($columns);
+    $cont = count($columnsSearch);
     for ($i = 0; $i < $cont; $i++) {
-        $where .= $columns[$i] . " LIKE :campo$i OR ";
+        $where .= $columnsSearch[$i] . " LIKE :campo$i OR ";
         $params[":campo$i"] = "%{$campo}%";
     }
     $where = substr_replace($where, "", -3);
@@ -81,12 +92,18 @@ $output = [
     'paginacion' => ''
 ];
 
+
 foreach ($resultado as $row) {
     $output['data'] .= '<tr class="text-center">';
 
     $output['data'] .= '<td>' . $row['ci_employee'] . '</td>';
     $output['data'] .= '<td>' . $row['fullname'] . '</td>';
-    $output['data'] .= '<td>' . $row['name_codeType'] . '</td>';
+    $output['data'] .= '<td>' . $row['startDate_employee'] . '</td>';
+    $output['data'] .= '<td>' . $row['name_departament'] . '</td>';
+    $output['data'] .= '<td>' . $row['startDate_vacationPeriod'] . '</td>';
+    $output['data'] .= '<td>' . $row['endDate_vacationPeriod'] . '</td>';
+    $output['data'] .= '<td>' . $row['balanceWorkingDays_vacationPeriod'] . '</td>';
+    $output['data'] .= '<td>' . $row['balanceWeekendDays_vacationPeriod'] . '</td>';
     $output['data'] .= '<td>' . $row['balanceDays_vacationPeriod'] . '</td>';
 
     $output['data'] .= '</tr>';

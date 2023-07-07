@@ -93,8 +93,13 @@ require_once "assets/php/database.php";
             <tr class="text-center">
               <th class="align-middle">Cedula</th>
               <th class="align-middle">Nombres y Apellidos</th>
-              <th class="align-middle">Tipo de Código</th>
-              <th class="align-middle">Saldo de Vacaciones</th>
+              <th class="align-middle">Fecha de Ingreso</th>
+              <th class="align-middle">Departamento</th>
+              <th class="align-middle">Fecha Inicial</th>
+              <th class="align-middle">Fecha Final</th>
+              <th class="align-middle">Saldo. Laborables</th>
+              <th class="align-middle">Saldo. Fin de Semana</th>
+              <th class="align-middle">Total de Saldos</th>
             </tr>
           </thead>
           <tbody id="content">

@@ -64,11 +64,9 @@ require_once "assets/php/database.php";
       <div class="col-auto">
       <button class="btn btn-dark text-white" id="btnReportDepartament" style="margin-top:-2px"> Generar PDF </button>
       </div>
+
       <div class="col-auto">
-        <label for="num_registros" class="col-form-label fw-bold">Buscar: </label>
-      </div>
-      <div class="col-auto">
-        <input type="text" name="campo" id="campo" class="form-control" placeholder="Escriba aquí...">
+        <div id="slotSearchDepartamentReport"></div>
       </div>
       <div class="col-auto">
         <label for="num_registros" class="col-form-label fw-bold">Mostrar: </label>
@@ -90,10 +88,15 @@ require_once "assets/php/database.php";
       <div class="col-12">
         <table class="table table-hover mt-2">
           <thead class="">
-            <tr class="text-center">
+          <tr class="text-center">
+              <th class="align-middle">Cedula</th>
+              <th class="align-middle">Nombres y Apellidos</th>
+              <th class="align-middle">Fecha de Ingreso</th>
               <th class="align-middle">Departamento</th>
-              <th class="align-middle">Saldo de Dias Laborales</th>
-              <th class="align-middle">Saldo de Dias de Fines de Semana</th>
+              <th class="align-middle">Fecha Inicial</th>
+              <th class="align-middle">Fecha Final</th>
+              <th class="align-middle">Saldo. Laborables</th>
+              <th class="align-middle">Saldo. Fin de Semana</th>
               <th class="align-middle">Total de Saldos</th>
             </tr>
           </thead>
@@ -130,11 +133,12 @@ require_once "assets/php/database.php";
     /* Llamando a la función getData() */
     getData();
 
-    /* Escuchar un evento keyup en el campo de entrada y luego llamar a la función getData. */
+    /* 
     document.getElementById("campo").addEventListener("keyup", function () {
       document.getElementById("pagina").value = 1;
       getData();
-    }, false)
+    }, false);
+    */
     document.getElementById("num_registros").addEventListener("change", function () {
       document.getElementById("pagina").value = 1;
       getData();
@@ -143,7 +147,7 @@ require_once "assets/php/database.php";
 
     /* Peticion AJAX */
     function getData() {
-      let input = document.getElementById("campo").value;
+      //let input = document.getElementById("campo").value;
       let num_registros = document.getElementById("num_registros").value;
       let content = document.getElementById("content");
       let pagina = document.getElementById("pagina").value;
@@ -156,7 +160,7 @@ require_once "assets/php/database.php";
 
       let url = "./partials/tableReportDepartament.php";
       let formaData = new FormData();
-      formaData.append('campo', input);
+      //formaData.append('campo', input);
       formaData.append('registros', num_registros);
       formaData.append('pagina', pagina);
       formaData.append('orderCol', orderCol);

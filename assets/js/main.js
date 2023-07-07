@@ -11,6 +11,7 @@ $(document).ready(function () {
   $('#slotSearchEmployeeDiscountDate').load('./partials/searchEmployeeDiscountDate.php');
   $('#slotSearchEmployeePermissBack').load('./partials/searchEmployeePermissBack.php');
   $('#slotSearchEmployeeUser').load('./partials/searchEmployeeUser.php');
+  $('#slotSearchDepartamentReport').load('./partials/searchDepartamentReport.php');
 
   //Ocultar botones
   $('#btnUpdateDepartament').hide();

@@ -9,18 +9,19 @@ class PDF extends FPDF
     function Header()
     {
         // Logo
-        $this->Image('assets/images/Logo.png', 10, 5, 30);
+        $this->Image('assets/images/Logo.png', 20, 5, 30);
         // Arial bold 15
         $this->SetFont('Arial', 'B', 13);
         // Movernos a la derecha
         $this->Cell(80);
         // Título
-        $this->Cell(130, 0, 'Reporte de Permisos', 0, 0, 'C');
+        $this->Cell(120, 0, iconv('UTF-8', 'windows-1252', 'ESTACIÓN EXPERIMENTAL TROPICAL PICHILINGUE - INIAP'), 0, 1, 'C');
+        $this->Cell(280, 10, 'Reporte de Permisos', 0, 0, 'C');
         $this->SetFont('Arial', 'I', 10);
-        $this->Cell(-150, 10, iconv('UTF-8', 'windows-1252', 'Fecha de Reporte:'), 0, 0, 'C');
-        $this->Cell(200, 10, date('d/m/Y'), 0, 1, 'C');
+        $this->Cell(-300, 20, iconv('UTF-8', 'windows-1252', 'Fecha de Reporte:'), 0, 0, 'C');
+        $this->Cell(350, 20, date('d/m/Y'), 0, 1, 'C');
         // Salto de línea
-        $this->Ln(5);
+        $this->Ln(1);
 
         $this->SetFont('Arial', 'B', 10);
         // Títulos de las columnas
