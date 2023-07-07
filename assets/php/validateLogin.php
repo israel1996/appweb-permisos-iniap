@@ -98,6 +98,8 @@ if (!empty($recd_username) && !empty($recd_pass)) {
                 $tab2->addSubmenu($subTab2);
                 $subTab3 = new MenuItem('Periodos', $url . $nombreCarpeta . '/admin_periods.php');
                 $tab2->addSubmenu($subTab3);
+                $subTab14 = new MenuItem('Certificado', $url . $nombreCarpeta . '/admin_certificate.php');
+                $tab2->addSubmenu($subTab14);
 
 
                 $tab3 = new MenuItem('Permisos', '#');
