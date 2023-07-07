@@ -103,3 +103,48 @@ inputs.forEach(function(input) {
   });
 });
 
+
+
+
+var inputs = document.querySelectorAll('input[name="dateInput"]');
+
+inputs.forEach(function(input) {
+  input.addEventListener("keypress", function(event) {
+    // Bloquea la entrada de letras y caracteres que no sean la barra ("/")
+    if (!/[0-9\/]/.test(String.fromCharCode(event.which))) {
+      event.preventDefault();
+    }
+  });
+
+  input.addEventListener("input", function(event) {
+    var inputValue = event.target.value;
+
+    var dayPattern = /^(\d{1,2})$/;
+    var dayWithSeparatorPattern = /^(\d{1,2})\/$/;
+    var monthPattern = /^(\d{1,2})\/(\d{1,2})$/;
+    var monthWithSeparatorPattern = /^(\d{1,2})\/(\d{1,2})\/$/;
+    var partialYearPattern = /^(\d{1,2})\/(\d{1,2})\/(\d{1,3})$/;
+    var yearPattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+
+    if (inputValue === '' ||
+        dayPattern.test(inputValue) ||
+        dayWithSeparatorPattern.test(inputValue) ||
+        monthPattern.test(inputValue) ||
+        monthWithSeparatorPattern.test(inputValue) ||
+        partialYearPattern.test(inputValue) ||
+        yearPattern.test(inputValue)) {
+      input.classList.remove("is-invalid");
+    } else {
+      input.classList.add("is-invalid");
+    }
+  });
+
+  input.addEventListener("blur", function(event) {
+    if (event.target.value === "") {
+      event.target.classList.remove("is-invalid");
+    }
+  });
+});
+
+
+

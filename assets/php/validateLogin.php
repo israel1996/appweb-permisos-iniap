@@ -116,21 +116,23 @@ if (!empty($recd_username) && !empty($recd_pass)) {
                 $tab4 = new MenuItem('Reportes', '#');
                 $menu[] = $tab4;
 
-                $subTab8 = new MenuItem('General', $url . $nombreCarpeta . '/#');
+                $subTab8 = new MenuItem('General', $url . $nombreCarpeta . '/admin_report_general.php');
                 $tab4->addSubmenu($subTab8);
-                $subTab9 = new MenuItem('Departamento', $url . $nombreCarpeta . '/#');
+                $subTab9 = new MenuItem('Departamento', $url . $nombreCarpeta . '/admin_report_departament.php');
                 $tab4->addSubmenu($subTab9);
-                $subTab10 = new MenuItem('Empleado', $url . $nombreCarpeta . '/#');
+                $subTab10 = new MenuItem('Empleado', $url . $nombreCarpeta . '/admin_report_employee.php');
                 $tab4->addSubmenu($subTab10);
+                $subTab11 = new MenuItem('Permisos', $url . $nombreCarpeta . '/admin_report_permiss.php');
+                $tab4->addSubmenu($subTab11);
 
 
                 $tab5 = new MenuItem('Sistema', '#');
                 $menu[] = $tab5;
 
-                $subTab11 = new MenuItem('Nueva Información', $url . $nombreCarpeta . '/admin_datamaster.php');
-                $tab5->addSubmenu($subTab11);
-                $subTab12 = new MenuItem('Logos de Aplicación', $url . $nombreCarpeta . '/admin_logos.php');
+                $subTab12 = new MenuItem('Nueva Información', $url . $nombreCarpeta . '/admin_datamaster.php');
                 $tab5->addSubmenu($subTab12);
+                $subTab13 = new MenuItem('Logos de Aplicación', $url . $nombreCarpeta . '/admin_logos.php');
+                $tab5->addSubmenu($subTab13);
 
                 $_SESSION['menu'] = serialize($menu);
 

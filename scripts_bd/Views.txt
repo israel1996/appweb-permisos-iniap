@@ -136,3 +136,66 @@ INNER JOIN tb_typecontract tc ON e.id_typeContract = tc.id_typeContract
 INNER JOIN tb_departament d ON e.id_departament = d.id_departament
 INNER JOIN tb_jobtitle jt ON e.id_jobTitle = jt.id_jobTitle;
   
+
+
+CREATE VIEW vw_reportGeneral AS
+SELECT 
+e.id_employee,
+e.ci_employee,
+CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+ct.name_codeType,
+SUM(vp.balanceDays_vacationPeriod) AS balanceDays_vacationPeriod
+FROM tb_employee e INNER JOIN tb_vacationperiod vp
+ON e.id_employee = vp.id_employee INNER JOIN tb_codetype ct 
+ON ct.id_codeType = e.id_codeType
+GROUP BY e.id_employee, e.ci_employee, fullname, ct.name_codeType;
+
+
+CREATE VIEW vw_reportPermiss AS
+SELECT 
+    p.id_permission,
+    e.ci_employee,
+    CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+    DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
+    CASE 
+        WHEN p.state_permission = 'V' THEN 'Validado'
+        WHEN p.state_permission = 'P' THEN 'Pendiente'
+        WHEN p.state_permission = 'R' THEN 'Rechazado'
+        ELSE p.state_permission
+    END AS state_permission,
+    IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
+    IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
+    p.workingDays_permission,
+    p.weekendDays_permission,
+   p.workingDays_permission + p.weekendDays_permission AS total
+FROM tb_permission p
+INNER JOIN tb_employee e ON p.id_employee = e.id_employee
+INNER JOIN tb_departament d ON d.id_departament = e.id_departament
+ORDER BY p.startDateTime_permission ASC;
+
+
+CREATE VIEW vw_reportDepartament AS
+SELECT 
+d.id_departament,
+d.name_departament,
+SUM(vp.balanceWorkingDays_vacationPeriod) AS balanceWorkingDays_vacationPeriod,
+SUM(vp.balanceWeekendDays_vacationPeriod) AS balanceWeekendDays_vacationPeriod,
+SUM(vp.balanceDays_vacationPeriod) AS balanceDays_vacationPeriod
+FROM tb_employee e INNER JOIN tb_vacationperiod vp ON e.id_employee = vp.id_employee
+INNER JOIN tb_departament d ON e.id_departament = d.id_departament 
+WHERE vp.state_vacationPeriod = 1
+GROUP BY d.id_departament, d.name_departament;
+
+
+CREATE VIEW vw_reportEmployee AS
+SELECT 
+e.id_employee,
+e.ci_employee,
+CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+DATE_FORMAT(vp.startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod,
+DATE_FORMAT(vp.endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
+vp.balanceDays_vacationPeriod
+FROM tb_employee e INNER JOIN tb_vacationperiod vp ON e.id_employee = vp.id_employee 
+WHERE vp.state_vacationPeriod = 1;
+
+

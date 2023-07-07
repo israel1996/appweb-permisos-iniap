@@ -1473,6 +1473,56 @@ function generatePDFPermiss(idPermiss) {
     $('#modalPDFPermiss').modal('show');
 
 }
+function generatePDFReportGeneral(search, numRows) {
+    // Definir la URL del script PHP
+    var url = "report_general.php";
+    // Crear la URL completa con el parámetro
+    var fullUrl = url + "?search=" + encodeURIComponent(search.trim()) + "&numRows=" + encodeURIComponent(numRows);
+    
+    // Actualizar la URL del iframe
+    $('#pdfFrameGeneral').attr('src', fullUrl);
+    // Mostrar el modal
+    $('#modalReportGeneral').modal('show');
+
+}
+function generatePDFReportPermiss(search, numRows, startDate, endDate) {
+    // Definir la URL del script PHP
+    var url = "report_permiss.php";
+    // Crear la URL completa con el parámetro
+    var fullUrl = url + "?search=" + encodeURIComponent(search.trim()) + "&numRows=" + encodeURIComponent(numRows) + 
+    "&startDate=" + encodeURIComponent(startDate) + "&endDate=" + encodeURIComponent(endDate);
+    
+    // Actualizar la URL del iframe
+    $('#pdfFramePermiss').attr('src', fullUrl);
+    // Mostrar el modal
+    $('#modalReportPermiss').modal('show');
+
+}
+function generatePDFReportDepartament(search, numRows) {
+    // Definir la URL del script PHP
+    var url = "report_departament.php";
+    // Crear la URL completa con el parámetro
+    var fullUrl = url + "?search=" + encodeURIComponent(search.trim()) + "&numRows=" + encodeURIComponent(numRows);
+    
+    // Actualizar la URL del iframe
+    $('#pdfFrameDepartament').attr('src', fullUrl);
+    // Mostrar el modal
+    $('#modalReportDepartament').modal('show');
+
+}
+function generatePDFReportEmployee(search, numRows) {
+    // Definir la URL del script PHP
+    var url = "report_employee.php";
+    // Crear la URL completa con el parámetro
+    var fullUrl = url + "?search=" + encodeURIComponent(search.trim()) + "&numRows=" + encodeURIComponent(numRows);
+    
+    // Actualizar la URL del iframe
+    $('#pdfFrameEmployee').attr('src', fullUrl);
+    // Mostrar el modal
+    $('#modalReportEmployee').modal('show');
+
+}
+
 
 
 

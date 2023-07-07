@@ -752,7 +752,6 @@ $(document).ready(function () {
   });
 
   //Enviar datos para subir logos
-
   $('#btnUploadMainLogo').click(function () {
     toastr.options.preventDuplicates = true;
     toastr.options.positionClass = 'toast-bottom-right';
@@ -794,6 +793,30 @@ $(document).ready(function () {
     } else {
       toastr.error("Seleccione una imagen", "MENSAJE");
     }
+  });
+
+  //Enviar parametros para Reporte PDF
+  $('#btnReportGeneral').click(function () {
+    var search = $('#campo').val();
+    var numRows = $('#num_registros').val();
+    generatePDFReportGeneral(search, numRows);
+  });
+  $('#btnReportPermiss').click(function () {
+    var search = $('#campo').val();
+    var numRows = $('#num_registros').val();
+    var startDate = $('#startDate').val();
+    var endDate = $('#endDate').val();
+    generatePDFReportPermiss(search, numRows, startDate, endDate);
+  });
+  $('#btnReportDepartament').click(function () {
+    var search = $('#campo').val();
+    var numRows = $('#num_registros').val();
+    generatePDFReportDepartament(search, numRows);
+  });
+  $('#btnReportEmployee').click(function () {
+    var search = $('#campo').val();
+    var numRows = $('#num_registros').val();
+    generatePDFReportEmployee(search, numRows);
   });
 
 
