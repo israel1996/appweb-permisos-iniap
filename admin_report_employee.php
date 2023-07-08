@@ -42,8 +42,10 @@ require_once "assets/php/database.php";
 
   <section class="container" style="margin-top: 50px;">
 
-  <!-- Modal PDF -->
-  <div class="modal fade" id="modalReportEmployee" tabindex="-1" aria-labelledby="exampleModalLabel"
+    <input type="hidden" id="idEmployeeSelectedReport" value="0">
+
+    <!-- Modal PDF -->
+    <div class="modal fade" id="modalReportEmployee" tabindex="-1" aria-labelledby="exampleModalLabel"
       aria-hidden="true">
       <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -62,13 +64,10 @@ require_once "assets/php/database.php";
     <!-- Boton de Agregar, seleccionador de Registros y busqueda -->
     <div class="row g-4">
       <div class="col-auto">
-      <button class="btn btn-dark text-white" id="btnReportEmployee" style="margin-top:-2px"> Generar PDF </button>
+        <button class="btn btn-dark text-white" id="btnReportEmployee" style="margin-top:-2px"> Generar PDF </button>
       </div>
       <div class="col-auto">
-        <label for="num_registros" class="col-form-label fw-bold">Buscar: </label>
-      </div>
-      <div class="col-auto">
-        <input type="text" name="campo" id="campo" class="form-control" placeholder="Escriba aquí...">
+        <div id="slotSearchEmployeeReport"></div>
       </div>
       <div class="col-auto">
         <label for="num_registros" class="col-form-label fw-bold">Mostrar: </label>
@@ -93,9 +92,13 @@ require_once "assets/php/database.php";
             <tr class="text-center">
               <th class="align-middle">Cedula</th>
               <th class="align-middle">Nombres y Apellidos</th>
-              <th class="align-middle">Fecha de Inicio</th>
-              <th class="align-middle">Fecha de Fin</th>
-              <th class="align-middle">Saldo de Vacaciones</th>
+              <th class="align-middle">Fecha de Ingreso</th>
+              <th class="align-middle">Departamento</th>
+              <th class="align-middle">Fecha Inicial</th>
+              <th class="align-middle">Fecha Final</th>
+              <th class="align-middle">Saldo. Laborables</th>
+              <th class="align-middle">Saldo. Fin de Semana</th>
+              <th class="align-middle">Total de Saldos</th>
             </tr>
           </thead>
           <tbody id="content">
@@ -132,19 +135,16 @@ require_once "assets/php/database.php";
     getData();
 
     /* Escuchar un evento keyup en el campo de entrada y luego llamar a la función getData. */
-    document.getElementById("campo").addEventListener("keyup", function () {
-      document.getElementById("pagina").value = 1;
-      getData();
-    }, false)
+   
     document.getElementById("num_registros").addEventListener("change", function () {
       document.getElementById("pagina").value = 1;
       getData();
-    }, false)
+    }, false);
 
 
     /* Peticion AJAX */
     function getData() {
-      let input = document.getElementById("campo").value;
+      let input = document.getElementById("idEmployeeSelectedReport").value;
       let num_registros = document.getElementById("num_registros").value;
       let content = document.getElementById("content");
       let pagina = document.getElementById("pagina").value;

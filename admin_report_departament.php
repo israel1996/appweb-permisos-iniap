@@ -42,6 +42,8 @@ require_once "assets/php/database.php";
 
   <section class="container" style="margin-top: 50px;">
 
+  <input type="hidden" id="idDepartamentSelectedReported" value="0">
+
   <!-- Modal PDF -->
   <div class="modal fade" id="modalReportDepartament" tabindex="-1" aria-labelledby="exampleModalLabel"
       aria-hidden="true">
@@ -133,12 +135,7 @@ require_once "assets/php/database.php";
     /* Llamando a la función getData() */
     getData();
 
-    /* 
-    document.getElementById("campo").addEventListener("keyup", function () {
-      document.getElementById("pagina").value = 1;
-      getData();
-    }, false);
-    */
+
     document.getElementById("num_registros").addEventListener("change", function () {
       document.getElementById("pagina").value = 1;
       getData();
@@ -147,7 +144,7 @@ require_once "assets/php/database.php";
 
     /* Peticion AJAX */
     function getData() {
-      //let input = document.getElementById("campo").value;
+      let input = document.getElementById("idDepartamentSelectedReported").value;
       let num_registros = document.getElementById("num_registros").value;
       let content = document.getElementById("content");
       let pagina = document.getElementById("pagina").value;
@@ -160,7 +157,7 @@ require_once "assets/php/database.php";
 
       let url = "./partials/tableReportDepartament.php";
       let formaData = new FormData();
-      //formaData.append('campo', input);
+      formaData.append('campo', input);
       formaData.append('registros', num_registros);
       formaData.append('pagina', pagina);
       formaData.append('orderCol', orderCol);

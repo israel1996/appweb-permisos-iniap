@@ -12,6 +12,7 @@ $(document).ready(function () {
   $('#slotSearchEmployeePermissBack').load('./partials/searchEmployeePermissBack.php');
   $('#slotSearchEmployeeUser').load('./partials/searchEmployeeUser.php');
   $('#slotSearchDepartamentReport').load('./partials/searchDepartamentReport.php');
+  $('#slotSearchEmployeeReport').load('./partials/searchEmployeeReport.php');
 
   //Ocultar botones
   $('#btnUpdateDepartament').hide();
@@ -810,14 +811,31 @@ $(document).ready(function () {
     generatePDFReportPermiss(search, numRows, startDate, endDate);
   });
   $('#btnReportDepartament').click(function () {
-    var search = $('#campo').val();
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    var search = $('#searchDepartamentReport').val();
     var numRows = $('#num_registros').val();
-    generatePDFReportDepartament(search, numRows);
+
+    if (search != 0) {
+      generatePDFReportDepartament(search, numRows);
+    } else {
+      toastr.error("Seleccione un Departamento", "MENSAJE");
+    }
   });
   $('#btnReportEmployee').click(function () {
-    var search = $('#campo').val();
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    var search = $('#searchEmployeeReport').val();
     var numRows = $('#num_registros').val();
-    generatePDFReportEmployee(search, numRows);
+    if (search != 0) {
+      generatePDFReportEmployee(search, numRows);
+    } else {
+      toastr.error("Seleccione un Empleado", "MENSAJE");
+    }
   });
 
 

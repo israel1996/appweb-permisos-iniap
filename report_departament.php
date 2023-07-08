@@ -9,26 +9,29 @@ class PDF extends FPDF
     function Header()
     {
         // Logo
-        $this->Image('assets/images/Logo.png', 10, 5, 30);
+        $this->Image('assets/images/Logo.png', 20, 5, 30);
         // Arial bold 15
         $this->SetFont('Arial', 'B', 13);
         // Movernos a la derecha
         $this->Cell(80);
         // Título
-        $this->Cell(30, 0, 'Reporte de Saldos - Departamentos', 0, 0, 'C');
+        $this->Cell(120, 0, iconv('UTF-8', 'windows-1252', 'ESTACIÓN EXPERIMENTAL TROPICAL PICHILINGUE - INIAP'), 0, 1, 'C');
+        $this->Cell(280, 10, 'Reporte General de Saldos', 0, 0, 'C');
         $this->SetFont('Arial', 'I', 10);
-        $this->Cell(-50, 10, iconv('UTF-8', 'windows-1252', 'Fecha de Reporte:'), 0, 0, 'C');
-        $this->Cell(100, 10, date('d/m/Y'), 0, 1, 'C');
+        $this->Cell(-300, 20, iconv('UTF-8', 'windows-1252', 'Fecha de Reporte:'), 0, 0, 'C');
+        $this->Cell(350, 20, date('d/m/Y'), 0, 1, 'C');
         // Salto de línea
-        $this->Ln(5);
+        $this->Ln(1);
 
-        $this->SetFont('Arial', 'B', 10);
-        $header = array('Departamento', 'Laborables', 'Fine de Semana', 'Saldos Totales');
+        $this->SetFont('Arial', 'B', 8);
+        // Títulos de las columnas
+        // Títulos de las columnas
+        $header = array('Cédula', 'Nombres y Apellidos', 'F. Laboral', 'Departamento', 'F. Inicio', 'F. Fin', 'Lab.', 'Fines.', 'Total');
         // Ancho de las columnas
-        $widths = array(100, 30, 30, 30);
+        $widths = array(25, 65, 20, 95, 20, 20, 12, 12, 10);
 
         for ($i = 0; $i < count($header); $i++) {
-            $this->Cell($widths[$i], 7, iconv('UTF-8', 'windows-1252', $header[$i]), 1, 0, 'C');
+            $this->Cell($widths[$i], 7, iconv('UTF-8', 'windows-1252', $header[$i]) , 1, 0, 'C');
         }
         $this->Ln();
 
@@ -48,7 +51,6 @@ class PDF extends FPDF
     // Tabla simple
     function BasicTable($data, $widths)
     {
-
         // Datos
         foreach ($data as $row) {
             $i = 0;
@@ -75,12 +77,8 @@ if (isset($_GET['numRows'])) {
 
 // Consulta SQL
 $where = "";
-if ($search != "") {
-    $where = "WHERE  
-    LOWER(name_departament) LIKE LOWER('%" . $search . "%') OR 
-    balanceWorkingDays_vacationPeriod LIKE '%" . $search . "%' OR 
-    balanceWeekendDays_vacationPeriod LIKE '%" . $search . "%' OR 
-    balanceDays_vacationPeriod LIKE '%" . $search . "%' ";
+if ($search != "" && $search != 0) {
+    $where = "WHERE id_departament = ".$search;
 }
 $limit = "";
 if ($numRows != 0) {
@@ -88,18 +86,22 @@ if ($numRows != 0) {
 }
 
 $sql = "SELECT 
+ci_employee,
+fullname,
+startDate_employee,
 name_departament,
+startDate_vacationPeriod,
+endDate_vacationPeriod,
 balanceWorkingDays_vacationPeriod,
 balanceWeekendDays_vacationPeriod,
 balanceDays_vacationPeriod
-FROM vw_reportDepartament " . $where . " " . $limit;
-
+FROM vw_reportGeneral " . $where . " " . $limit;
 
 
 // Títulos de las columnas
-$header = array('Departamento', 'Laborables', 'Fine de Semana', 'Saldos Totales');
+$header = array('Cédula', 'Nombres y Apellidos', 'F. Laboral', 'Departamento', 'F. Inicio', 'F. Fin', 'Lab.', 'Fin. Sem.', 'Total');
 // Ancho de las columnas
-$widths = array(100, 30, 30, 30);
+$widths = array(25, 65, 20, 95, 20, 20, 12, 12, 10);
 
 // Datos del permiso
 $stmt = $conn->prepare($sql);
@@ -110,10 +112,10 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 //Generar pdf
 
-$pdf = new PDF('P', 'mm', 'A4');
+$pdf = new PDF('L', 'mm', 'A4');
 
 // Carga de datos
-$pdf->SetFont('Arial', '', 10);
+$pdf->SetFont('Arial', '', 8);
 $pdf->AddPage();
 $pdf->BasicTable($results, $widths);
 

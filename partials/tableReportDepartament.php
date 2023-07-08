@@ -7,6 +7,7 @@ $columns = [
     'ci_employee',
     'fullname',
     'startDate_employee',
+    'id_departament',
     'name_departament',
     'startDate_vacationPeriod',
     'endDate_vacationPeriod',
@@ -29,16 +30,8 @@ $campo = isset($_POST['campo']) ? $_POST['campo'] : null;
 $where = '';
 $params = [];
 
-if (!is_null($campo)) {
-    $where = "WHERE (";
-
-    $cont = count($columnsSearch);
-    for ($i = 0; $i < $cont; $i++) {
-        $where .= $columnsSearch[$i] . " LIKE :campo$i OR ";
-        $params[":campo$i"] = "%{$campo}%";
-    }
-    $where = substr_replace($where, "", -3);
-    $where .= ")";
+if (!is_null($campo) && $campo != 0) {
+    $where = "WHERE id_departament = ". $campo;
 }
 
 $limit = isset($_POST['registros']) ? (int) $_POST['registros'] : 10;
