@@ -1,7 +1,6 @@
 <?php
 session_start();
 require_once "database.php";
-require_once "../class/Employee.php";
 require_once "../class/User.php";
 
 $response = array();

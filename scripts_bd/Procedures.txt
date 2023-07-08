@@ -1558,24 +1558,23 @@ BEGIN
   ) INTO v_pendingPermissionExists;
 
   IF v_pendingPermissionExists = FALSE THEN
-
-	IF p_id_reason = v_id_reason_vacaciones THEN
-		-- Verificar si existe un periodo de vacaciones activo 
-    	SELECT EXISTS(
-      SELECT 1
-      FROM tb_vacationPeriod 
-      WHERE id_employee = p_id_employee
-        AND state_vacationPeriod = TRUE 
-    	) INTO v_vacationExists;
-   ELSE 
-   	SET v_vacationExists = TRUE;
-	END IF;
+    IF p_id_reason = v_id_reason_vacaciones THEN
+      -- Verificar si existe un periodo de vacaciones activo 
+      SELECT EXISTS(
+        SELECT 1
+        FROM tb_vacationPeriod 
+        WHERE id_employee = p_id_employee
+          AND state_vacationPeriod = TRUE 
+      ) INTO v_vacationExists;
+    ELSE 
+      SET v_vacationExists = TRUE;
+    END IF;
    
     IF v_vacationExists = FALSE THEN
       SET message = 'No tiene periodo de vacaciones activo';
       SET success = FALSE;
     ELSE
-    	-- Seleccionan el periodo más antiguo activo
+      -- Seleccionan el periodo más antiguo activo
       SELECT id_vacationPeriod, balanceDays_vacationPeriod, balanceWorkingDays_vacationPeriod, balanceWeekendDays_vacationPeriod
       INTO v_id_vacationPeriod, v_balanceDays, v_balanceWorkingDays, v_balanceWeekendDays
       FROM tb_vacationPeriod
@@ -1588,218 +1587,219 @@ BEGIN
       FROM tb_numberPeriod
       WHERE state_numberPeriod = TRUE;
       -- Validar si las fechas ingresadas son la misma, es decir para comprobar las horas
-      IF DATE(p_startDate) = DATE(p_endDate) THEN
-      	-- Validar que no sea dias de fin de semana (sábado o domingo)
-      	IF WEEKDAY(p_startDate) <> 5 AND WEEKDAY(p_startDate) <> 6 THEN
-	      	-- Validar el rango de horario según el id_codeType
-	        IF v_codeType = 1 AND (TIME(p_startDate) < '08:00:00' OR TIME(p_endDate) > '16:30:00') THEN
-	          SET message = 'Las horas seleccionadas no están de acuerdo a su horario. El rango de horario debe ser de 8:00 a 16:30.';
-	          SET success = FALSE;
-	        ELSEIF v_codeType = 2 AND (TIME(p_startDate) < '07:00:00' OR TIME(p_endDate) > '15:30:00') THEN
-	          SET message = 'Las horas seleccionadas no están de acuerdo a su horario. El rango de horario debe ser de 7:00 a 15:30.';
-	          SET success = FALSE;
-	        ELSE
-	          -- Verificar Rango de fecha y hora
-	          IF TIME(p_startDate) >= TIME(p_endDate) THEN
-	            SET message = 'El rango de hora es incorrecto.';
-	            SET success = FALSE;
-	          ELSE
-	            -- Calcular la diferencia de tiempo en minutos
-	            SET v_timeDiff = TIME_TO_SEC(TIMEDIFF(p_endDate, p_startDate)) / 60;
-	            -- Convertir saldo de dias laborales en minutos
-	            SET v_balanceWorkingDays = v_balanceWorkingDays * 8 * 60;     
-	            -- Devuelve media hora si pide permiso en horario especifico y cuando pasa las 5 horas y media
-		          IF (TIME(p_startDate) = '12:00:00' AND TIME(p_endDate) = '14:00:00') OR v_timeDiff = 330 OR v_timeDiff = 510 THEN
-		            SET v_timeDiff = v_timeDiff - 30;
-		          END IF;
-		          -- Convertir la diferencia de tiempo en días
-	            SET v_timeInDays = v_timeDiff / (8 * 60);
-	            -- Verificar que si el tiempo de dia laboral no excede el saldo de dia laboral
-	  				IF v_timeDiff > v_balanceWorkingDays THEN
-	                SET message = CONCAT('Se excede en ', v_timeDiff - v_balanceWorkingDays , ' minutos del día laboral.');
-	                SET success = FALSE;
-	            ELSE 
-	                SET v_workingDays = v_timeInDays;
-	              	 SET success = TRUE;
-	              	 
-	              	 -- Control de dias laboales en caso de que sean vacaciones
-		            IF p_id_reason = v_id_reason_vacaciones THEN
-			            -- Obtener carry anterior
-				          SET v_carry = (SELECT IFNULL((
-							  SELECT carry_permission
-							  FROM tb_permission
-							  WHERE id_reason = v_id_reason_vacaciones AND id_employee = p_id_employee
-							  ORDER BY id_permission DESC
-							  LIMIT 1
-							 ), 0));
-								
-							-- Validar si pasa de los 5 dias acumulados le descuente 2 dias de fines de semana
-							IF (v_carry + v_workingDays) < 5 THEN 
-								SET v_carry = v_carry + v_workingDays;
-							ELSEIF (v_carry + v_workingDays) >= 5 AND v_balanceWeekendDays > 0 THEN
-								SET v_weekendDays = 2;
-								SET v_carry = (v_carry + v_workingDays) - 5;
-							END IF;
-		            END IF;
-	            
-	            END IF;
-	            
-	            IF success = TRUE THEN
-	              INSERT INTO tb_permission (
-	                id_employee,
-	                id_reason,
-	                id_numberPeriod,
-	                issueDate_permission,
-	                state_permission,
-	                startDateTime_permission,
-	                endDateTime_permission,
-	                workingDays_permission,
-	                weekendDays_permission,
-	                carry_permission,
-	                observation_permission
-	              )
-	              VALUES (
-	                p_id_employee,
-	                p_id_reason,
-	                v_id_numberPeriod,
-	                CURRENT_DATE(),
-	                'P',
-	                p_startDate,
-	                p_endDate,
-	                v_workingDays,
-	                v_weekendDays,
-	                v_carry,
-	                p_observation_permission
-	              );
-	              -- Actualizar el contador en tb_numberPeriod
-	              UPDATE tb_numberPeriod
-	              SET count_numberPeriod = count_numberPeriod + 1
-	              WHERE id_numberPeriod = v_id_numberPeriod;
-	              -- Actualizar el estado de la fecha atrasado en caso de haber
-	              UPDATE tb_permissionBack
-	              SET state_permissionBack = 0
-	              WHERE id_employee = p_id_employee AND state_permissionBack = 1;
-	              -- Obtener contador actual
-	              SELECT count_numberPeriod
-				      INTO v_issueNumber
-				      FROM tb_numberPeriod
-				      WHERE id_numberPeriod = v_id_numberPeriod;
-				     -- Actualizar numero de documento
-				     SET @lastInsertId = LAST_INSERT_ID();
-				     UPDATE tb_permission
-				     SET issueNumber_permission = v_issueNumber
-				     WHERE id_permission = @lastInsertId;
-	  
-	              SET message = 'Permiso solicitado exitosamente.';
-	              SET success = TRUE;
-	            END IF;
-	            -- SET message = v_balanceWorkingDays;
-	          END IF;
-	        END IF;
-      	ELSE
-      		SET message = 'Solo aplica para dias laborables';
-          	SET success = FALSE;
-		END IF;
-      ELSE
-        -- Verificar Rango de fecha
-        IF DATE(p_startDate) > DATE(p_endDate) THEN
-          SET message = 'El rango de fechas es incorrecto.';
-          SET success = FALSE;
-        ELSE
-          SET v_workingDays = 0;
-          SET v_weekendDays = 0;
-          SET v_tempDate = DATE(p_startDate);
-  
-          -- Calcular los dias laborales y fines de semana
-          WHILE v_tempDate <= DATE(p_endDate) DO
-            IF WEEKDAY(v_tempDate) BETWEEN 0 AND 4 THEN
-              SET v_workingDays = v_workingDays + 1;
-            ELSEIF WEEKDAY(v_tempDate) IN (5, 6) THEN
-              SET v_weekendDays = v_weekendDays + 1;
-            END IF;
-            SET v_tempDate = DATE_ADD(v_tempDate, INTERVAL 1 DAY);
-          END WHILE;
-			
-          -- Verificar que si los dias laborales y fines de semanas no exceden del saldo de dias.
-          IF (v_workingDays + v_weekendDays) > v_balanceDays THEN
-            SET message = CONCAT('Se excede en ',v_balanceDays - (v_workingDays + v_balanceWeekendDays), ' día(s).');
+      IF (DATE(p_startDate) = DATE(p_endDate)) AND (TIME(p_startDate) <> '00:00:00' OR TIME(p_endDate) <> '00:00:00') THEN
+        -- Validar que no sea dias de fin de semana (sábado o domingo)
+        IF WEEKDAY(p_startDate) <> 5 AND WEEKDAY(p_startDate) <> 6 THEN
+          -- Validar el rango de horario según el id_codeType
+          IF v_codeType = 1 AND (TIME(p_startDate) < '08:00:00' OR TIME(p_endDate) > '16:30:00') THEN
+            SET message = 'Las horas seleccionadas no están de acuerdo a su horario. El rango de horario debe ser de 8:00 a 16:30.';
+            SET success = FALSE;
+          ELSEIF v_codeType = 2 AND (TIME(p_startDate) < '07:00:00' OR TIME(p_endDate) > '15:30:00') THEN
+            SET message = 'Las horas seleccionadas no están de acuerdo a su horario. El rango de horario debe ser de 7:00 a 15:30.';
             SET success = FALSE;
           ELSE
-             -- Control de dias laboales en caso de que sean vacaciones
-		      IF p_id_reason = v_id_reason_vacaciones THEN
-			   -- Obtener carry anterior
-					SET v_carry = (SELECT IFNULL((
-					SELECT carry_permission
-					FROM tb_permission
-					WHERE id_reason = v_id_reason_vacaciones AND id_employee = p_id_employee
-					ORDER BY id_permission DESC
-				 	LIMIT 1
-					), 0));
-								
-					-- Validar si pasa de los 5 dias acumulados le descuente 2 dias de fines de semana
-					IF (v_carry + v_workingDays) < 5 THEN 
-						SET v_carry = v_carry + v_workingDays;
-					ELSEIF (v_carry + v_workingDays) >= 5 AND v_workingDays <= 5 AND v_balanceWeekendDays > 0 THEN
-						SET v_weekendDays = 2;
-						SET v_carry = (v_carry + v_workingDays) - 5;
-					END IF;
-					
-					-- Validar si los fines de semana exceden al saldo de fines de semana
-					IF v_weekendDays > v_balanceWeekendDays THEN
-						SET v_workingDays = v_workingDays + (v_weekendDays - v_balanceWeekendDays);
-						SET v_weekendDays = v_balanceWeekendDays;
-					END IF;
-		      END IF;
-	         
-            INSERT INTO tb_permission (
-              id_employee,
-              id_reason,
-              id_numberPeriod,
-              issueDate_permission,
-              state_permission,
-              startDateTime_permission,
-              endDateTime_permission,
-              workingDays_permission,
-              weekendDays_permission,
-              carry_permission,
-              observation_permission
-            )
-            VALUES (
-              p_id_employee,
-              p_id_reason,
-              v_id_numberPeriod,
-              CURRENT_DATE(),
-              'P',
-              p_startDate,
-              p_endDate,
-              v_workingDays,
-              v_weekendDays,
-              v_carry,
-              p_observation_permission
-            );
-            
-            -- Actualizar el contador en tb_numberPeriod
-            UPDATE tb_numberPeriod
-            SET count_numberPeriod = count_numberPeriod + 1
-            WHERE id_numberPeriod = v_id_numberPeriod;
-            -- Actualizar el estado de la fecha atrasado en caso de haber
-	         UPDATE tb_permissionBack
-	         SET state_permissionBack = 0
-	         WHERE id_employee = p_id_employee AND state_permissionBack = 1;
-	         -- Obtener contador actual
-	         SELECT count_numberPeriod
-				INTO v_issueNumber
-				FROM tb_numberPeriod
-				WHERE id_numberPeriod = v_id_numberPeriod;
-				-- Actualizar numero de documento
-				SET @lastInsertId = LAST_INSERT_ID();
-				UPDATE tb_permission
-				SET issueNumber_permission = v_issueNumber
-				WHERE id_permission = @lastInsertId;
-  
-            SET message = 'Permiso solicitado exitosamente.';
-            SET success = TRUE;
+            -- Verificar Rango de fecha y hora
+            IF TIME(p_startDate) >= TIME(p_endDate) THEN
+              SET message = 'El rango de hora es incorrecto.';
+              SET success = FALSE;
+            ELSE
+              -- Calcular la diferencia de tiempo en minutos
+              SET v_timeDiff = TIME_TO_SEC(TIMEDIFF(p_endDate, p_startDate)) / 60;
+              -- Convertir saldo de dias laborales en minutos
+              SET v_balanceDays = v_balanceDays * 8 * 60;     
+              -- Devuelve media hora si pide permiso en horario especifico y cuando pasa las 5 horas y media
+              IF (TIME(p_startDate) = '12:00:00' AND TIME(p_endDate) = '14:00:00') OR v_timeDiff = 330 OR v_timeDiff = 510 THEN
+                SET v_timeDiff = v_timeDiff - 30;
+              END IF;
+              
+              -- Convertir la diferencia de tiempo en días
+              SET v_workingDays = v_timeDiff / (8 * 60);
+              
+                -- Control de dias laboales en caso de que sean vacaciones
+                IF p_id_reason = v_id_reason_vacaciones THEN
+                  -- Obtener carry anterior
+                  SET v_carry = (SELECT IFNULL((
+                    SELECT carry_permission
+                    FROM tb_permission
+                    WHERE id_reason = v_id_reason_vacaciones AND id_employee = p_id_employee
+                    ORDER BY id_permission DESC
+                    LIMIT 1
+                  ), 0));
+                  
+                  -- Validar si pasa de los 5 dias acumulados le descuente 2 dias de fines de semana
+                  IF (v_carry + v_workingDays) < 5 THEN 
+                    SET v_carry = v_carry + v_workingDays;
+                  ELSEIF (v_carry + v_workingDays) >= 5 AND v_balanceWeekendDays > 0 THEN
+                    SET v_weekendDays = 2;
+                    SET v_carry = (v_carry + v_workingDays) - 5;
+                  END IF;
+                END IF;
+                
+              SET success = TRUE;
+              
+              IF success = TRUE THEN
+                INSERT INTO tb_permission (
+                  id_employee,
+                  id_reason,
+                  id_numberPeriod,
+                  issueDate_permission,
+                  state_permission,
+                  startDateTime_permission,
+                  endDateTime_permission,
+                  workingDays_permission,
+                  weekendDays_permission,
+                  carry_permission,
+                  observation_permission
+                )
+                VALUES (
+                  p_id_employee,
+                  p_id_reason,
+                  v_id_numberPeriod,
+                  CURRENT_DATE(),
+                  'P',
+                  p_startDate,
+                  p_endDate,
+                  v_workingDays,
+                  v_weekendDays,
+                  v_carry,
+                  p_observation_permission
+                );
+                -- Actualizar el contador en tb_numberPeriod
+                UPDATE tb_numberPeriod
+                SET count_numberPeriod = count_numberPeriod + 1
+                WHERE id_numberPeriod = v_id_numberPeriod;
+                -- Actualizar el estado de la fecha atrasado en caso de haber
+                UPDATE tb_permissionBack
+                SET state_permissionBack = 0
+                WHERE id_employee = p_id_employee AND state_permissionBack = 1;
+                -- Obtener contador actual
+                SELECT count_numberPeriod
+                INTO v_issueNumber
+                FROM tb_numberPeriod
+                WHERE id_numberPeriod = v_id_numberPeriod;
+                -- Actualizar numero de documento
+                SET @lastInsertId = LAST_INSERT_ID();
+                UPDATE tb_permission
+                SET issueNumber_permission = v_issueNumber
+                WHERE id_permission = @lastInsertId;
+
+                SET message = 'Permiso solicitado exitosamente.';
+                SET success = TRUE;
+              END IF;
+              -- SET message = v_balanceWorkingDays;
+            END IF;
           END IF;
+        ELSE
+          SET message = 'Solo aplica para dias laborables';
+          SET success = FALSE;
+        END IF;
+      ELSE
+        -- Validar que no sea dias de fin de semana (sábado o domingo)
+        IF ((DATE(p_startDate) <> DATE(p_endDate)) AND (WEEKDAY(p_startDate) <> 5 AND WEEKDAY(p_endDate) <> 6)) OR 
+		   ((WEEKDAY(p_startDate) <> 5 AND WEEKDAY(p_startDate) <> 6) AND (WEEKDAY(p_endDate) <> 5 AND WEEKDAY(p_endDate) <> 6)) THEN
+          -- Verificar Rango de fecha
+          IF DATE(p_startDate) > DATE(p_endDate) THEN
+            SET message = 'El rango de fechas es incorrecto.';
+            SET success = FALSE;
+          ELSE
+            SET v_workingDays = 0;
+            SET v_weekendDays = 0;
+            SET v_tempDate = DATE(p_startDate);
+
+            -- Calcular los dias laborales y fines de semana
+            WHILE v_tempDate <= DATE(p_endDate) DO
+              IF WEEKDAY(v_tempDate) BETWEEN 0 AND 4 THEN
+                SET v_workingDays = v_workingDays + 1;
+              ELSEIF WEEKDAY(v_tempDate) IN (5, 6) THEN
+                SET v_weekendDays = v_weekendDays + 1;
+              END IF;
+              SET v_tempDate = DATE_ADD(v_tempDate, INTERVAL 1 DAY);
+            END WHILE;
+            
+            -- Verificar que si los dias laborales y fines de semanas no exceden del saldo de dias.
+            IF (v_workingDays + v_weekendDays) > v_balanceDays THEN
+              SET message = CONCAT('Se excede en ',v_balanceDays - (v_workingDays + v_balanceWeekendDays), ' día(s).');
+              SET success = FALSE;
+            ELSE
+               -- Control de dias laboales en caso de que sean vacaciones
+              IF p_id_reason = v_id_reason_vacaciones THEN
+                -- Obtener carry anterior
+                SET v_carry = (SELECT IFNULL((
+                  SELECT carry_permission
+                  FROM tb_permission
+                  WHERE id_reason = v_id_reason_vacaciones AND id_employee = p_id_employee
+                  ORDER BY id_permission DESC
+                  LIMIT 1
+                ), 0));
+                
+                -- Validar si pasa de los 5 dias acumulados le descuente 2 dias de fines de semana
+                IF (v_carry + v_workingDays) < 5 THEN 
+                  SET v_carry = v_carry + v_workingDays;
+                ELSEIF (v_carry + v_workingDays) >= 5 AND v_workingDays <= 5 AND v_balanceWeekendDays > 0 THEN
+                  SET v_weekendDays = 2;
+                  SET v_carry = (v_carry + v_workingDays) - 5;
+                END IF;
+                
+                -- Validar si los fines de semana exceden al saldo de fines de semana
+                IF v_weekendDays > v_balanceWeekendDays THEN
+                  SET v_workingDays = v_workingDays + (v_weekendDays - v_balanceWeekendDays);
+                  SET v_weekendDays = v_balanceWeekendDays;
+                END IF;
+              END IF;
+             
+              INSERT INTO tb_permission (
+                id_employee,
+                id_reason,
+                id_numberPeriod,
+                issueDate_permission,
+                state_permission,
+                startDateTime_permission,
+                endDateTime_permission,
+                workingDays_permission,
+                weekendDays_permission,
+                carry_permission,
+                observation_permission
+              )
+              VALUES (
+                p_id_employee,
+                p_id_reason,
+                v_id_numberPeriod,
+                CURRENT_DATE(),
+                'P',
+                p_startDate,
+                p_endDate,
+                v_workingDays,
+                v_weekendDays,
+                v_carry,
+                p_observation_permission
+              );
+              
+              -- Actualizar el contador en tb_numberPeriod
+              UPDATE tb_numberPeriod
+              SET count_numberPeriod = count_numberPeriod + 1
+              WHERE id_numberPeriod = v_id_numberPeriod;
+              -- Actualizar el estado de la fecha atrasado en caso de haber
+              UPDATE tb_permissionBack
+              SET state_permissionBack = 0
+              WHERE id_employee = p_id_employee AND state_permissionBack = 1;
+              -- Obtener contador actual
+              SELECT count_numberPeriod
+              INTO v_issueNumber
+              FROM tb_numberPeriod
+              WHERE id_numberPeriod = v_id_numberPeriod;
+              -- Actualizar numero de documento
+              SET @lastInsertId = LAST_INSERT_ID();
+              UPDATE tb_permission
+              SET issueNumber_permission = v_issueNumber
+              WHERE id_permission = @lastInsertId;
+
+              SET message = 'Permiso solicitado exitosamente.';
+              SET success = TRUE;
+            END IF;
+          END IF;
+        ELSE
+          SET message = 'Solo aplica para dias laborables';
+          SET success = FALSE;
         END IF;
       END IF;
     END IF;

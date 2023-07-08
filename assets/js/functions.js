@@ -412,30 +412,16 @@ function yesOrNoQuestionDisableEmployee(id) {
 }
 //Permisos
 function yesOrNoQuestionSendPermiss(datos) {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
     alertify.confirm('Enviar Solicitud', '¿Esta seguro de enviar esta solicitud?',
         function () {
             sendRequestPermiss(datos);
         },
         function () {
-            alertify.error('Se cancelo')
-        });
-}
-function yesOrNoQuestionSendPermissDay(datos) {
-    alertify.confirm('Enviar Solicitud', '¿Esta seguro de enviar esta solicitud?',
-        function () {
-            sendRequestPermissDay(datos);
-        },
-        function () {
-            alertify.error('Se cancelo')
-        });
-}
-function yesOrNoQuestionSendPermissDiscount(datos) {
-    alertify.confirm('Enviar Solicitud', '¿Esta seguro de enviar esta solicitud?',
-        function () {
-            sendRequestPermissDiscount(datos);
-        },
-        function () {
-            alertify.error('Se cancelo')
+            toastr.error('Se canceló', "MENSAJE");
         });
 }
 
@@ -1063,81 +1049,7 @@ function sendRequestPermiss(datos) {
         }
     });
 }
-function sendRequestPermissDiscount(datos) {
-    //Configuraciones de alerta
-    toastr.options.preventDuplicates = true;
-    toastr.options.positionClass = 'toast-bottom-right';
-    toastr.options.closeButton = true;
-    toastr.options.newestOnTop = false;
 
-    d = datos.split('||');
-
-    cadena = "idEmployee=" + d[0] +
-        "&idReason=" + d[1] +
-        "&startDate=" + d[2] +
-        "&endDate=" + d[3] +
-        "&observation=" + d[4];
-
-    $.ajax({
-        type: "POST",
-        url: "assets/php/insertPermiss.php",
-        data: cadena,
-        dataType: "json",
-        success: function (response) {
-            var success = response.success;
-            var message = response.message;
-            if (success == true) {
-                getData("discountDate");
-                toastr.success(message, "MENSAJE");
-            } else {
-                toastr.error(message, "MENSAJE");
-            }
-        },
-        error: function (xhr, status, error) {
-            // Manejar errores de la solicitud Ajax
-            console.log("Error en la solicitud Ajax:", error);
-        }
-    });
-
-
-
-}
-function sendRequestPermissDay(datos) {
-    //Configuraciones de alerta
-    toastr.options.preventDuplicates = true;
-    toastr.options.positionClass = 'toast-bottom-right';
-    toastr.options.closeButton = true;
-    toastr.options.newestOnTop = false;
-
-    d = datos.split('||');
-
-    cadena = "idEmployee=" + d[0] +
-        "&idReason=" + d[1] +
-        "&startDate=" + d[2] +
-        "&endDate=" + d[3] +
-        "&observation=" + d[4];
-
-    $.ajax({
-        type: "POST",
-        url: "assets/php/insertPermiss.php",
-        data: cadena,
-        dataType: "json",
-        success: function (response) {
-            var success = response.success;
-            var message = response.message;
-            if (success == true) {
-                getData("discountDay");
-                toastr.success(message, "MENSAJE");
-            } else {
-                toastr.error(message, "MENSAJE");
-            }
-        },
-        error: function (xhr, status, error) {
-            // Manejar errores de la solicitud Ajax
-            console.log("Error en la solicitud Ajax:", error);
-        }
-    });
-}
 function updateStatePermiss(idPermiss, state, message) {
     //Configuraciones de alerta
     toastr.options.preventDuplicates = true;

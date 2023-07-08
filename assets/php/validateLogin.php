@@ -69,7 +69,8 @@ if (!empty($recd_username) && !empty($recd_pass)) {
             $result2['id_user'],
             $result2['id_userType'],
             $result1['name_employee'],
-            $result1['lastName_employee']
+            $result1['lastName_employee'],
+            $result1['id_jobTitle']
         );
 
         // serializar el objeto User

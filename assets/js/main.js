@@ -486,15 +486,25 @@ $(document).ready(function () {
 
   //Enviar datos para Gestion de permisos - EMPLEADO
   $('#btnSendRequestPermissDate').click(function () {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
     var idEmployee = $('#idEmployee').val();
     var idReason = $('#selectReason').val();
     var rangeDate = $('#rangeDate').val();
-    dates = rangeDate.split('-');
-    startDate = moment(dates[0].trim(), 'DD/MM/YYYY').format('YYYY-MM-DD');
-    endDate = moment(dates[1].trim(), 'DD/MM/YYYY').format('YYYY-MM-DD');
     var observation = $('#txtObservation').val();
-    var datos = idEmployee + '||' + idReason + '||' + startDate + '||' + endDate + '||' + observation;
-    yesOrNoQuestionSendPermiss(datos);
+    if (idEmployee != 0 && rangeDate !== '' && idReason !== '' && observation !== '') {
+      dates = rangeDate.split('-');
+      startDate = moment(dates[0].trim(), 'DD/MM/YYYY').format('YYYY-MM-DD');
+      endDate = moment(dates[1].trim(), 'DD/MM/YYYY').format('YYYY-MM-DD');
+
+      var datos = idEmployee + '||' + idReason + '||' + startDate + '||' + endDate + '||' + observation;
+      yesOrNoQuestionSendPermiss(datos);
+    } else {
+      toastr.error("Ingrese todos los datos", "MENSAJE");
+    }
+
   });
   $('#btnSendRequestPermissDay').click(function () {
     var idEmployee = $('#idEmployee').val();
@@ -503,18 +513,80 @@ $(document).ready(function () {
     var dateDay = $('#dateDay').val();
     var idReason = $('#selectReasonDay').val();
     var observation = $('#observationDay').val();
+    if (idEmployee != 0 && dateDay !== '' && timeStart !== '' && timeEnd !== ''
+      && idReason !== '' && observation !== '') {
 
-    dateDay = moment(dateDay, 'DD/MM/YYYY').format('YYYY-MM-DD');
-    timeStart = convertirFormatoAMPMa24Horas(timeStart);
-    timeEnd = convertirFormatoAMPMa24Horas(timeEnd);
+      dateDay = moment(dateDay, 'DD/MM/YYYY').format('YYYY-MM-DD');
+      timeStart = convertirFormatoAMPMa24Horas(timeStart);
+      timeEnd = convertirFormatoAMPMa24Horas(timeEnd);
 
-    var startDate = dateDay + ' ' + timeStart;
-    var endDate = dateDay + ' ' + timeEnd;
+      var startDate = dateDay + ' ' + timeStart;
+      var endDate = dateDay + ' ' + timeEnd;
 
-    var datos = idEmployee + '||' + idReason + '||' + startDate + '||' + endDate + '||' + observation;
-    yesOrNoQuestionSendPermissDay(datos);
+      var datos = idEmployee + '||' + idReason + '||' + startDate + '||' + endDate + '||' + observation;
+      yesOrNoQuestionSendPermiss(datos);
+    } else {
+      toastr.error("Ingrese todos los datos", "MENSAJE");
+    }
   });
 
+  //Enviar datos para Permiso de Descuento - ADMIN
+  $('#btnEmployeeDiscountDate').click(function () {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    var idEmployee = $('#idEmployee_discountDate').val();
+    var idReason = $('#selectReasonDiscountDate').val();
+    var rangeDate = $('#rangeDateDiscountDate').val();
+    var observation = $('#txtObservationDiscountDate').val();
+
+    if (idEmployee != 0) {
+      if (rangeDate !== '' && idReason !== '' && observation !== '') {
+        var dates = rangeDate.split('-');
+        var startDate = moment(dates[0].trim(), 'DD/MM/YYYY').format('YYYY-MM-DD');
+        var endDate = moment(dates[1].trim(), 'DD/MM/YYYY').format('YYYY-MM-DD');
+
+        var datos = idEmployee + '||' + idReason + '||' + startDate + '||' + endDate + '||' + observation;
+        yesOrNoQuestionSendPermiss(datos);
+      } else {
+        toastr.error("Ingrese todos los datos", "MENSAJE");
+      }
+    } else {
+      toastr.error("Seleccione un empleado", "MENSAJE");
+    }
+  });
+  $('#btnEmployeeDiscountDay').click(function () {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    var idEmployee = $('#idEmployee_discountDay').val();
+    var timeStart = $('#timeStartDiscountDay').val();
+    var timeEnd = $('#timeEndDiscountDay').val();
+    var dateDay = $('#dateDiscountDay').val();
+    var idReason = $('#selectReasonDiscountDay').val();
+    var observation = $('#observationDiscountDay').val();
+
+    if (idEmployee != 0) {
+      if (timeStart !== '' && timeEnd !== '' && dateDay !== '' && idReason !== '' && observation !== '') {
+        dateDay = moment(dateDay, 'DD/MM/YYYY').format('YYYY-MM-DD');
+        timeStart = convertirFormatoAMPMa24Horas(timeStart);
+        timeEnd = convertirFormatoAMPMa24Horas(timeEnd);
+
+        var startDate = dateDay + ' ' + timeStart;
+        var endDate = dateDay + ' ' + timeEnd;
+
+        var datos = idEmployee + '||' + idReason + '||' + startDate + '||' + endDate + '||' + observation;
+        yesOrNoQuestionSendPermiss(datos);
+      } else {
+        toastr.error("Ingrese todos los datos", "MENSAJE");
+      }
+    } else {
+      toastr.error("Seleccione un empleado", "MENSAJE");
+    }
+
+  });
 
   //Enviar datos para Vacaciones - ADMIN
   $('#btnSendRequestPermissDateVacation').click(function () {
@@ -660,63 +732,6 @@ $(document).ready(function () {
     }
   });
 
-  //Enviar datos para Permiso de Descuento - ADMIN
-  $('#btnEmployeeDiscountDate').click(function () {
-    toastr.options.preventDuplicates = true;
-    toastr.options.positionClass = 'toast-bottom-right';
-    toastr.options.closeButton = true;
-
-    var idEmployee = $('#idEmployee_discountDate').val();
-    var idReason = $('#selectReasonDiscountDate').val();
-    var rangeDate = $('#rangeDateDiscountDate').val();
-    var observation = $('#txtObservationDiscountDate').val();
-
-    if (idEmployee != 0) {
-      if (rangeDate !== '' && idReason !== '' && observation !== '') {
-        var dates = rangeDate.split('-');
-        var startDate = moment(dates[0].trim(), 'DD/MM/YYYY').format('YYYY-MM-DD');
-        var endDate = moment(dates[1].trim(), 'DD/MM/YYYY').format('YYYY-MM-DD');
-
-        var datos = idEmployee + '||' + idReason + '||' + startDate + '||' + endDate + '||' + observation;
-        yesOrNoQuestionSendPermissDiscount(datos);
-      } else {
-        toastr.error("Ingrese todos los datos", "MENSAJE");
-      }
-    } else {
-      toastr.error("Seleccione un empleado", "MENSAJE");
-    }
-  });
-  $('#btnEmployeeDiscountDay').click(function () {
-    toastr.options.preventDuplicates = true;
-    toastr.options.positionClass = 'toast-bottom-right';
-    toastr.options.closeButton = true;
-
-    var idEmployee = $('#idEmployee_discountDay').val();
-    var timeStart = $('#timeStartDiscountDay').val();
-    var timeEnd = $('#timeEndDiscountDay').val();
-    var dateDay = $('#dateDiscountDay').val();
-    var idReason = $('#selectReasonDiscountDay').val();
-    var observation = $('#observationDiscountDay').val();
-
-    if (idEmployee != 0) {
-      if (timeStart !== '' && timeEnd !== '' && dateDay !== '' && idReason !== '' && observation !== '') {
-        dateDay = moment(dateDay, 'DD/MM/YYYY').format('YYYY-MM-DD');
-        timeStart = convertirFormatoAMPMa24Horas(timeStart);
-        timeEnd = convertirFormatoAMPMa24Horas(timeEnd);
-
-        var startDate = dateDay + ' ' + timeStart;
-        var endDate = dateDay + ' ' + timeEnd;
-
-        var datos = idEmployee + '||' + idReason + '||' + startDate + '||' + endDate + '||' + observation;
-        yesOrNoQuestionSendPermissDay(datos);
-      } else {
-        toastr.error("Ingrese todos los datos", "MENSAJE");
-      }
-    } else {
-      toastr.error("Seleccione un empleado", "MENSAJE");
-    }
-
-  });
 
   //Enviar datos para habilitar fecha de permiso atrasado - ADMIN
   $('#btnEmployeePermissBack').click(function () {
