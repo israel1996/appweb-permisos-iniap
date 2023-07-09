@@ -16,7 +16,7 @@ class PDF extends FPDF
         $this->Cell(80);
         // Título
         $this->Cell(120, 0, iconv('UTF-8', 'windows-1252', 'ESTACIÓN EXPERIMENTAL TROPICAL PICHILINGUE - INIAP'), 0, 1, 'C');
-        $this->Cell(280, 10, 'Reporte General de Saldos', 0, 0, 'C');
+        $this->Cell(280, 10, 'Reporte de Saldos - Empleado', 0, 0, 'C');
         $this->SetFont('Arial', 'I', 10);
         $this->Cell(-300, 20, iconv('UTF-8', 'windows-1252', 'Fecha de Reporte:'), 0, 0, 'C');
         $this->Cell(350, 20, date('d/m/Y'), 0, 1, 'C');

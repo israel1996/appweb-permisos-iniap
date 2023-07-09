@@ -57,9 +57,9 @@ CREATE TABLE `tb_permission` (
   `state_permission` char(1),
   `startDateTime_permission` datetime,
   `endDateTime_permission` datetime,
-  `workingDays_permission` decimal(10,2),
-  `weekendDays_permission` decimal(10,2),
-  `carry_permission` decimal(10,2),
+  `workingDays_permission` decimal(10,3),
+  `weekendDays_permission` decimal(10,3),
+  `carry_permission` decimal(10,3),
   `observation_permission` text,
   `adminObservation_permission` text
 );
@@ -132,9 +132,9 @@ CREATE TABLE `tb_vacationPeriod` (
   `startDate_vacationPeriod` date,
   `endDate_vacationPeriod` date,
   `earnedDays_vacationPeriod` decimal(10,2),
-  `balanceDays_vacationPeriod` decimal(10,2),
-  `balanceWorkingDays_vacationPeriod` decimal(10,2),
-  `balanceWeekendDays_vacationPeriod` decimal(10,2),
+  `balanceDays_vacationPeriod` decimal(10,3),
+  `balanceWorkingDays_vacationPeriod` decimal(10,3),
+  `balanceWeekendDays_vacationPeriod` decimal(10,3),
   `state_vacationPeriod` bool
 );
 
@@ -366,115 +366,6 @@ END $$
 DELIMITER ;
 
 
-
-
-DELIMITER $$
-CREATE PROCEDURE pa_updateEmployeeUser(
-    IN p_employeeId INT,
-    IN p_id_codeType INT,
-    IN p_id_typeContract INT,
-    IN p_id_departament INT,
-    IN p_ci_employee VARCHAR(13),
-    IN p_name_employee VARCHAR(100),
-    IN p_lastName_employee VARCHAR(150),
-    IN p_startDate_employee DATE,
-    IN p_phoneNumber_employee VARCHAR(13),
-    IN p_address_employee TEXT,
-    IN p_email_employee VARCHAR(100),
-    IN p_id_userType INT,
-    IN p_password_user VARCHAR(200),
-    OUT p_success BOOLEAN,
-    OUT p_message TEXT
-)
-BEGIN
-    DECLARE username VARCHAR(255);
-    DECLARE counter INT DEFAULT 0;
-    DECLARE usernameExists INT DEFAULT 0;
-    DECLARE p_name_employee_n VARCHAR(255);
-    DECLARE p_lastName_employee_n VARCHAR(255);
-    DECLARE p_current_name_employee VARCHAR(100);
-    DECLARE p_current_lastName_employee VARCHAR(150);
-    DECLARE cedulaExists INT DEFAULT 0;
-    
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        SET p_success = FALSE;
-        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(NEW.MESSAGE, 100), ' at ', -1), ':', 1));
-    END;
-
-    START TRANSACTION;
-
-    -- Obtener el primer nombre y el primer apellido
-    SET p_name_employee = TRIM(p_name_employee);
-    SET p_lastName_employee = TRIM(p_lastName_employee);
-    SET p_name_employee_n = SUBSTRING_INDEX(p_name_employee, ' ', 1);
-    SET p_lastName_employee_n = SUBSTRING_INDEX(p_lastName_employee, ' ', 1);
-
-    -- Verificar si el nombre y apellido recibidos son diferentes a los registrados en la base de datos
-    SELECT name_employee, lastName_employee INTO p_current_name_employee, p_current_lastName_employee
-    FROM tb_employee
-    WHERE id_employee = p_employeeId;
-
-    IF p_current_name_employee <> p_name_employee OR p_current_lastName_employee <> p_lastName_employee THEN
-        -- Generar el nombre de usuario solo si hay cambios en el nombre o apellido
-        SET username = CONCAT(LOWER(p_name_employee_n), '.', LOWER(p_lastName_employee_n));
-
-        -- Verificar si el nombre de usuario ya existe
-        SELECT COUNT(*) INTO usernameExists FROM tb_user WHERE name_user = username AND id_employee = p_employeeId;
-        
-        IF usernameExists = 0 THEN
-            -- Si el nombre de usuario ya existe, agregar un número al final
-            WHILE usernameExists > 0 DO
-                SET counter = counter + 1;
-                SET username = CONCAT(LOWER(p_name_employee_n), '.', LOWER(p_lastName_employee_n), counter);
-                SELECT COUNT(*) INTO usernameExists FROM tb_user WHERE name_user = username;
-            END WHILE;
-        END IF;
-    ELSE
-        -- Mantener el nombre de usuario existente sin cambios
-        SELECT name_user INTO username FROM tb_user WHERE id_employee = p_employeeId;
-    END IF;
-    
-    -- Verificar si el número de cédula ya existe en otro empleado
-    SELECT COUNT(*) INTO cedulaExists FROM tb_employee WHERE ci_employee = p_ci_employee AND id_employee <> p_employeeId;
-    
-    IF cedulaExists > 0 THEN
-        SET p_success = FALSE;
-        SET p_message = 'El número de cédula ya existe en otro empleado';
-        ROLLBACK;
-    ELSE
-        -- Actualización en la tabla tb_employee
-        UPDATE tb_employee
-        SET
-            id_codeType = p_id_codeType,
-            id_typeContract = p_id_typeContract,
-            id_departament = p_id_departament,
-            ci_employee = p_ci_employee,
-            name_employee = p_name_employee,
-            lastName_employee = p_lastName_employee,
-            startDate_employee = p_startDate_employee,
-            phoneNumber_employee = p_phoneNumber_employee,
-            address_employee = p_address_employee,
-            email_employee = p_email_employee
-        WHERE id_employee = p_employeeId;
-
-        -- Actualización en la tabla tb_user
-        UPDATE tb_user
-        SET
-            id_userType = p_id_userType,
-            name_user = username,
-            password_user = p_password_user
-        WHERE id_employee = p_employeeId;
-
-        COMMIT;
-
-        SET p_success = TRUE;
-        SET p_message = 'Actualización exitosa';
-    END IF;
-END $$
-
-DELIMITER ;
 
 
 DELIMITER $$
@@ -1222,10 +1113,10 @@ BEGIN
     DECLARE _id_codeType INT;
     DECLARE _years_of_service INT;
     DECLARE _earned_days INT;
-    DECLARE _balance_days DECIMAL(10,2);
+    DECLARE _balance_days DECIMAL(10,3);
     DECLARE _working_days INT;
     DECLARE _weekend_days INT;
-    DECLARE _balance_periods DECIMAL(10,2);
+    DECLARE _balance_periods DECIMAL(10,3);
     DECLARE _id_vacationPeriod INT;
     DECLARE _count_periods INT;
     DECLARE cur CURSOR FOR
@@ -1571,28 +1462,23 @@ BEGIN
   -- Obtener el año actual
   SET v_yearCount = YEAR(CURDATE()) - YEAR(v_startDate);
 
-  -- Establecer las fechas de inicio y fin para el período de vacaciones del año actual
-  SET v_startDate_currentYear = DATE_ADD(v_startDate, INTERVAL v_yearCount YEAR);
-  SET v_endDate_currentYear = DATE_SUB(DATE_ADD(v_startDate, INTERVAL (v_yearCount + 1) YEAR), INTERVAL 1 DAY);
+  -- Comprobar si el empleado tiene años de antigüedad
+  IF v_yearCount > 0 THEN
+    SET p_success = FALSE;
+    SET p_message = "No se aplica para empleados con antigüedad";
+  ELSE
+    -- Establecer las fechas de inicio y fin para el período de vacaciones del año actual
+    SET v_startDate_currentYear = DATE_ADD(v_startDate, INTERVAL v_yearCount YEAR);
+    SET v_endDate_currentYear = DATE_SUB(DATE_ADD(v_startDate, INTERVAL (v_yearCount + 1) YEAR), INTERVAL 1 DAY);
 
-  -- Verificar si ya existe un período de vacaciones para el año actual
-  SELECT COUNT(*) INTO v_exists
-  FROM tb_vacationPeriod
-  WHERE id_employee = p_id_employee
-    AND startDate_vacationPeriod = v_startDate_currentYear
-    AND endDate_vacationPeriod = v_endDate_currentYear;
-
-  IF v_exists = 0 THEN
-    -- Verificar si existen períodos de vacaciones anteriores al año actual
+    -- Verificar si ya existe un período de vacaciones para el año actual
     SELECT COUNT(*) INTO v_exists
     FROM tb_vacationPeriod
     WHERE id_employee = p_id_employee
-      AND startDate_vacationPeriod < v_startDate_currentYear;
+      AND startDate_vacationPeriod = v_startDate_currentYear
+      AND endDate_vacationPeriod = v_endDate_currentYear;
 
-    IF v_exists > 0 THEN
-      SET p_success = FALSE;
-      SET p_message = "Ya existen períodos de vacaciones anteriores al año actual";
-    ELSE
+    IF v_exists = 0 THEN
       -- Establecer los valores de días según el codeType
       IF v_codeType = 1 THEN
         SET v_earnedDays = 30;
@@ -1630,13 +1516,15 @@ BEGIN
 
       SET p_success = TRUE;
       SET p_message = "Período de vacaciones creado correctamente para el año actual";
+    ELSE
+      SET p_success = FALSE;
+      SET p_message = "Ya existe un período de vacaciones para el año actual";
     END IF;
-  ELSE
-    SET p_success = FALSE;
-    SET p_message = "Ya existe un período de vacaciones para el año actual";
   END IF;
 END $$
+
 DELIMITER ;
+
 
 
 DELIMITER $$
@@ -1646,9 +1534,9 @@ CREATE PROCEDURE pa_updateVacationPeriod(
   IN p_startDate_vacationPeriod DATE,
   IN p_endDate_vacationPeriod DATE,
   IN p_earnedDays_vacationPeriod DECIMAL(10, 2),
-  IN p_balanceDays_vacationPeriod DECIMAL(10, 2),
-  IN p_balanceWorkingDays_vacationPeriod DECIMAL(10, 2),
-  IN p_balanceWeekendDays_vacationPeriod DECIMAL(10, 2),
+  IN p_balanceDays_vacationPeriod DECIMAL(10, 3),
+  IN p_balanceWorkingDays_vacationPeriod DECIMAL(10, 3),
+  IN p_balanceWeekendDays_vacationPeriod DECIMAL(10, 3),
   IN p_state_vacationPeriod BOOL,
   OUT p_message VARCHAR(255),
   OUT p_success BOOL
@@ -1716,12 +1604,12 @@ CREATE PROCEDURE pa_insertPermissionEmployee(
 )
 BEGIN
   DECLARE v_id_numberPeriod INT DEFAULT 1;
-  DECLARE v_workingDays DECIMAL(10,2) DEFAULT 0;
-  DECLARE v_weekendDays DECIMAL(10,2) DEFAULT 0;
+  DECLARE v_workingDays DECIMAL(10,3) DEFAULT 0;
+  DECLARE v_weekendDays DECIMAL(10,3) DEFAULT 0;
   DECLARE v_tempDate DATE;
-  DECLARE v_balanceDays DECIMAL(10,2); 
-  DECLARE v_balanceWorkingDays DECIMAL(10,2);
-  DECLARE v_balanceWeekendDays DECIMAL(10,2);
+  DECLARE v_balanceDays DECIMAL(10,3); 
+  DECLARE v_balanceWorkingDays DECIMAL(10,3);
+  DECLARE v_balanceWeekendDays DECIMAL(10,3);
   DECLARE v_id_vacationPeriod INT;
   DECLARE v_vacationExists BOOLEAN;
   DECLARE v_pendingPermissionExists BOOLEAN;
@@ -1729,8 +1617,9 @@ BEGIN
   DECLARE v_startTime TIME;
   DECLARE v_endTime TIME;
   DECLARE v_timeDiff INT;
-  DECLARE v_timeInDays DECIMAL(10,2);
-  DECLARE v_carry DECIMAL(10,2) DEFAULT 0;
+  DECLARE v_dayDiff INT;
+  DECLARE v_timeInDays DECIMAL(10,3);
+  DECLARE v_carry DECIMAL(10,3) DEFAULT 0;
   DECLARE v_issueNumber INT;
   DECLARE v_id_reason_vacaciones INT;
 
@@ -1778,8 +1667,11 @@ BEGIN
       INTO v_id_numberPeriod
       FROM tb_numberPeriod
       WHERE state_numberPeriod = TRUE;
+      -- Obtener la diferencia de tiempos en dias y en minutos.
+      SET v_dayDiff = ABS(DATEDIFF(p_startDate, p_endDate));
+      SET v_timeDiff = ABS(TIMESTAMPDIFF(MINUTE, p_startDate, p_endDate));
       -- Validar si las fechas ingresadas son la misma, es decir para comprobar las horas
-      IF (DATE(p_startDate) = DATE(p_endDate)) AND (TIME(p_startDate) <> '00:00:00' OR TIME(p_endDate) <> '00:00:00') THEN
+      IF (v_dayDiff = 0) AND (v_timeDiff > 0) THEN
         -- Validar que no sea dias de fin de semana (sábado o domingo)
         IF WEEKDAY(p_startDate) <> 5 AND WEEKDAY(p_startDate) <> 6 THEN
           -- Validar el rango de horario según el id_codeType
@@ -1886,14 +1778,22 @@ BEGIN
           SET success = FALSE;
         END IF;
       ELSE
-        -- Validar que no sea dias de fin de semana (sábado o domingo)
-        IF ((DATE(p_startDate) <> DATE(p_endDate)) AND (WEEKDAY(p_startDate) <> 5 AND WEEKDAY(p_endDate) <> 6)) OR 
-		   ((WEEKDAY(p_startDate) <> 5 AND WEEKDAY(p_startDate) <> 6) AND (WEEKDAY(p_endDate) <> 5 AND WEEKDAY(p_endDate) <> 6)) THEN
-          -- Verificar Rango de fecha
-          IF DATE(p_startDate) > DATE(p_endDate) THEN
-            SET message = 'El rango de fechas es incorrecto.';
+      	SET success = TRUE;
+      	-- Validar cuando escogen 1 dia sábado o domingo
+			IF (v_dayDiff = 0 AND (WEEKDAY(p_startDate) = 5 OR WEEKDAY(p_startDate) = 6)) THEN
+      		SET message = 'Solo aplica para dias laborables';
+          	SET success = FALSE;
+         -- Validar cuando escogen 2 dias, solo sábado y domingo
+         ELSEIF (v_dayDiff = 1 AND (WEEKDAY(p_startDate) = 5 AND WEEKDAY(p_endDate) = 6)) THEN
+         	SET message = 'Solo aplica para dias laborables';
+          	SET success = FALSE;
+         -- Validar el rango de las fehcas
+         ELSEIF (DATE(p_startDate) > DATE(p_endDate)) THEN
+         	SET message = 'El rango de fechas es incorrecto.';
             SET success = FALSE;
-          ELSE
+      	END IF;
+        -- Validar que no sea dias de fin de semana (sábado o domingo)
+        IF success = TRUE THEN
             SET v_workingDays = 0;
             SET v_weekendDays = 0;
             SET v_tempDate = DATE(p_startDate);
@@ -1910,10 +1810,10 @@ BEGIN
             
             -- Verificar que si los dias laborales y fines de semanas no exceden del saldo de dias.
             IF (v_workingDays + v_weekendDays) > v_balanceDays THEN
-              SET message = CONCAT('Se excede en ',v_balanceDays - (v_workingDays + v_balanceWeekendDays), ' día(s).');
+              SET message = CONCAT('Se excede en ',ABS(v_balanceDays - (v_workingDays + v_balanceWeekendDays)), ' día(s).');
               SET success = FALSE;
             ELSE
-               -- Control de dias laboales en caso de que sean vacaciones
+               -- Control de dias laborales en caso de que sean vacaciones
               IF p_id_reason = v_id_reason_vacaciones THEN
                 -- Obtener carry anterior
                 SET v_carry = (SELECT IFNULL((
@@ -1987,11 +1887,7 @@ BEGIN
 
               SET message = 'Permiso solicitado exitosamente.';
               SET success = TRUE;
-            END IF;
-          END IF;
-        ELSE
-          SET message = 'Solo aplica para dias laborables';
-          SET success = FALSE;
+          	END IF;
         END IF;
       END IF;
     END IF;
@@ -2020,8 +1916,8 @@ CREATE PROCEDURE pa_updatePermissionState(
 BEGIN
   DECLARE v_id_employee INT;
   DECLARE v_id_reason INT;
-  DECLARE v_workingDays DECIMAL(10,2);
-  DECLARE v_weekendDays DECIMAL(10,2);
+  DECLARE v_workingDays DECIMAL(10,3);
+  DECLARE v_weekendDays DECIMAL(10,3);
   DECLARE v_id_vacationPeriod INT;
   DECLARE v_state_permission CHAR(1);
   DECLARE v_id_reason_vacaciones INT;
@@ -2307,13 +2203,14 @@ SELECT
     CONCAT(e.name_employee, ' ', e.lastName_employee) AS full_name,
     DATE_FORMAT(v.startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod,
     DATE_FORMAT(v.endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
-    v.earnedDays_vacationPeriod,
-    v.balanceDays_vacationPeriod,
-    v.balanceWorkingDays_vacationPeriod,
-    v.balanceWeekendDays_vacationPeriod,
+    IF(v.earnedDays_vacationPeriod = 0, 0, v.earnedDays_vacationPeriod) AS earnedDays_vacationPeriod,
+    IF(v.balanceDays_vacationPeriod = 0, 0, v.balanceDays_vacationPeriod) AS balanceDays_vacationPeriod,
+    IF(v.balanceWorkingDays_vacationPeriod = 0, 0, v.balanceWorkingDays_vacationPeriod) AS balanceWorkingDays_vacationPeriod,
+    IF(v.balanceWeekendDays_vacationPeriod = 0, 0, v.balanceWeekendDays_vacationPeriod) AS balanceWeekendDays_vacationPeriod,
     v.state_vacationPeriod
 FROM tb_vacationperiod v
 INNER JOIN tb_employee e ON v.id_employee = e.id_employee;
+
 
 
 CREATE VIEW vw_permissVacation AS
@@ -2324,14 +2221,15 @@ SELECT
   p.id_reason,
   DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
   p.state_permission,
-  p.workingDays_permission,
-  p.weekendDays_permission,
-  p.workingDays_permission + p.weekendDays_permission AS total,
+  IF(p.workingDays_permission = 0, 0, p.workingDays_permission) AS workingDays_permission,
+  IF(p.weekendDays_permission = 0, 0, p.weekendDays_permission) AS weekendDays_permission,
+  IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, p.workingDays_permission + p.weekendDays_permission) AS total,
   p.observation_permission
 FROM
   tb_permission p
 INNER JOIN
   tb_employee e ON p.id_employee = e.id_employee;
+
 
 
 
@@ -2346,9 +2244,9 @@ SELECT
   p.state_permission,
   IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
   IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
-  p.workingDays_permission,
-  p.weekendDays_permission,
-  p.workingDays_permission + p.weekendDays_permission AS total,
+  IF(p.workingDays_permission = 0, 0, p.workingDays_permission) AS workingDays_permission,
+  IF(p.weekendDays_permission = 0, 0, p.weekendDays_permission) AS weekendDays_permission,
+  IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, p.workingDays_permission + p.weekendDays_permission) AS total,
   p.observation_permission
 FROM
   tb_permission p
@@ -2371,8 +2269,8 @@ r.name_reason,
 p.observation_permission,
 IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
 IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
-p.workingDays_permission,
-p.weekendDays_permission,
+IF(p.workingDays_permission = 0, 0, p.workingDays_permission) AS workingDays_permission,
+IF(p.weekendDays_permission = 0, 0, p.weekendDays_permission) AS weekendDays_permission,
 COALESCE((SELECT SUM(v.balanceWorkingDays_vacationPeriod) FROM tb_vacationPeriod v WHERE v.id_employee = p.id_employee), 0) AS balanceWorkingDays_vacationPeriod,
 COALESCE((SELECT SUM(v.balanceWeekendDays_vacationPeriod) FROM tb_vacationPeriod v WHERE v.id_employee = p.id_employee), 0) AS balanceWeekendDays_vacationPeriod,
 p.state_permission,
@@ -2381,6 +2279,7 @@ FROM tb_permission p
 INNER JOIN tb_employee e ON p.id_employee = e.id_employee
 INNER JOIN tb_departament d ON d.id_departament = e.id_departament
 INNER JOIN tb_reason r ON r.id_reason = p.id_reason;
+
 
   
 
@@ -2456,13 +2355,14 @@ SELECT
     END AS state_permission,
     IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
     IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
-    p.workingDays_permission,
-    p.weekendDays_permission,
-   p.workingDays_permission + p.weekendDays_permission AS total
+    IF(p.workingDays_permission = 0, 0, p.workingDays_permission) AS workingDays_permission,
+    IF(p.weekendDays_permission = 0, 0, p.weekendDays_permission) AS weekendDays_permission,
+    IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, p.workingDays_permission + p.weekendDays_permission) AS total
 FROM tb_permission p
 INNER JOIN tb_employee e ON p.id_employee = e.id_employee
 INNER JOIN tb_departament d ON d.id_departament = e.id_departament
 ORDER BY p.startDateTime_permission ASC;
+
 
 
 /**********************************************************************************************

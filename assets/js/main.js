@@ -507,6 +507,10 @@ $(document).ready(function () {
 
   });
   $('#btnSendRequestPermissDay').click(function () {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+    
     var idEmployee = $('#idEmployee').val();
     var timeStart = $('#timeStart').val();
     var timeEnd = $('#timeEnd').val();
