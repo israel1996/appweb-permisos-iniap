@@ -143,6 +143,10 @@ if ($num_rows > 0) {
         <img src="./assets/icons/user-x.svg" alt="Desactivar">
         </button></td>';
 
+        $output['data'] .= '<td><button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalEmployeeCertificate" 
+        onclick="addToModalEmployeeCertificate(\'' . $datos . '\')"> <img src="./assets/icons/file-text.svg" alt="Certificate">
+        </button></td>';
+
         $output['data'] .= '</tr>';
     }
 } else {

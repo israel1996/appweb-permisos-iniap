@@ -2203,10 +2203,10 @@ SELECT
     CONCAT(e.name_employee, ' ', e.lastName_employee) AS full_name,
     DATE_FORMAT(v.startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod,
     DATE_FORMAT(v.endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
-    IF(v.earnedDays_vacationPeriod = 0, 0, v.earnedDays_vacationPeriod) AS earnedDays_vacationPeriod,
-    IF(v.balanceDays_vacationPeriod = 0, 0, v.balanceDays_vacationPeriod) AS balanceDays_vacationPeriod,
-    IF(v.balanceWorkingDays_vacationPeriod = 0, 0, v.balanceWorkingDays_vacationPeriod) AS balanceWorkingDays_vacationPeriod,
-    IF(v.balanceWeekendDays_vacationPeriod = 0, 0, v.balanceWeekendDays_vacationPeriod) AS balanceWeekendDays_vacationPeriod,
+    IF(v.earnedDays_vacationPeriod = 0, 0, ROUND(v.earnedDays_vacationPeriod, 2)) AS earnedDays_vacationPeriod,
+    IF(v.balanceDays_vacationPeriod = 0, 0, ROUND(v.balanceDays_vacationPeriod, 2)) AS balanceDays_vacationPeriod,
+    IF(v.balanceWorkingDays_vacationPeriod = 0, 0, ROUND(v.balanceWorkingDays_vacationPeriod, 2)) AS balanceWorkingDays_vacationPeriod,
+    IF(v.balanceWeekendDays_vacationPeriod = 0, 0, ROUND(v.balanceWeekendDays_vacationPeriod, 2)) AS balanceWeekendDays_vacationPeriod,
     v.state_vacationPeriod
 FROM tb_vacationperiod v
 INNER JOIN tb_employee e ON v.id_employee = e.id_employee;
@@ -2221,9 +2221,9 @@ SELECT
   p.id_reason,
   DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
   p.state_permission,
-  IF(p.workingDays_permission = 0, 0, p.workingDays_permission) AS workingDays_permission,
-  IF(p.weekendDays_permission = 0, 0, p.weekendDays_permission) AS weekendDays_permission,
-  IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, p.workingDays_permission + p.weekendDays_permission) AS total,
+  IF(p.workingDays_permission = 0, 0, ROUND(p.workingDays_permission, 2)) AS workingDays_permission,
+  IF(p.weekendDays_permission = 0, 0, ROUND(p.weekendDays_permission, 2)) AS weekendDays_permission,
+  IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, ROUND(p.workingDays_permission + p.weekendDays_permission, 2)) AS total,
   p.observation_permission
 FROM
   tb_permission p
@@ -2244,9 +2244,9 @@ SELECT
   p.state_permission,
   IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
   IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
-  IF(p.workingDays_permission = 0, 0, p.workingDays_permission) AS workingDays_permission,
-  IF(p.weekendDays_permission = 0, 0, p.weekendDays_permission) AS weekendDays_permission,
-  IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, p.workingDays_permission + p.weekendDays_permission) AS total,
+  IF(p.workingDays_permission = 0, 0, ROUND(p.workingDays_permission, 2)) AS workingDays_permission,
+  IF(p.weekendDays_permission = 0, 0, ROUND(p.weekendDays_permission, 2)) AS weekendDays_permission,
+  IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, ROUND(p.workingDays_permission + p.weekendDays_permission, 2)) AS total,
   p.observation_permission
 FROM
   tb_permission p
@@ -2256,25 +2256,26 @@ INNER JOIN
   tb_reason r ON r.id_reason = p.id_reason;
 
 
+
 CREATE VIEW vw_permissEmployeeReport AS
 SELECT 
-p.id_permission,
-p.issueNumber_permission,
-DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
-e.ci_employee,
-e.name_employee,
-e.lastName_employee,
-d.name_departament,
-r.name_reason,
-p.observation_permission,
-IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
-IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
-IF(p.workingDays_permission = 0, 0, p.workingDays_permission) AS workingDays_permission,
-IF(p.weekendDays_permission = 0, 0, p.weekendDays_permission) AS weekendDays_permission,
-COALESCE((SELECT SUM(v.balanceWorkingDays_vacationPeriod) FROM tb_vacationPeriod v WHERE v.id_employee = p.id_employee), 0) AS balanceWorkingDays_vacationPeriod,
-COALESCE((SELECT SUM(v.balanceWeekendDays_vacationPeriod) FROM tb_vacationPeriod v WHERE v.id_employee = p.id_employee), 0) AS balanceWeekendDays_vacationPeriod,
-p.state_permission,
-p.adminObservation_permission
+    p.id_permission,
+    p.issueNumber_permission,
+    DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
+    e.ci_employee,
+    e.name_employee,
+    e.lastName_employee,
+    d.name_departament,
+    r.name_reason,
+    p.observation_permission,
+    IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
+    IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
+    IF(p.workingDays_permission = 0, 0, ROUND(p.workingDays_permission, 2)) AS workingDays_permission,
+    IF(p.weekendDays_permission = 0, 0, ROUND(p.weekendDays_permission, 2)) AS weekendDays_permission,
+    ROUND(COALESCE((SELECT SUM(v.balanceWorkingDays_vacationPeriod) FROM tb_vacationPeriod v WHERE v.id_employee = p.id_employee), 0), 2) AS balanceWorkingDays_vacationPeriod,
+    ROUND(COALESCE((SELECT SUM(v.balanceWeekendDays_vacationPeriod) FROM tb_vacationPeriod v WHERE v.id_employee = p.id_employee), 0), 2) AS balanceWeekendDays_vacationPeriod,
+    p.state_permission,
+    p.adminObservation_permission
 FROM tb_permission p
 INNER JOIN tb_employee e ON p.id_employee = e.id_employee
 INNER JOIN tb_departament d ON d.id_departament = e.id_departament

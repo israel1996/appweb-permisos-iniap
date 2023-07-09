@@ -236,15 +236,6 @@ function addToModalUser(datos) {
 function addToModalPermissBack(datos) {
     d = datos.split('||');
 
-    $columns = [
-        'id_permissionBack',
-        'id_employee',
-        'fullname',
-        'issueDate_permissionBack',
-        'minDate_permissionBack',
-        'state_permissionBack'
-    ];
-
     var cadena = "id=" + d[1];
 
     let date = d[4];
@@ -265,6 +256,31 @@ function addToModalPermissBack(datos) {
             $('#nameEmployeePermissBacku').val(response.name_employee);
             $('#lastNameEmployeePermissBacku').val(response.lastName_employee);
             $('#departamentEmployeePermissBacku').val(response.name_departament);
+
+        },
+        error: function (xhr, status, error) {
+            // Manejar errores de la solicitud Ajax
+            console.log("Error en la solicitud Ajax:", error);
+        }
+    });
+}
+function addToModalEmployeeCertificate(datos) {
+    d = datos.split('||');
+
+    var cadena = "id=" + d[0];
+    $('#idEmployeeSelectedRow').val(d[0]);
+
+    $.ajax({
+        type: "POST",
+        data: cadena,
+        dataType: "json",
+        url: './assets/php/getDataEmployee.php',
+        success: function (response) {
+            $('#cedulaEmployeeCertificate').val(response.ci_employee);
+            $('#nameEmployeeCertificate').val(response.name_employee);
+            $('#lastNameEmployeeCertificate').val(response.lastName_employee);
+            $('#departamentEmployeeCertificate').val(response.name_departament);
+            $('#startDateEmployeeCertificate').val(response.startDate_employee);
 
         },
         error: function (xhr, status, error) {

@@ -47,27 +47,27 @@ $result = $conn->query($sql);
 
         $('#buscadorvivo').change(function () {
             var idEmployee = $(this).val();
-            var cadena = "id=" +idEmployee;
-            if(idEmployee != 0){
+            var cadena = "id=" + idEmployee;
+            if (idEmployee != 0) {
                 $.ajax({
-                type: "POST",
-                data: cadena,
-                dataType: "json",
-                url: './assets/php/getDataEmployee.php',
-                success: function (response) {
-                    $('#cedulaEmployeeVacation').val(response.ci_employee);
-                    $('#nameEmployeeVacation').val(response.name_employee);
-                    $('#lastNameEmployeeVacation').val(response.lastName_employee);
-                    $('#departamentEmployeeVacation').val(response.name_departament);
-                    
-                },
-                error: function (xhr, status, error) {
-                    // Manejar errores de la solicitud Ajax
-                    console.log("Error en la solicitud Ajax:", error);
-                }
-            });
+                    type: "POST",
+                    data: cadena,
+                    dataType: "json",
+                    url: './assets/php/getDataEmployee.php',
+                    success: function (response) {
+                        $('#cedulaEmployeeVacation').val(response.ci_employee);
+                        $('#nameEmployeeVacation').val(response.name_employee);
+                        $('#lastNameEmployeeVacation').val(response.lastName_employee);
+                        $('#departamentEmployeeVacation').val(response.name_departament);
 
-            $('#modalVacation').modal('show');
+                    },
+                    error: function (xhr, status, error) {
+                        // Manejar errores de la solicitud Ajax
+                        console.log("Error en la solicitud Ajax:", error);
+                    }
+                });
+
+                $('#modalVacation').modal('show');
             }
             $('#idEmployeeSelectedVacation').val(idEmployee);
             document.getElementById("pagina_vacation").value = 1;

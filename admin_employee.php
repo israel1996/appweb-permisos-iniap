@@ -42,6 +42,58 @@ require_once "assets/php/database.php";
 
   <section class="container" style="margin-top: 50px;">
 
+    <input type="hidden" id="idEmployeeSelectedRow" value="0">
+
+    <!-- Modal Generar Certificado -->
+    <div class="modal fade" id="modalEmployeeCertificate" tabindex="-1" aria-labelledby="modalEmployeeCertificateLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalEmployeeCertificateLabel">Generar Certificado</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <label for="cedulaEmployeeCertificate" class="form-label fw-bold">Cedula</label>
+                <input type="text" id="cedulaEmployeeCertificate" class="form-control" disabled>
+
+                <label for="nameEmployeeCertificate" class="form-label fw-bold">Nombres</label>
+                <input type="text" id="nameEmployeeCertificate" class="form-control" disabled>
+
+                <label for="lastNameEmployeeCertificate" class="form-label fw-bold">Apellidos</label>
+                <input type="text" id="lastNameEmployeeCertificate" class="form-control" disabled>
+              </div>
+
+              <div class="col-md-6">
+                <label for="departamentEmployeeCertificate" class="form-label fw-bold">Departamento</label>
+                <input type="text" name="departamentEmployeeCertificate" id="departamentEmployeeCertificate" class="form-control"
+                  disabled>
+
+                <label for="startDateEmployeeCertificate" class="form-label  fw-bold">Fecha de Inicio Laboral</label>
+                <input type="date" name="startDateEmployeeCertificate" class="form-control" id="startDateEmployeeCertificate"
+                  disabled>
+
+                <br />
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="chRMU"
+                    style="width: 20px; height: 20px; border: 2px solid #969696;">
+                  <label class="form-check-label fw-bold" for="chRMU">Remuneración</label>
+                </div>
+
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="btnGenerateCertificate" class="btn btn-success w-100">Generar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Boton de Agregar, seleccionador de Registros y busqueda -->
     <div class="row g-4">
       <div class="col-auto">
@@ -80,12 +132,13 @@ require_once "assets/php/database.php";
               <th class="align-middle">Cédula</th>
               <th class="align-middle">Nombres</th>
               <th class="align-middle">Apellidos</th>
-              <th class="align-middle">Departamento</th>      
+              <th class="align-middle">Departamento</th>
               <th class="align-middle">Tipo de Código</th>
               <th class="align-middle">Cargo</th>
               <th class="align-middle">F. Inicio Laboral</th>
               <th class="align-middle">Editar</th>
-              <th class="align-middle">Desactivar</th>
+              <th class="align-middle">Desactivar Periodos</th>
+              <th class="align-middle">Certificado</th>
             </tr>
           </thead>
           <tbody id="content">
@@ -205,7 +258,7 @@ require_once "assets/php/database.php";
 
               </div>
               <div class="col-md-6">
-              <label for="nombreEmpleado" class="form-label fw-bold">Nombres</label>
+                <label for="nombreEmpleado" class="form-label fw-bold">Nombres</label>
                 <input type="text" name="single-text" id="nombreEmpleado" class="form-control">
 
                 <label for="apellidoEmpleado" class="form-label fw-bold">Apellidos</label>

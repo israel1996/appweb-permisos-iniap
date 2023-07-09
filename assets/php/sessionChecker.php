@@ -23,7 +23,7 @@ if (!isset($_SESSION["user"])) {
 $pages_user_can_access = array(
     ADMIN => array("admin_datamaster.php", "admin_discount.php", "admin_employee.php", "admin_periods.php", 
     "admin_permise.php", "admin_permissBack.php", "admin_user.php", "admin_vacation.php", "admin_logos.php", "admin_report_general.php", 
-    "admin_report_permiss.php", "admin_report_departament.php", "admin_report_employee.php", "admin_certificate.php", "index.php"),
+    "admin_report_permiss.php", "admin_report_departament.php", "admin_report_employee.php", "index.php"),
     EMPLEADO => array("employee_balance.php", "employee_permise.php", "index.php")
 );
 
