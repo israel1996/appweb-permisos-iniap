@@ -1,8 +1,0 @@
-Pasos:
-
-1. Crear base de datos con el nombre    iniap
-2. En la clase database.php cambiar parametros de conexión
-3. Copiar todo de BD Iniap Pichilingue.txt y ejecutarlo
-4. Copiar todo de Procedures.txt y ejecutarlo
-5. Copiar todo de Datos iniciales.txt y ejecutarlo
-6. La clave de acceso de todos los usuarios es iniap

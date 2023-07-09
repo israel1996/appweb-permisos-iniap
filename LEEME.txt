@@ -1,0 +1,5 @@
+Pasos:
+
+1. Copiar script en   script_bd/All_Scripts  y ejecutarlo en el DBMS Mysql.
+2. En   assets/php/database   database.php cambiar parametros de conexión
+6. La clave de acceso de todos los usuarios es iniap
