@@ -2332,13 +2332,14 @@ d.id_departament,
 d.name_departament,
 DATE_FORMAT(vp.startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod,
 DATE_FORMAT(vp.endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
-vp.balanceWorkingDays_vacationPeriod,
-vp.balanceWeekendDays_vacationPeriod,
-vp.balanceDays_vacationPeriod
+IF(vp.balanceWorkingDays_vacationPeriod = 0, 0, ROUND(vp.balanceWorkingDays_vacationPeriod, 2)) AS balanceWorkingDays_vacationPeriod,
+IF(vp.balanceWeekendDays_vacationPeriod = 0, 0, ROUND(vp.balanceWeekendDays_vacationPeriod, 2)) AS balanceWeekendDays_vacationPeriod,
+IF(vp.balanceDays_vacationPeriod = 0, 0, ROUND(vp.balanceDays_vacationPeriod, 2)) AS balanceDays_vacationPeriod
 FROM tb_employee e INNER JOIN tb_vacationperiod vp
 ON e.id_employee = vp.id_employee INNER JOIN tb_departament d 
 ON d.id_departament = e.id_departament
 WHERE vp.state_vacationPeriod = 1;
+
 
 
 CREATE VIEW vw_reportPermiss AS
@@ -2355,9 +2356,9 @@ SELECT
     END AS state_permission,
     IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
     IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
-    IF(p.workingDays_permission = 0, 0, p.workingDays_permission) AS workingDays_permission,
-    IF(p.weekendDays_permission = 0, 0, p.weekendDays_permission) AS weekendDays_permission,
-    IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, p.workingDays_permission + p.weekendDays_permission) AS total
+    IF(p.workingDays_permission = 0, 0, ROUND(p.workingDays_permission, 2)) AS workingDays_permission,
+    IF(p.weekendDays_permission = 0, 0, ROUND(p.weekendDays_permission, 2)) AS weekendDays_permission,
+    IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, ROUND(p.workingDays_permission + p.weekendDays_permission, 2)) AS total
 FROM tb_permission p
 INNER JOIN tb_employee e ON p.id_employee = e.id_employee
 INNER JOIN tb_departament d ON d.id_departament = e.id_departament
