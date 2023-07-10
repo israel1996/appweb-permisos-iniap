@@ -971,4 +971,19 @@ $(document).ready(function () {
       toastr.error("Seleccione un Empleado", "MENSAJE");
     }
   });
+  $("#btnGenerateCertificate").click(function () {
+    toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = "toast-bottom-right";
+    toastr.options.closeButton = true;
+
+    var idEmployee = $("#idEmployeeSelectedRow").val();
+    var rmu = $("#chRMU").prop("checked");
+    
+    if (idEmployee != 0) {
+      generatePDFCertificate(idEmployee, rmu);
+    } else {
+      toastr.error("Seleccione un Empleado", "MENSAJE");
+    }
+  });
+
 });

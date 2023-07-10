@@ -1,10 +1,11 @@
 <?php
+session_start();
 require('libs/fpdf/fpdf.php');
 require_once('assets/php/database.php');
+require_once('assets/class/User.php');
 
 class PDF extends FPDF
 {
-
     function Header()
     {
         // Logo
@@ -31,14 +32,14 @@ class PDF extends FPDF
     }
 
     // Tabla simple
-    function BasicTable($data, $widths)
+    function BasicTable($dataEmployee, $dataAdmin)
     {
         $this->SetFont('Arial', 'B', 11);
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "INIAP-UATH-" . date('Y') . "-37-CER"), 0, 1, 'R');
         $this->SetFont('Arial', '', 10);
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Mocache, 09 de junio de 2023"), 0, 1, 'R');
         $this->Ln();
-        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "El Ing. Carlos Macías Loor, Responsable de Administración del Talento Humano, a petición de la interesada"), 0, 1, 'L');
+        $this->MultiCell(0, 5, iconv('UTF-8', 'windows-1252', "El o La Ingeniero/a ". $dataAdmin['fullname'] .", Responsable de Administración del Talento Humano, a petición de la interesada"), 0, 'L', 0);
         $this->SetFont('Arial', 'B', 11);
         $this->Ln();
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "CERTIFICA:"), 0, 1, 'C');
@@ -46,7 +47,7 @@ class PDF extends FPDF
         $this->SetFont('Arial', '', 10);
         $this->MultiCell(0, 5, iconv('UTF-8', 'windows-1252', "Que LLANOS SALAS MARIA ALEJANDRA con cédula de ciudadanía Nro. 12062470772, labora en esta Institución con la siguiente Información"), 0, 'L', 0);
         $this->Ln(5);
-        
+
         $this->SetFont('Arial', 'B', 10);
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Cargo"), 0, 1, 'L');
         $this->SetFont('Arial', '', 10);
@@ -66,7 +67,7 @@ class PDF extends FPDF
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Remuneración"), 0, 1, 'L');
         $this->SetFont('Arial', '', 10);
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Remuneración"), 0, 1, 'L');
-        
+
         $this->Ln(5);
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Tal como consta en los registros de esta Unidad."), 0, 1, 'L');
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Es todo en cuanto puedo infromar en honor a la verdad."), 0, 1, 'L');
@@ -100,50 +101,42 @@ class PDF extends FPDF
 }
 
 //Captura de parámetros
+$idAdmin = 0;
+$idEmployee = 0;
+$rmu = false;
 
-$search = "";
-$numRows = 0;
+if (isset($_SESSION['user'])) {
+    $user = unserialize($_SESSION['user']);
+    $idAdmin = $user->getIdEmployee();
+} 
 
-if (isset($_GET['search'])) {
-    $search = $_GET['search'];
+if (isset($_GET['idEmployee'])) {
+    $idEmployee = $_GET['idEmployee'];
 }
-if (isset($_GET['numRows'])) {
-    $numRows = $_GET['numRows'];
-}
-
-// Consulta SQL
-$where = "";
-if ($search != "") {
-    $where = "WHERE  
-    LOWER(name_departament) LIKE LOWER('%" . $search . "%') OR 
-    balanceWorkingDays_vacationPeriod LIKE '%" . $search . "%' OR 
-    balanceWeekendDays_vacationPeriod LIKE '%" . $search . "%' OR 
-    balanceDays_vacationPeriod LIKE '%" . $search . "%' ";
-}
-$limit = "";
-if ($numRows != 0) {
-    $limit = "LIMIT " . $numRows;
+if (isset($_GET['rmu'])) {
+    $rmu = $_GET['rmu'];
 }
 
 $sql = "SELECT 
+id_employee,
+ci_employee,
+fullname,
+name_jobTitle,
+startDate_employee,
 name_departament,
-balanceWorkingDays_vacationPeriod,
-balanceWeekendDays_vacationPeriod,
-balanceDays_vacationPeriod
-FROM vw_reportDepartament " . $where . " " . $limit;
+salary_employee
+FROM vw_dataEmloyeeCertificate ";
 
+$sql_employee = $sql . "WHERE id_employee = " . $idEmployee;
+$sql_admin = $sql . "WHERE id_employee = " . $idAdmin;
 
-
-// Títulos de las columnas
-$header = array('Departamento', 'Laborables', 'Fine de Semana', 'Saldos Totales');
-// Ancho de las columnas
-$widths = array(100, 30, 30, 30);
-
-// Datos del permiso
-$stmt = $conn->prepare($sql);
+$stmt = $conn->prepare($sql_employee);
 $stmt->execute();
-//fetching all rows
-$results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$dataEmployee = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$stmt = $conn->prepare($sql_admin);
+$stmt->execute();
+$dataAdmin = $stmt->fetch(PDO::FETCH_ASSOC);
 
 
 //Generar pdf
@@ -153,8 +146,8 @@ $pdf = new PDF('P', 'mm', 'A4');
 // Carga de datos
 $pdf->SetFont('Arial', '', 10);
 $pdf->AddPage();
-$pdf->BasicTable($results, $widths);
+$pdf->BasicTable($dataEmployee, $dataAdmin);
 
 // Generar el archivo PDF
-$pdf->Output('reporte_general.pdf', 'I');
+$pdf->Output('certificado.pdf', 'I');
 ?>

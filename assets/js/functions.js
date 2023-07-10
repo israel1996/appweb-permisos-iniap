@@ -1450,6 +1450,15 @@ function generatePDFReportEmployee(search, numRows) {
     $('#modalReportEmployee').modal('show');
 
 }
+function generatePDFCertificate(idEmployee, rmu) {
+    // Definir la URL del script PHP
+    var url = "report_certificate.php";
+    // Crear la URL completa con el parámetro
+    var fullUrl = url + "?idEmployee=" + encodeURIComponent(idEmployee) + "&rmu=" + encodeURIComponent(rmu);
+    // Abrir una nueva ventana o pestaña del navegador con la URL completa
+    window.open(fullUrl, "_blank");
+
+}
 
 
 
