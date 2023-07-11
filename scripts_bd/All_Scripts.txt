@@ -1266,7 +1266,6 @@ DELIMITER ;
 
 
 
-
 DELIMITER $$
 
 CREATE PROCEDURE pa_resetNumberPeriod()
@@ -1291,9 +1290,28 @@ BEGIN
         WHERE year_numberPeriod < thisYear;
 
         -- Crear un nuevo registro para este año
-        INSERT INTO tb_numberPeriod (year_numberPeriod, count_numberPeriod, state_numberPeriod)
-        VALUES (thisYear, 0, TRUE);
+        INSERT INTO tb_numberPeriod (year_numberPeriod, countCertificate_numberPeriod, count_numberPeriod, state_numberPeriod)
+        VALUES (thisYear, 0, 0, TRUE);
     END IF;
+END $$
+
+DELIMITER ;
+
+
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_incrementCountCertificate()
+BEGIN
+    DECLARE thisYear YEAR;
+
+    -- Obtener el año actual
+    SET thisYear = YEAR(CURDATE());
+
+    -- Incrementar el valor de countCertificate_numberPeriod para este año
+    UPDATE tb_numberPeriod
+    SET countCertificate_numberPeriod = countCertificate_numberPeriod + 1
+    WHERE year_numberPeriod = thisYear AND state_numberPeriod = TRUE;
 END $$
 
 DELIMITER ;
@@ -2366,6 +2384,25 @@ INNER JOIN tb_departament d ON d.id_departament = e.id_departament
 ORDER BY p.startDateTime_permission ASC;
 
 
+CREATE VIEW vw_dataEmloyeeCertificate AS
+SELECT 
+    e.id_employee,
+    e.ci_employee,
+    CONCAT(e.lastName_employee, ' ', e.name_employee) AS fullname,
+    CONCAT(SUBSTRING_INDEX(e.name_employee, ' ', 1), ' ', SUBSTRING_INDEX(e.lastName_employee, ' ', 1)) AS fullname_inv,
+    CONCAT(SUBSTRING_INDEX(e.name_employee, ' ', 1), ' ', SUBSTRING_INDEX(e.lastName_employee, ' ', -1)) AS fullname_inv2,
+    jt.name_jobTitle,
+    DATE_FORMAT(e.startDate_employee, '%d/%m/%Y') AS startDate_employee,
+    d.name_departament,
+    e.salary_employee,
+    (SELECT np.countCertificate_numberPeriod FROM tb_numberPeriod np WHERE np.year_numberPeriod = YEAR(CURDATE()) AND np.state_numberPeriod = TRUE) AS countCertificate_numberPeriod
+FROM tb_employee e 
+INNER JOIN tb_jobtitle jt ON e.id_jobTitle = jt.id_jobTitle
+INNER JOIN tb_departament d ON e.id_departament = d.id_departament;
+
+
+
+
 
 /**********************************************************************************************
  ***                                                                                         **
@@ -2391,7 +2428,7 @@ INSERT INTO tb_typecontract (name_typeContract) VALUES('Servicios Ocasionales');
 
 
 -- ---------------------------CONTADOR DE PERIODO---------------------------------------------
-INSERT INTO tb_numberPeriod (year_numberPeriod, count_numberPeriod, state_numberPeriod) VALUES (YEAR(CURRENT_DATE()), 0, 1);
+INSERT INTO tb_numberPeriod (year_numberPeriod, countCertificate_numberPeriod, count_numberPeriod, state_numberPeriod) VALUES (YEAR(CURRENT_DATE()), 0, 0, 1);
 
 -- ---------------------------RAZONES----------------------------------------------------
 INSERT INTO tb_reason (name_reason) VALUES ('Comparecencia para versión en trámite judicial');
