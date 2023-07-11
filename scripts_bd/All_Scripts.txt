@@ -2390,7 +2390,7 @@ SELECT
     e.ci_employee,
     CONCAT(e.lastName_employee, ' ', e.name_employee) AS fullname,
     CONCAT(SUBSTRING_INDEX(e.name_employee, ' ', 1), ' ', SUBSTRING_INDEX(e.lastName_employee, ' ', 1)) AS fullname_inv,
-    CONCAT(SUBSTRING_INDEX(e.name_employee, ' ', 1), ' ', SUBSTRING_INDEX(e.lastName_employee, ' ', -1)) AS fullname_inv2,
+    CONCAT(SUBSTRING_INDEX(e.name_employee, ' ', 1), ' ', e.lastName_employee) AS fullname_inv2,
     jt.name_jobTitle,
     DATE_FORMAT(e.startDate_employee, '%d/%m/%Y') AS startDate_employee,
     d.name_departament,
