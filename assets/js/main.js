@@ -261,14 +261,14 @@ $(document).ready(function () {
       idTipoContrato !== "" &&
       idDepartamento !== "" &&
       idJobTitle !== "" &&
-      cedulaEmpleado !== "" &&
-      nombreEmpleado !== "" &&
-      apellidoEmpleado !== "" &&
+      cedulaEmpleado.trim() !== "" &&
+      nombreEmpleado.trim() !== "" &&
+      apellidoEmpleado.trim() !== "" &&
       fechaInicioLaboral !== "" &&
-      telefonoEmpleado !== "" &&
-      direccionEmpleado !== "" &&
-      emailEmpleado !== "" &&
-      salary !== ""
+      telefonoEmpleado.trim() !== "" &&
+      direccionEmpleado.trim() !== "" &&
+      emailEmpleado.trim() !== "" &&
+      salary.trim() !== ""
     ) {
       if (validateCedula(cedulaEmpleado.trim())) {
         var emailPattern = /^[^\s@]+@iniap\.gob\.ec$/;
@@ -367,7 +367,7 @@ $(document).ready(function () {
     }
   });
   $("#btnChangePassword").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -430,7 +430,7 @@ $(document).ready(function () {
 
   //Enviar datos para Gestión de Departamentos
   $("#btnAddDepartament").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -443,7 +443,7 @@ $(document).ready(function () {
     }
   });
   $("#btnUpdateDepartament").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -486,7 +486,7 @@ $(document).ready(function () {
   });
   //Enviar datos para Gestión de Cargos
   $("#btnAddJobTitle").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -499,7 +499,7 @@ $(document).ready(function () {
     }
   });
   $("#btnUpdateJobTitle").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -517,7 +517,7 @@ $(document).ready(function () {
 
   //Enviar datos para Gestion de permisos - EMPLEADO
   $("#btnSendRequestPermissDate").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = false;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -529,7 +529,7 @@ $(document).ready(function () {
       idEmployee != 0 &&
       rangeDate !== "" &&
       idReason !== "" &&
-      observation !== ""
+      observation.trim() !== ""
     ) {
       dates = rangeDate.split("-");
       startDate = moment(dates[0].trim(), "DD/MM/YYYY").format("YYYY-MM-DD");
@@ -551,7 +551,7 @@ $(document).ready(function () {
     }
   });
   $("#btnSendRequestPermissDay").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = false;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -567,7 +567,7 @@ $(document).ready(function () {
       timeStart !== "" &&
       timeEnd !== "" &&
       idReason !== "" &&
-      observation !== ""
+      observation.trim() !== ""
     ) {
       dateDay = moment(dateDay, "DD/MM/YYYY").format("YYYY-MM-DD");
       timeStart = convertirFormatoAMPMa24Horas(timeStart);
@@ -594,7 +594,7 @@ $(document).ready(function () {
 
   //Enviar datos para Permiso de Descuento - ADMIN
   $("#btnEmployeeDiscountDate").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = false;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -604,7 +604,7 @@ $(document).ready(function () {
     var observation = $("#txtObservationDiscountDate").val();
 
     if (idEmployee != 0) {
-      if (rangeDate !== "" && idReason !== "" && observation !== "") {
+      if (rangeDate !== "" && idReason !== "" && observation.trim() !== "") {
         var dates = rangeDate.split("-");
         var startDate = moment(dates[0].trim(), "DD/MM/YYYY").format(
           "YYYY-MM-DD"
@@ -632,7 +632,7 @@ $(document).ready(function () {
     }
   });
   $("#btnEmployeeDiscountDay").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = false;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -649,7 +649,7 @@ $(document).ready(function () {
         timeEnd !== "" &&
         dateDay !== "" &&
         idReason !== "" &&
-        observation !== ""
+        observation.trim() !== ""
       ) {
         dateDay = moment(dateDay, "DD/MM/YYYY").format("YYYY-MM-DD");
         timeStart = convertirFormatoAMPMa24Horas(timeStart);
@@ -679,7 +679,7 @@ $(document).ready(function () {
 
   //Enviar datos para Vacaciones - ADMIN
   $("#btnSendRequestPermissDateVacation").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -744,7 +744,7 @@ $(document).ready(function () {
 
   //Enviar datos para Gestión de Periodos - ADMIN
   $("#btnGeneratePeriods").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -758,7 +758,7 @@ $(document).ready(function () {
     }
   });
   $("#btnOptionsPeriod").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -788,7 +788,7 @@ $(document).ready(function () {
     }
   });
   $("#btnUpadatePeriod").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -852,7 +852,7 @@ $(document).ready(function () {
 
   //Enviar datos para habilitar fecha de permiso atrasado - ADMIN
   $("#btnEmployeePermissBack").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -869,7 +869,7 @@ $(document).ready(function () {
     }
   });
   $("#btnEmployeePermissBacku").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -889,7 +889,7 @@ $(document).ready(function () {
 
   //Enviar datos para subir logos
   $("#btnUploadMainLogo").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -903,7 +903,7 @@ $(document).ready(function () {
     }
   });
   $("#btnUploadLogoHeader").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -917,7 +917,7 @@ $(document).ready(function () {
     }
   });
   $("#btnUploadLogoFooter").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -945,7 +945,7 @@ $(document).ready(function () {
     generatePDFReportPermiss(search, numRows, startDate, endDate);
   });
   $("#btnReportDepartament").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -959,7 +959,7 @@ $(document).ready(function () {
     }
   });
   $("#btnReportEmployee").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 
@@ -972,7 +972,7 @@ $(document).ready(function () {
     }
   });
   $("#btnGenerateCertificate").click(function () {
-    toastr.options.preventDuplicates = true;
+    //toastr.options.preventDuplicates = true;
     toastr.options.positionClass = "toast-bottom-right";
     toastr.options.closeButton = true;
 

@@ -20,34 +20,27 @@ $id = 'id_vacationPeriod';
 $campo = isset($_POST['campo_period']) ? $_POST['campo_period'] : null;
 $idEmployeeSelectedPeriod = isset($_POST['idEmployeeSelectedPeriod']) ? $_POST['idEmployeeSelectedPeriod'] : null;
 
-$where = '';
+$where = [];
 $params = [];
 
 //Busqueda
 if ($campo != null) {
-    $where = "WHERE (";
-
-    $cont = count($columns);
-    for ($i = 0; $i < $cont; $i++) {
-        $where .= $columns[$i] . " LIKE :campo$i OR ";
+    $temp_where = [];
+    for ($i = 0; $i < count($columns); $i++) {
+        $temp_where[] = $columns[$i] . " LIKE :campo$i";
         $params[":campo$i"] = "%{$campo}%";
     }
-    $where = substr_replace($where, "", -3);
-    $where .= ")";
+    $where[] = "(" . implode(' OR ', $temp_where) . ")";
 }
-
-if ($where != '') {
-    $where .= " AND state_vacationPeriod = 1";
-} else {
-    $where = "WHERE state_vacationPeriod = 1";
-}
-
 
 if ($idEmployeeSelectedPeriod != null && $idEmployeeSelectedPeriod != 0) {
-    $where = "WHERE id_employee = :idEmployeeSelectedPeriod";
+    $where[] = "id_employee = :idEmployeeSelectedPeriod";
     $params[':idEmployeeSelectedPeriod'] = $idEmployeeSelectedPeriod;
+} else {
+    $where[] = "state_vacationPeriod = 1";
 }
 
+$where = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
 $limit = isset($_POST['registros_period']) ? $_POST['registros_period'] : 10;
 $pagina = isset($_POST['pagina_period']) ? $_POST['pagina_period'] : 0;
@@ -93,10 +86,12 @@ $sqlFiltro = "SELECT FOUND_ROWS()";
 $stmtFiltro = $conn->query($sqlFiltro);
 $totalFiltro = $stmtFiltro->fetchColumn();
 
-// Actualizar el cálculo del total de registros y el total de páginas
 $sqlTotal = "SELECT count($id) FROM $table $where";
 $stmtTotal = $conn->prepare($sqlTotal);
-$stmtTotal->execute($params);
+foreach ($params as $key => &$value) {
+    $stmtTotal->bindParam($key, $value);
+}
+$stmtTotal->execute();
 $totalRegistros = $stmtTotal->fetchColumn();
 
 $output = [];
