@@ -2411,6 +2411,18 @@ INNER JOIN tb_jobtitle jt ON e.id_jobTitle = jt.id_jobTitle
 INNER JOIN tb_departament d ON e.id_departament = d.id_departament;
 
 
+CREATE VIEW vw_balanceEmployee AS
+SELECT 
+		id_employee,
+		DATE_FORMAT(startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod,
+		DATE_FORMAT(endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
+		IF(balanceWorkingDays_vacationPeriod = 0, 0, ROUND(balanceWorkingDays_vacationPeriod, 2)) AS balanceWorkingDays_vacationPeriod,
+		IF(balanceWeekendDays_vacationPeriod = 0, 0, ROUND(balanceWeekendDays_vacationPeriod, 2)) AS balanceWeekendDays_vacationPeriod,
+      IF(balanceDays_vacationPeriod = 0, 0, ROUND(balanceDays_vacationPeriod, 2)) AS balanceDays_vacationPeriod,
+      state_vacationPeriod
+                FROM tb_vacationperiod;
+
+
 
 
 

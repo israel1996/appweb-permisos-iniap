@@ -31,7 +31,7 @@ if (isset($_SESSION['user'])) {
                 balanceWorkingDays_vacationPeriod,
                 balanceWeekendDays_vacationPeriod,
                 balanceDays_vacationPeriod
-                FROM tb_vacationperiod
+                FROM vw_balanceEmployee
                 WHERE state_vacationPeriod = 1 AND id_employee = " . $idEmployee;
                 $stmt = $conn->prepare($sql);
                 $stmt->execute();
