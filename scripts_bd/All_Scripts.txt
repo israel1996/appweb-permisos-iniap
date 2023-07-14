@@ -60,6 +60,8 @@ CREATE TABLE `tb_permission` (
   `workingDays_permission` decimal(10,3),
   `weekendDays_permission` decimal(10,3),
   `carry_permission` decimal(10,3),
+  `balanceWorkingDays_permission` decimal(10,3),
+  `balanceWeekendDays_permission` decimal(10,3),
   `observation_permission` text,
   `adminObservation_permission` text
 );
@@ -93,37 +95,9 @@ CREATE TABLE `tb_jobTitle` (
   `name_jobTitle` text
 );
 
-CREATE TABLE `tb_paymentRole` (
-  `id_paymentRole` int PRIMARY KEY AUTO_INCREMENT,
-  `id_employee` int,
-  `issueDate_paymentRole` date,
-  `year_paymentRole` char(4)
-);
-
-CREATE TABLE `tb_paymentRole_detail` (
-  `id_paymentRole_detail` int PRIMARY KEY AUTO_INCREMENT,
-  `id_paymentRole` int,
-  `rmu_nominal` decimal(10,2),
-  `rmu` decimal(10,2),
-  `sueldo_encargo` decimal(10,2),
-  `mes_decimos` decimal(10,2),
-  `total_ingresos` decimal(10,2),
-  `aporte_iess` decimal(10,2),
-  `prestamo_quirografario` decimal(10,2),
-  `prestamo_hipotecario` decimal(10,2),
-  `impuesto_renta_mes` decimal(10,2),
-  `anticipo` decimal(10,2),
-  `viaticos_inj` decimal(10,2),
-  `aso_empleados` decimal(10,2),
-  `juzg_ninez` decimal(10,2),
-  `cob_salud` decimal(10,2),
-  `sindicato` decimal(10,2),
-  `sancion_pecuniaria` decimal(10,2),
-  `sub_enfermedad` decimal(10,2),
-  `ley_con_sol` decimal(10,2),
-  `uniformes` decimal(10,2),
-  `total_egresos` decimal(10,2),
-  `total_recibir` decimal(10,2)
+CREATE TABLE `tb_abbrJob` (
+  `id_abbrJob` int PRIMARY KEY AUTO_INCREMENT,
+  `name_abbrJob` text
 );
 
 CREATE TABLE `tb_vacationPeriod` (
@@ -175,13 +149,8 @@ ALTER TABLE `tb_permission` ADD FOREIGN KEY (`id_numberPeriod`) REFERENCES `tb_n
 
 ALTER TABLE `tb_permissionBack` ADD FOREIGN KEY (`id_employee`) REFERENCES `tb_employee` (`id_employee`);
 
-ALTER TABLE `tb_paymentRole` ADD FOREIGN KEY (`id_employee`) REFERENCES `tb_employee` (`id_employee`);
-
-ALTER TABLE `tb_paymentRole_detail` ADD FOREIGN KEY (`id_paymentRole`) REFERENCES `tb_paymentRole` (`id_paymentRole`);
-
 ALTER TABLE `tb_vacationPeriod` ADD FOREIGN KEY (`id_employee`) REFERENCES `tb_employee` (`id_employee`);
 
-ALTER TABLE `tb_audit` ADD FOREIGN KEY (`id_user`) REFERENCES `tb_user` (`id_user`);
 
 
 
@@ -1677,13 +1646,11 @@ BEGIN
       SET message = 'No tiene periodo de vacaciones activo';
       SET success = FALSE;
     ELSE
-      -- Seleccionan el periodo más antiguo activo
-      SELECT id_vacationPeriod, balanceDays_vacationPeriod, balanceWorkingDays_vacationPeriod, balanceWeekendDays_vacationPeriod
-      INTO v_id_vacationPeriod, v_balanceDays, v_balanceWorkingDays, v_balanceWeekendDays
-      FROM tb_vacationPeriod
-      WHERE id_employee = p_id_employee AND state_vacationPeriod = TRUE 
-      ORDER BY endDate_vacationPeriod ASC
-      LIMIT 1;
+    	-- Obtener los saldos de los periodos activos
+      SELECT SUM(balanceDays_vacationPeriod), SUM(balanceWorkingDays_vacationPeriod), SUM(balanceWeekendDays_vacationPeriod)
+      INTO v_balanceDays, v_balanceWorkingDays, v_balanceWeekendDays
+      FROM tb_vacationperiod 
+		WHERE id_employee = p_id_employee AND state_vacationPeriod = TRUE;
       -- Obtener el id_numberPeriod activo
       SELECT id_numberPeriod
       INTO v_id_numberPeriod
@@ -1760,6 +1727,8 @@ BEGIN
                   workingDays_permission,
                   weekendDays_permission,
                   carry_permission,
+                  balanceWorkingDays_permission,
+                  balanceWeekendDays_permission,
                   observation_permission
                 )
                 VALUES (
@@ -1773,6 +1742,8 @@ BEGIN
                   v_workingDays,
                   v_weekendDays,
                   v_carry,
+                  v_balanceWorkingDays,
+                  v_balanceWeekendDays,
                   p_observation_permission
                 );
                 -- Actualizar el contador en tb_numberPeriod
@@ -1878,6 +1849,8 @@ BEGIN
                   workingDays_permission,
                   weekendDays_permission,
                   carry_permission,
+                  balanceWorkingDays_permission,
+                  balanceWeekendDays_permission,
                   observation_permission
                 )
                 VALUES (
@@ -1891,6 +1864,8 @@ BEGIN
                   v_workingDays,
                   v_weekendDays,
                   v_carry,
+                  v_balanceWorkingDays,
+                  v_balanceWeekendDays,
                   p_observation_permission
                 );
                 
@@ -1926,9 +1901,6 @@ BEGIN
 END $$
 
 DELIMITER ;
-
-
-
 
 
 
@@ -2300,8 +2272,8 @@ SELECT
     IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
     IF(p.workingDays_permission = 0, 0, ROUND(p.workingDays_permission, 2)) AS workingDays_permission,
     IF(p.weekendDays_permission = 0, 0, ROUND(p.weekendDays_permission, 2)) AS weekendDays_permission,
-    ROUND(COALESCE((SELECT SUM(v.balanceWorkingDays_vacationPeriod) FROM tb_vacationPeriod v WHERE v.id_employee = p.id_employee), 0), 2) AS balanceWorkingDays_vacationPeriod,
-    ROUND(COALESCE((SELECT SUM(v.balanceWeekendDays_vacationPeriod) FROM tb_vacationPeriod v WHERE v.id_employee = p.id_employee), 0), 2) AS balanceWeekendDays_vacationPeriod,
+    IF(p.balanceWorkingDays_permission = 0, 0, ROUND(p.balanceWorkingDays_permission, 2)) AS balanceWorkingDays_permission,
+    IF(p.balanceWeekendDays_permission = 0, 0, ROUND(p.balanceWeekendDays_permission, 2)) AS balanceWeekendDays_permission,
     p.state_permission,
     p.adminObservation_permission
 FROM tb_permission p

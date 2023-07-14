@@ -9,7 +9,7 @@ class PDF extends FPDF
     function Header()
     {
         // Logo
-        $this->Image('assets/images/Logo_header.png', 10, 5, 60);
+        $this->Image('assets/images/Logo_header.png', 10, 5, 0, 0);
         $this->Ln(15);
 
     }
@@ -20,15 +20,7 @@ class PDF extends FPDF
         // Posición a 1,5 cm del final
         $this->SetY(-30);
         // Logotipo
-        $this->Image('assets/images/Logo_footer.png', 170, 270, 20);
-
-        // Texto del pie de página
-        $this->SetFont('Arial', 'I', 10);
-        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Instituto Nacional de Investigaciones Agropecuarias"), 0, 1, 'L');
-        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Dirección: Km 5 Vía Quevedo - El Empalme, Cantón Mocache,"), 0, 1, 'L');
-        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Provincia de los Rios"), 0, 1, 'L');
-        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Télefonos: 593-5-2783128 / 2783044"), 0, 1, 'L');
-        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "www.iniap.gob.ec"), 0, 1, 'L');
+        $this->Image('assets/images/Logo_footer.png', 0, 270, 0, 0);
     }
 
     // Tabla simple
@@ -95,6 +87,7 @@ class PDF extends FPDF
         }
         $this->Ln(5);
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Tal como consta en los registros de esta Unidad."), 0, 1, 'L');
+        $this->Ln(5);
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Es todo en cuanto puedo infromar en honor a la verdad."), 0, 1, 'L');
         $this->Ln(5);
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Atentamente."), 0, 1, 'C');
