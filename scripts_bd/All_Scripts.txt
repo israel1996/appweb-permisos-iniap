@@ -1133,10 +1133,8 @@ BEGIN
         			SET state_vacationPeriod = FALSE WHERE id_vacationPeriod = _id_vacationPeriod;
         		END IF;
         		-- Creación de nuevo periodo
-				IF @success = FALSE THEN
-					CALL pa_insertVacationPeriod(_id_employee, @message, @success);
-				END IF;
-
+				CALL pa_insertVacationPeriod(_id_employee, @message, @success);
+				
         -- Condicionales código de trabajo
         ELSEIF _id_codeType = 2 THEN
 			    -- Cantidad de periodos activos
@@ -1154,9 +1152,7 @@ BEGIN
         			SET state_vacationPeriod = 0 WHERE id_vacationPeriod = _id_vacationPeriod; 
 				END IF;
 				-- Creación de nuevo periodo
-				IF @success = FALSE THEN
-					CALL pa_insertVacationPeriod(_id_employee, @message, @success);
-				END IF;
+				CALL pa_insertVacationPeriod(_id_employee, @message, @success);
         END IF;
     END LOOP;
 
