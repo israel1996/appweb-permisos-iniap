@@ -363,8 +363,6 @@ BEGIN
         -- Deshabilitar usuario
         UPDATE tb_vacationPeriod
         SET 
-            earnedDays_vacationPeriod = 0,
-            balanceDays_vacationPeriod = 0,
             balanceWorkingDays_vacationPeriod = 0,
             balanceWeekendDays_vacationPeriod = 0,
             state_vacationPeriod = 0
@@ -1078,113 +1076,69 @@ CREATE PROCEDURE pa_assignVacationDays()
 BEGIN
     DECLARE done INT DEFAULT 0;
     DECLARE _id_employee INT;
-    DECLARE _start_date DATE;
     DECLARE _start_date_origin DATE;
-    DECLARE _end_date DATE;
-    DECLARE _earned_days_vacation INT;
-    DECLARE _balance_working_days INT;
     DECLARE _id_codeType INT;
     DECLARE _years_of_service INT;
     DECLARE _earned_days INT;
-    DECLARE _balance_days DECIMAL(10,3);
     DECLARE _working_days INT;
     DECLARE _weekend_days INT;
     DECLARE _balance_periods DECIMAL(10,3);
     DECLARE _id_vacationPeriod INT;
     DECLARE _count_periods INT;
     DECLARE cur CURSOR FOR
-	SELECT 
+	 SELECT 
 	    e.id_employee,
-	    vp.startDate_vacationPeriod,
-	    vp.endDate_vacationPeriod,
-	    vp.earnedDays_vacationPeriod,
-	    vp.balanceWorkingDays_vacationPeriod,
-	    e.id_codeType
-	FROM
-	    tb_employee e
-	INNER JOIN 
-	    tb_vacationPeriod vp ON e.id_employee = vp.id_employee
-	INNER JOIN
-	    (SELECT id_employee, MAX(startDate_vacationPeriod) as MaxStartDate
-	     FROM tb_vacationPeriod
-	     WHERE state_vacationPeriod = 1
-	     GROUP BY id_employee) subq ON e.id_employee = subq.id_employee AND vp.startDate_vacationPeriod = subq.MaxStartDate
-	WHERE
-	    vp.state_vacationPeriod = 1 AND DATEDIFF(CURDATE(), vp.endDate_vacationPeriod) >= 365; -- Periodo activo y busca al finalizar un año;
+	    e.id_codeType,
+	    e.startDate_employee
+	 FROM tb_employee e WHERE DATEDIFF(CURDATE(), e.startDate_employee) >= 365;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
     OPEN cur;
 
     read_loop: LOOP
-        FETCH cur INTO _id_employee, _start_date, _end_date, _earned_days_vacation, _balance_working_days, _id_codeType;
+        FETCH cur INTO _id_employee, _id_codeType, _start_date_origin;
         IF done THEN
             LEAVE read_loop;
         END IF;
         
-        -- Obtener fecha de inicio laboral
-        SET _start_date_origin = (SELECT startDate_employee FROM tb_employee WHERE id_employee = _id_employee);
-        
         -- Cacula tiempo tatal que lleva trabajando, en base al tiempo de inicio laboral, con el tiempo actual     
         SET _years_of_service = TIMESTAMPDIFF(YEAR, _start_date_origin, DATE_ADD(CURDATE(), INTERVAL 1 DAY));
         
+        -- Obtener numero de registros de la tabla de periodos
+        SET @num_rows = (SELECT COUNT(*) FROM tb_vacationperiod WHERE id_employee = _id_employee);
+        -- Ejecutar prodecimiento de generar periodos
+        SET @success = FALSE;
+        IF @num_rows = 0 THEN
+        		CALL pa_insertVacationPeriods(_id_employee, @message, @success);
+        END IF;
+        
         -- Suma de los saldso de los periodos
-   	  SET _balance_periods = (SELECT SUM(balanceDays_vacationPeriod) FROM tb_vacationPeriod
-		  WHERE id_employee = _id_employee AND state_vacationPeriod = 1);
+   	  SET _balance_periods = (SELECT IFNULL(SUM(balanceWorkingDays_vacationPeriod + balanceWeekendDays_vacationPeriod), 0)
+			FROM tb_vacationPeriod WHERE id_employee = _id_employee AND state_vacationPeriod = TRUE);
 		  
         -- Condicionales LOSEP
         IF _id_codeType = 1 THEN
-        		SET _earned_days = 30;
         		SET _working_days = 22;
         		SET _weekend_days = 8;
+        		SET _earned_days = _working_days + _weekend_days;
         		
 				-- Desactivación de periodo más antiguo
 				IF (_balance_periods + _earned_days) > 60 THEN
 					-- Captura el id, del periodo más antiguo, activo
 					SET _id_vacationPeriod = (SELECT id_vacationPeriod FROM tb_vacationPeriod
-					WHERE id_employee = _id_employee AND state_vacationPeriod = 1
+					WHERE id_employee = _id_employee AND state_vacationPeriod = TRUE
 					ORDER BY startDate_vacationPeriod ASC LIMIT 1);
 					-- Desactiva el periodo más antiguo
 					UPDATE tb_vacationPeriod 
-        			SET state_vacationPeriod = 0 WHERE id_vacationPeriod = _id_vacationPeriod;
+        			SET state_vacationPeriod = FALSE WHERE id_vacationPeriod = _id_vacationPeriod;
         		END IF;
-        		
         		-- Creación de nuevo periodo
-				INSERT INTO tb_vacationPeriod 
-				(id_employee, 
-				startDate_vacationPeriod, 
-				endDate_vacationPeriod, 
-				earnedDays_vacationPeriod, 
-				balanceDays_vacationPeriod, 
-				balanceWorkingDays_vacationPeriod,
-				balanceWeekendDays_vacationPeriod,
-				state_vacationPeriod)		
-				VALUES 
-				(_id_employee, 
-				DATE_ADD(_end_date, INTERVAL 1 DAY), 
-				DATE_ADD(DATE_ADD(_end_date, INTERVAL 1 YEAR),INTERVAL -1 DAY),
-				_earned_days, 
-				_earned_days, 
-				_working_days,
-				_weekend_days,
-				1);
-				
+				IF @success = FALSE THEN
+					CALL pa_insertVacationPeriod(_id_employee, @message, @success);
+				END IF;
+
         -- Condicionales código de trabajo
         ELSEIF _id_codeType = 2 THEN
-			    -- Asignación de dias de acuerdo al año
-			    IF _years_of_service >= 5 AND _years_of_service < 20 THEN
-			        SET _earned_days = _earned_days_vacation + 1;
-			        SET _working_days = _balance_working_days + 1;
-			        SET _weekend_days = 4;
-			    ELSEIF _years_of_service >= 20 THEN
-			        SET _earned_days = 30;
-			        SET _working_days = 26;
-			        SET _weekend_days = 4;
-			    ELSE
-			        SET _earned_days = 15;
-			        SET _working_days = 11;
-			        SET _weekend_days = 4;
-			    END IF;
-			    
 			    -- Cantidad de periodos activos
 			    SET _count_periods = (SELECT COUNT(*) FROM tb_vacationperiod 
 				 WHERE id_employee = _id_employee AND state_vacationPeriod = 1);
@@ -1200,25 +1154,9 @@ BEGIN
         			SET state_vacationPeriod = 0 WHERE id_vacationPeriod = _id_vacationPeriod; 
 				END IF;
 				-- Creación de nuevo periodo
-				INSERT INTO tb_vacationPeriod 
-				(id_employee, 
-				startDate_vacationPeriod, 
-				endDate_vacationPeriod, 
-				earnedDays_vacationPeriod, 
-				balanceDays_vacationPeriod, 
-				balanceWorkingDays_vacationPeriod,
-				balanceWeekendDays_vacationPeriod,
-				state_vacationPeriod)		
-				VALUES 
-				(_id_employee, 
-				DATE_ADD(_end_date, INTERVAL 1 DAY), 
-				DATE_ADD(DATE_ADD(_end_date, INTERVAL 1 YEAR),INTERVAL -1 DAY),
-				_earned_days, 
-				_earned_days, 
-				_working_days,
-				_weekend_days,
-				1);
-        		
+				IF @success = FALSE THEN
+					CALL pa_insertVacationPeriod(_id_employee, @message, @success);
+				END IF;
         END IF;
     END LOOP;
 
@@ -1309,12 +1247,14 @@ BEGIN
   DECLARE v_id_codeType INT;
   DECLARE v_maxYearCount INT;
   DECLARE v_earnedWorkingDays INT;
+  DECLARE v_earnedWeekendDays INT;
   DECLARE v_employeeEligible BOOLEAN DEFAULT TRUE;
-  
-  SET v_earnedWorkingDays = 11;
 
   -- Iniciar la transacción
   START TRANSACTION;
+  
+-- Obtener el tipo de còdigo del empleado
+  SELECT id_codeType INTO v_id_codeType FROM tb_employee WHERE id_employee = p_id_employee;
 
   -- Obtener la fecha de inicio del empleado
   SELECT startDate_employee INTO v_startDate FROM tb_employee WHERE id_employee = p_id_employee;
@@ -1332,19 +1272,29 @@ BEGIN
     SELECT COUNT(*) INTO v_exists FROM tb_vacationPeriod WHERE id_employee = p_id_employee;
 
     IF v_exists = 0 THEN
+    	-- Asignar el valor inicial de los dias laborables
+    	IF v_id_codeType = 1 THEN
+    		SET v_earnedWorkingDays = 22;
+    		SET v_earnedWeekendDays = 8;
+    	ELSEIF v_id_codeType = 2 THEN
+    		SET v_earnedWorkingDays = 11;
+    		SET v_earnedWeekendDays = 4;
+    	END IF;
       -- Insertar un período de vacaciones para cada año desde la fecha de inicio hasta un año antes de la fecha actual
       WHILE v_yearCount <= v_maxYearCount DO
         -- Establecer las fechas de inicio y fin para el período de vacaciones
         SET v_startDate_while = DATE_ADD(v_startDate, INTERVAL v_yearCount YEAR);
         SET v_endDate_while = DATE_SUB(DATE_ADD(v_startDate, INTERVAL (v_yearCount + 1) YEAR), INTERVAL 1 DAY);
-
-        -- Establecer los días acumulados y laborables para el id_codeType 2 a partir del sexto año
-        IF v_yearCount >= 5 AND v_yearCount < 20 THEN
-          SET v_earnedWorkingDays = v_earnedWorkingDays + 1;
-        ELSEIF v_yearCount >= 20 THEN
-          SET v_earnedWorkingDays = 26;
-        END IF;
-
+         -- En caso de ser còdigo de trabajo que haga los incrementos de acuerdo al tiempo
+		  	IF v_id_codeType = 2 THEN
+				-- Establecer los días acumulados y laborables para el id_codeType 2 a partir del sexto año
+        		IF v_yearCount >= 5 AND v_yearCount < 20 THEN
+          		SET v_earnedWorkingDays = v_earnedWorkingDays + 1;
+        		ELSEIF v_yearCount >= 20 THEN
+          		SET v_earnedWorkingDays = 26;
+        		END IF;
+    		END IF; 
+        
         -- Insertar el período de vacaciones
         INSERT INTO tb_vacationPeriod (
           id_employee,
@@ -1360,8 +1310,8 @@ BEGIN
           p_id_employee,
           v_startDate_while,
           v_endDate_while,
-          0,
-          0,
+          v_earnedWorkingDays,
+          v_earnedWeekendDays,
           0,
           0,
           FALSE
@@ -1374,9 +1324,7 @@ BEGIN
         SET v_yearCount = v_yearCount + 1;
       END WHILE;
 
-      -- Actualizar el último periodo de vacaciones con los valores especificados dependiendo del id_codeType
-      SELECT id_codeType INTO v_id_codeType FROM tb_employee WHERE id_employee = p_id_employee;
-
+     -- Actualizar el último periodo de vacaciones con los valores especificados dependiendo del id_codeType
       IF v_id_codeType = 1 THEN
         UPDATE tb_vacationPeriod 
         SET 
@@ -1464,15 +1412,27 @@ BEGIN
       AND endDate_vacationPeriod = v_endDate_currentYear;
 
     IF v_exists = 0 THEN
-      -- Establecer los valores de días según el codeType
-      IF v_codeType = 1 THEN
-        SET v_workingDays = 22;
-        SET v_weekendDays = 8;
-      ELSEIF v_codeType = 2 THEN
-        SET v_workingDays = 11;
-        SET v_weekendDays = 4;
-      END IF;
-
+    	IF @num_rows = 0 THEN
+    		-- Establecer los valores de días según el codeType
+      	IF v_codeType = 1 THEN
+        		SET v_workingDays = 22;
+        		SET v_weekendDays = 8;
+      	ELSEIF v_codeType = 2 THEN
+        		SET v_workingDays = 11;
+        		SET v_weekendDays = 4;
+      	END IF;
+      ELSE
+      	SELECT earnedWorkingDays_vacationPeriod, earnedWeekendDays_vacationPeriod
+			INTO v_workingDays, v_weekendDays FROM tb_vacationperiod 
+			WHERE id_employee = p_id_employee ORDER BY id_vacationPeriod DESC LIMIT 1;
+			IF v_codeType = 2 THEN
+        		IF v_yearCount >= 5 AND v_yearCount < 20 THEN
+          		SET v_workingDays = v_workingDays + 1;
+        		ELSEIF v_yearCount >= 20 THEN
+          		SET v_workingDays = 26;
+        		END IF;
+    		END IF;
+    	END IF;
       -- Insertar el período de vacaciones para el año actual
       INSERT INTO tb_vacationPeriod (
         id_employee,
@@ -1500,6 +1460,103 @@ BEGIN
     ELSE
       SET p_success = FALSE;
       SET p_message = "Ya existe un período de vacaciones para el año actual";
+    END IF;
+  END IF;
+END $$
+
+DELIMITER ;
+
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_insertVacationPeriod(
+  IN p_id_employee INT,
+  OUT p_message VARCHAR(255),
+  OUT p_success BOOLEAN
+)
+BEGIN
+  DECLARE v_yearCount INT;
+  DECLARE v_startDate DATE;
+  DECLARE v_startDate_currentYear DATE;
+  DECLARE v_endDate_currentYear DATE;
+  DECLARE v_exists INT;
+  DECLARE v_codeType INT;
+  DECLARE v_workingDays INT;
+  DECLARE v_weekendDays INT;
+  
+  -- Obtener la fecha de inicio del empleado y el codeType
+  SELECT startDate_employee, id_codeType INTO v_startDate, v_codeType FROM tb_employee WHERE id_employee = p_id_employee;
+
+  -- Obtener el año actual
+  SET v_yearCount = YEAR(CURDATE()) - YEAR(v_startDate);
+  
+  -- Obtener cantidad de registros de la tabla periodods
+  SET @num_rows = (SELECT COUNT(*) FROM tb_vacationperiod WHERE id_employee = p_id_employee);
+
+  -- Comprobar si el empleado tiene años de antigüedad
+  IF @num_rows = 0 AND v_yearCount > 0 THEN
+    SET p_success = FALSE;
+    SET p_message = "Primero debe generar los periodos";
+  ELSE
+    -- Establecer las fechas de inicio y fin para el período de vacaciones del año actual
+    SET v_startDate_currentYear = DATE_ADD(v_startDate, INTERVAL v_yearCount YEAR);
+    SET v_endDate_currentYear = DATE_SUB(DATE_ADD(v_startDate, INTERVAL (v_yearCount + 1) YEAR), INTERVAL 1 DAY);
+
+   -- Verificar si existen períodos de vacaciones anteriores al año actual
+    SELECT COUNT(*) INTO v_exists
+    FROM tb_vacationPeriod
+    WHERE id_employee = p_id_employee
+      AND startDate_vacationPeriod < v_startDate_currentYear;
+
+    IF v_exists = 0 THEN
+    	IF @num_rows = 0 THEN
+    		-- Establecer los valores de días según el codeType
+      	IF v_codeType = 1 THEN
+        		SET v_workingDays = 22;
+        		SET v_weekendDays = 8;
+      	ELSEIF v_codeType = 2 THEN
+        		SET v_workingDays = 11;
+        		SET v_weekendDays = 4;
+      	END IF;
+      ELSE
+      	SELECT earnedWorkingDays_vacationPeriod, earnedWeekendDays_vacationPeriod
+			INTO v_workingDays, v_weekendDays FROM tb_vacationperiod 
+			WHERE id_employee = p_id_employee ORDER BY id_vacationPeriod DESC LIMIT 1;
+			IF v_codeType = 2 THEN
+        		IF v_yearCount >= 5 AND v_yearCount < 20 THEN
+          		SET v_workingDays = v_workingDays + 1;
+        		ELSEIF v_yearCount >= 20 THEN
+          		SET v_workingDays = 26;
+        		END IF;
+    		END IF;
+    	END IF;
+      -- Insertar el período de vacaciones para el año actual
+      INSERT INTO tb_vacationPeriod (
+        id_employee,
+        startDate_vacationPeriod,
+        endDate_vacationPeriod,
+        earnedWorkingDays_vacationPeriod,
+        earnedWeekendDays_vacationPeriod,
+        balanceWorkingDays_vacationPeriod,
+        balanceWeekendDays_vacationPeriod,
+        state_vacationPeriod
+      )
+      VALUES (
+        p_id_employee,
+        v_startDate_currentYear,
+        v_endDate_currentYear,
+        v_workingDays,
+        v_weekendDays,
+        v_workingDays,
+        v_weekendDays,
+        TRUE
+      );
+
+      SET p_success = TRUE;
+      SET p_message = "Período de vacaciones creado correctamente para el año actual";
+    ELSE
+      SET p_success = FALSE;
+      SET p_message = "Ya existe un período de vacaciones para el año anterior";
     END IF;
   END IF;
 END $$
