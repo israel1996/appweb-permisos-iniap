@@ -94,7 +94,7 @@ startDate_vacationPeriod,
 endDate_vacationPeriod,
 balanceWorkingDays_vacationPeriod,
 balanceWeekendDays_vacationPeriod,
-balanceDays_vacationPeriod
+balanceDays
 FROM vw_reportGeneral " . $where . " " . $limit;
 
 

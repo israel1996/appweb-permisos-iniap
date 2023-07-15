@@ -30,7 +30,7 @@ if (isset($_SESSION['user'])) {
                 endDate_vacationPeriod,
                 balanceWorkingDays_vacationPeriod,
                 balanceWeekendDays_vacationPeriod,
-                balanceDays_vacationPeriod
+                balanceDays
                 FROM vw_balanceEmployee
                 WHERE state_vacationPeriod = 1 AND id_employee = " . $idEmployee;
                 $stmt = $conn->prepare($sql);
@@ -43,7 +43,7 @@ if (isset($_SESSION['user'])) {
                     $endDate = $row['endDate_vacationPeriod'];
                     $balanceWorkingDays = $row['balanceWorkingDays_vacationPeriod'];
                     $balanceWeekendDays = $row['balanceWeekendDays_vacationPeriod'];
-                    $balanceDays = $row['balanceDays_vacationPeriod'];
+                    $balanceDays = $row['balanceDays'];
 
                     $datos = $startDate . "||" . 
                     $endDate . "||" . 

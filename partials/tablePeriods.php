@@ -8,8 +8,8 @@ $columns = [
     'full_name',
     'startDate_vacationPeriod',
     'endDate_vacationPeriod',
-    'earnedDays_vacationPeriod',
-    'balanceDays_vacationPeriod',
+    'earnedWorkingDays_vacationPeriod',
+    'earnedWeekendDays_vacationPeriod',
     'balanceWorkingDays_vacationPeriod',
     'balanceWeekendDays_vacationPeriod',
     'state_vacationPeriod'
@@ -104,17 +104,22 @@ if ($num_rows > 0) {
     foreach ($results as $row) {
         $datos = implode("||", $row);
 
+        $earnedDays = $row['earnedWorkingDays_vacationPeriod'] + $row['earnedWeekendDays_vacationPeriod'];
+        $balanceWorkingDays = $row['balanceWorkingDays_vacationPeriod'];
+        $balanceWeekendDays = $row['balanceWeekendDays_vacationPeriod'];
+        $balanceDays = $balanceWorkingDays + $balanceWeekendDays;
+    
         $output['data'] .= '<tr class="text-center">';
         $output['data'] .= '<td>' . $row['id_vacationPeriod'] . '</td>';
         $output['data'] .= '<td>' . $row['full_name'] . '</td>';
         $output['data'] .= '<td>' . $row['startDate_vacationPeriod'] . '</td>';
         $output['data'] .= '<td>' . $row['endDate_vacationPeriod'] . '</td>';
-        $output['data'] .= '<td>' . $row['earnedDays_vacationPeriod'] . '</td>';
-        $output['data'] .= '<td>' . $row['balanceWorkingDays_vacationPeriod'] . '</td>';
-        $output['data'] .= '<td>' . $row['balanceWeekendDays_vacationPeriod'] . '</td>';
-        $output['data'] .= '<td>' . $row['balanceDays_vacationPeriod'] . '</td>';
+        $output['data'] .= '<td>' . number_format($earnedDays, 2) . '</td>';
+        $output['data'] .= '<td>' . $balanceWorkingDays . '</td>';
+        $output['data'] .= '<td>' . $balanceWeekendDays . '</td>';
+        $output['data'] .= '<td>' . number_format($balanceDays, 2) . '</td>';
         $output['data'] .= '<td><button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalPeriodUpdate"
-         onclick="addToModalPeriod(\'' . $datos . '\')"><img src="./assets/icons/edit-3.svg" alt="Ver"></button></td>';
+            onclick="addToModalPeriod(\'' . $datos . '\')"><img src="./assets/icons/edit-3.svg" alt="Ver"></button></td>';
         $output['data'] .= '</tr>';
     }
 } else {

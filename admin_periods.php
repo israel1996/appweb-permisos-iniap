@@ -87,9 +87,9 @@ include_once "assets/php/database.php";
               <th class="align-middle">Inicio de Periodo</th>
               <th class="align-middle">Fin de Periodo</th>
               <th class="align-middle">Dias Ganados</th>
-              <th class="align-middle">Dias Laborales</th>
-              <th class="align-middle">Fines de Semana</th>
-              <th class="align-middle">Saldo de Dias</th>
+              <th class="align-middle">Saldo Dias Laborales</th>
+              <th class="align-middle">Saldo Fines de Semana</th>
+              <th class="align-middle">Total de Saldos</th>
               <th class="align-middle">Editar</th>
             </tr>
           </thead>
@@ -202,15 +202,15 @@ include_once "assets/php/database.php";
 
               <div class="col-md-6">
                 <label for="lastNameEmployeeVacation" class="form-label fw-bold">Dias Ganados</label>
-                <input type="text" name="numeric" id="earnDaysPeriod" class="form-control">
+                <input type="text" name="numeric" id="earnDaysPeriod" class="form-control" disabled>
 
-                <label for="cedulaEmployeeVacation" class="form-label fw-bold">Dias Laborales</label>
+                <label for="cedulaEmployeeVacation" class="form-label fw-bold">Saldo Dias Laborales</label>
                 <input type="text" name="decimal" id="workingDaysPeriod" class="form-control">
 
-                <label for="nameEmployeeVacation" class="form-label fw-bold">Dias de Fin de Semana</label>
+                <label for="nameEmployeeVacation" class="form-label fw-bold">Saldo Dias de Fin de Semana</label>
                 <input type="text" name="decimal" id="weekendDaysPeriod" class="form-control">
 
-                <label for="lastNameEmployeeVacation" class="form-label fw-bold">Saldo de Dias</label>
+                <label for="lastNameEmployeeVacation" class="form-label fw-bold">Total de Saldos</label>
                 <input type="text" name="decimal" id="balanceDaysPeriod" class="form-control" disabled>
 
                 <label for="selectStatePeriod" class="form-label  fw-bold">Estado</label>

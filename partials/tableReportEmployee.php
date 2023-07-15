@@ -13,7 +13,7 @@ $columns = [
     'endDate_vacationPeriod',
     'balanceWorkingDays_vacationPeriod',
     'balanceWeekendDays_vacationPeriod',
-    'balanceDays_vacationPeriod'
+    'balanceDays'
 ];
 $columnsSearch = [
     'ci_employee',
@@ -97,7 +97,7 @@ foreach ($resultado as $row) {
     $output['data'] .= '<td>' . $row['endDate_vacationPeriod'] . '</td>';
     $output['data'] .= '<td>' . $row['balanceWorkingDays_vacationPeriod'] . '</td>';
     $output['data'] .= '<td>' . $row['balanceWeekendDays_vacationPeriod'] . '</td>';
-    $output['data'] .= '<td>' . $row['balanceDays_vacationPeriod'] . '</td>';
+    $output['data'] .= '<td>' . $row['balanceDays'] . '</td>';
 
     $output['data'] .= '</tr>';
 }

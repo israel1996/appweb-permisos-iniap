@@ -795,18 +795,15 @@ $(document).ready(function () {
     idPeriod = $("#idPeriod").val();
     startDate = $("#startDatePeriod").val();
     endDate = $("#endDatePeriod").val();
-    earndDays = $("#earnDaysPeriod").val();
     workingDays = $("#workingDaysPeriod").val();
     weekendDays = $("#weekendDaysPeriod").val();
-    balanceDays = $("#balanceDaysPeriod").val();
     statePeriod = $("#selectStatePeriod").val();
+
 
     if (
       idPeriod !== "" &&
       startDate !== "" &&
       endDate !== "" &&
-      earndDays !== "" &&
-      balanceDays !== "" &&
       workingDays !== "" &&
       weekendDays !== ""
     ) {
@@ -827,8 +824,6 @@ $(document).ready(function () {
             idPeriod,
             startDate,
             endDate,
-            earndDays,
-            balanceDays,
             workingDays,
             weekendDays,
             statePeriod

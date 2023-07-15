@@ -179,11 +179,14 @@ function addToModalPeriod(datos) {
     $('#idPeriod').val(d[0]);
     $('#startDatePeriod').val(d[3]);
     $('#endDatePeriod').val(d[4]);
-    $('#earnDaysPeriod').val(d[5]);
-    $('#balanceDaysPeriod').val(d[6]);
+    var earnedDays = parseFloat(d[5]) + parseFloat(d[6]);
+    $('#earnDaysPeriod').val(earnedDays.toFixed(2));
     $('#workingDaysPeriod').val(d[7]);
     $('#weekendDaysPeriod').val(d[8]);
     $('#selectStatePeriod').val(d[9]);
+    var balanceDays = parseFloat(d[7]) + parseFloat(d[8]);
+    $('#balanceDaysPeriod').val(balanceDays.toFixed(2));
+    
 
     idPeriod = $('#idPeriod').val();
 
@@ -1162,7 +1165,7 @@ function insertNextVacationPeriod(idEmployee) {
         }
     });
 }
-function updatePeriodVacation(idPeriod, startDate, endDate, earndDays, balanceDays, workingDays, weekendDays, statePeriod) {
+function updatePeriodVacation(idPeriod, startDate, endDate, workingDays, weekendDays, statePeriod) {
     toastr.options.preventDuplicates = true;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
@@ -1171,8 +1174,6 @@ function updatePeriodVacation(idPeriod, startDate, endDate, earndDays, balanceDa
         idPeriod: idPeriod,
         startDate: startDate,
         endDate: endDate,
-        earndDays: earndDays,
-        balanceDays: balanceDays,
         workingDays: workingDays,
         weekendDays: weekendDays,
         statePeriod: statePeriod

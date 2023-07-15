@@ -105,8 +105,8 @@ CREATE TABLE `tb_vacationPeriod` (
   `id_employee` int,
   `startDate_vacationPeriod` date,
   `endDate_vacationPeriod` date,
-  `earnedDays_vacationPeriod` decimal(10,2),
-  `balanceDays_vacationPeriod` decimal(10,3),
+  `earnedWorkingDays_vacationPeriod` decimal(10,3),
+  `earnedWeekendDays_vacationPeriod` decimal(10,3),
   `balanceWorkingDays_vacationPeriod` decimal(10,3),
   `balanceWeekendDays_vacationPeriod` decimal(10,3),
   `state_vacationPeriod` bool
@@ -1308,14 +1308,10 @@ BEGIN
   DECLARE v_lastID INT;
   DECLARE v_id_codeType INT;
   DECLARE v_maxYearCount INT;
-  DECLARE v_earnedDays INT;
-  DECLARE v_balanceDays INT;
-  DECLARE v_workingDays INT;
+  DECLARE v_earnedWorkingDays INT;
   DECLARE v_employeeEligible BOOLEAN DEFAULT TRUE;
   
-  SET v_earnedDays = 15;
-  SET v_balanceDays = 15;
-  SET v_workingDays = 11;
+  SET v_earnedWorkingDays = 11;
 
   -- Iniciar la transacción
   START TRANSACTION;
@@ -1344,13 +1340,9 @@ BEGIN
 
         -- Establecer los días acumulados y laborables para el id_codeType 2 a partir del sexto año
         IF v_yearCount >= 5 AND v_yearCount < 20 THEN
-          SET v_earnedDays = v_earnedDays + 1;
-          SET v_balanceDays = v_balanceDays + 1;
-          SET v_workingDays = v_workingDays + 1;
+          SET v_earnedWorkingDays = v_earnedWorkingDays + 1;
         ELSEIF v_yearCount >= 20 THEN
-          SET v_earnedDays = 30;
-          SET v_balanceDays = 30;
-          SET v_workingDays = 26;
+          SET v_earnedWorkingDays = 26;
         END IF;
 
         -- Insertar el período de vacaciones
@@ -1358,8 +1350,8 @@ BEGIN
           id_employee,
           startDate_vacationPeriod,
           endDate_vacationPeriod,
-          earnedDays_vacationPeriod,
-          balanceDays_vacationPeriod,
+          earnedWorkingDays_vacationPeriod,
+          earnedWeekendDays_vacationPeriod,
           balanceWorkingDays_vacationPeriod,
           balanceWeekendDays_vacationPeriod,
           state_vacationPeriod
@@ -1368,7 +1360,7 @@ BEGIN
           p_id_employee,
           v_startDate_while,
           v_endDate_while,
-           0,
+          0,
           0,
           0,
           0,
@@ -1388,8 +1380,8 @@ BEGIN
       IF v_id_codeType = 1 THEN
         UPDATE tb_vacationPeriod 
         SET 
-          earnedDays_vacationPeriod = 30,
-          balanceDays_vacationPeriod = 30,
+          earnedWorkingDays_vacationPeriod = 22,
+          earnedWeekendDays_vacationPeriod = 8,
           balanceWorkingDays_vacationPeriod = 22,
           balanceWeekendDays_vacationPeriod = 8,
           state_vacationPeriod = TRUE
@@ -1398,9 +1390,9 @@ BEGIN
       ELSEIF v_id_codeType = 2 THEN
         UPDATE tb_vacationPeriod 
         SET 
-          earnedDays_vacationPeriod = v_earnedDays,
-          balanceDays_vacationPeriod = v_balanceDays,
-          balanceWorkingDays_vacationPeriod = v_workingDays,
+          earnedWorkingDays_vacationPeriod = v_earnedWorkingDays,
+          earnedWeekendDays_vacationPeriod = 4,
+          balanceWorkingDays_vacationPeriod = v_earnedWorkingDays,
           balanceWeekendDays_vacationPeriod = 4,
           state_vacationPeriod = TRUE
         WHERE 
@@ -1428,6 +1420,7 @@ END $$
 DELIMITER ;
 
 
+
 DELIMITER $$
 
 CREATE PROCEDURE pa_nextVacationPeriod(
@@ -1442,8 +1435,6 @@ BEGIN
   DECLARE v_endDate_currentYear DATE;
   DECLARE v_exists INT;
   DECLARE v_codeType INT;
-  DECLARE v_earnedDays INT;
-  DECLARE v_balanceDays INT;
   DECLARE v_workingDays INT;
   DECLARE v_weekendDays INT;
   
@@ -1452,11 +1443,14 @@ BEGIN
 
   -- Obtener el año actual
   SET v_yearCount = YEAR(CURDATE()) - YEAR(v_startDate);
+  
+  -- Obtener cantidad de registros de la tabla periodods
+  SET @num_rows = (SELECT COUNT(*) FROM tb_vacationperiod WHERE id_employee = p_id_employee);
 
   -- Comprobar si el empleado tiene años de antigüedad
-  IF v_yearCount > 0 THEN
+  IF @num_rows = 0 AND v_yearCount > 0 THEN
     SET p_success = FALSE;
-    SET p_message = "No se aplica para empleados con antigüedad";
+    SET p_message = "Primero debe generar los periodos";
   ELSE
     -- Establecer las fechas de inicio y fin para el período de vacaciones del año actual
     SET v_startDate_currentYear = DATE_ADD(v_startDate, INTERVAL v_yearCount YEAR);
@@ -1472,13 +1466,9 @@ BEGIN
     IF v_exists = 0 THEN
       -- Establecer los valores de días según el codeType
       IF v_codeType = 1 THEN
-        SET v_earnedDays = 30;
-        SET v_balanceDays = 30;
         SET v_workingDays = 22;
         SET v_weekendDays = 8;
       ELSEIF v_codeType = 2 THEN
-        SET v_earnedDays = 15;
-        SET v_balanceDays = 15;
         SET v_workingDays = 11;
         SET v_weekendDays = 4;
       END IF;
@@ -1488,8 +1478,8 @@ BEGIN
         id_employee,
         startDate_vacationPeriod,
         endDate_vacationPeriod,
-        earnedDays_vacationPeriod,
-        balanceDays_vacationPeriod,
+        earnedWorkingDays_vacationPeriod,
+        earnedWeekendDays_vacationPeriod,
         balanceWorkingDays_vacationPeriod,
         balanceWeekendDays_vacationPeriod,
         state_vacationPeriod
@@ -1498,8 +1488,8 @@ BEGIN
         p_id_employee,
         v_startDate_currentYear,
         v_endDate_currentYear,
-        v_earnedDays,
-        v_balanceDays,
+        v_workingDays,
+        v_weekendDays,
         v_workingDays,
         v_weekendDays,
         TRUE
@@ -1524,8 +1514,6 @@ CREATE PROCEDURE pa_updateVacationPeriod(
   IN p_id_vacationPeriod INT,
   IN p_startDate_vacationPeriod DATE,
   IN p_endDate_vacationPeriod DATE,
-  IN p_earnedDays_vacationPeriod DECIMAL(10, 2),
-  IN p_balanceDays_vacationPeriod DECIMAL(10, 3),
   IN p_balanceWorkingDays_vacationPeriod DECIMAL(10, 3),
   IN p_balanceWeekendDays_vacationPeriod DECIMAL(10, 3),
   IN p_state_vacationPeriod BOOL,
@@ -1549,8 +1537,6 @@ BEGIN
   SET
     startDate_vacationPeriod = p_startDate_vacationPeriod,
     endDate_vacationPeriod = p_endDate_vacationPeriod,
-    earnedDays_vacationPeriod = p_earnedDays_vacationPeriod,
-    balanceDays_vacationPeriod = p_balanceDays_vacationPeriod,
     balanceWorkingDays_vacationPeriod = p_balanceWorkingDays_vacationPeriod,
     balanceWeekendDays_vacationPeriod = p_balanceWeekendDays_vacationPeriod,
     state_vacationPeriod = p_state_vacationPeriod
@@ -1599,8 +1585,8 @@ BEGIN
   DECLARE v_weekendDays DECIMAL(10,3) DEFAULT 0;
   DECLARE v_tempDate DATE;
   DECLARE v_balanceDays DECIMAL(10,3); 
-  DECLARE v_balanceWorkingDays DECIMAL(10,3);
-  DECLARE v_balanceWeekendDays DECIMAL(10,3);
+  DECLARE v_balanceWorkingDays DECIMAL(10,3) DEFAULT 0;
+  DECLARE v_balanceWeekendDays DECIMAL(10,3) DEFAULT 0;
   DECLARE v_id_vacationPeriod INT;
   DECLARE v_vacationExists BOOLEAN;
   DECLARE v_pendingPermissionExists BOOLEAN;
@@ -1638,6 +1624,11 @@ BEGIN
         WHERE id_employee = p_id_employee
           AND state_vacationPeriod = TRUE 
       ) INTO v_vacationExists;
+      -- Obtener los saldos de los periodos activos
+      SELECT SUM(balanceWorkingDays_vacationPeriod + balanceWeekendDays_vacationPeriod), SUM(balanceWorkingDays_vacationPeriod), SUM(balanceWeekendDays_vacationPeriod)
+      INTO v_balanceDays, v_balanceWorkingDays, v_balanceWeekendDays
+      FROM tb_vacationperiod 
+		WHERE id_employee = p_id_employee AND state_vacationPeriod = TRUE;
     ELSE 
       SET v_vacationExists = TRUE;
     END IF;
@@ -1646,11 +1637,6 @@ BEGIN
       SET message = 'No tiene periodo de vacaciones activo';
       SET success = FALSE;
     ELSE
-    	-- Obtener los saldos de los periodos activos
-      SELECT SUM(balanceDays_vacationPeriod), SUM(balanceWorkingDays_vacationPeriod), SUM(balanceWeekendDays_vacationPeriod)
-      INTO v_balanceDays, v_balanceWorkingDays, v_balanceWeekendDays
-      FROM tb_vacationperiod 
-		WHERE id_employee = p_id_employee AND state_vacationPeriod = TRUE;
       -- Obtener el id_numberPeriod activo
       SELECT id_numberPeriod
       INTO v_id_numberPeriod
@@ -1923,6 +1909,8 @@ BEGIN
   DECLARE v_id_reason_vacaciones INT;
   DECLARE v_carry_now INT;
   DECLARE v_carry INT DEFAULT 0;
+  DECLARE v_should_deduct BOOLEAN DEFAULT FALSE; -- Para descontar
+  DECLARE v_should_return BOOLEAN DEFAULT FALSE; -- Para devolver
 
   -- Obtener el id_reason para "vacaciones"
   SELECT id_reason INTO v_id_reason_vacaciones
@@ -1945,19 +1933,23 @@ BEGIN
 
   -- Si el estado es cambiado a Validado y el estado previo es Pendiente
   IF (p_state = 'V' AND v_state_permission = 'P') OR (p_state = 'V' AND v_state_permission = 'R') THEN
-    
+    SET v_should_deduct = TRUE; -- Aquí, estableces la variable como TRUE para descontar
+  -- Si el estado es cambiado a Rechazado y el estado previo es Aprobado
+  ELSEIF p_state = 'R' AND v_state_permission = 'V' THEN
+    SET v_should_return = TRUE; -- Aquí, estableces la variable como TRUE para devolver
+  -- Si el estado es cambiado a Rechazado y el estado previo es Pendiente
+  ELSEIF p_state = 'R' AND v_state_permission = 'P' THEN
+    SET message = 'Permiso rechazado.';
+    SET success = TRUE;
+  ELSE
+    SET message = 'Transición de estado no válida.';
+    SET success = FALSE;
+  END IF;
+
+  -- Lógica de deducción
+  IF v_should_deduct THEN
     -- Comprobar si id_reason corresponde a "vacaciones" antes de realizar descuentos
     IF v_id_reason = v_id_reason_vacaciones THEN
-    		IF p_state = 'V' AND v_state_permission = 'P' THEN
-    			SET v_carry = v_carry_now;
-    		ELSEIF p_state = 'V' AND v_state_permission = 'R' THEN
-    			IF (v_workingDays + v_carry_now) >= 5 THEN
-    				SET v_carry = (v_workingDays + v_carry_now) - 5;
-    			ELSE
-    				SET v_carry = v_carry_now + v_workingDays;
-    			END IF;
-    		END IF;
-    		
         UPDATE tb_vacationPeriod
         SET balanceDays_vacationPeriod = balanceDays_vacationPeriod - (v_workingDays + v_weekendDays),
             balanceWorkingDays_vacationPeriod = balanceWorkingDays_vacationPeriod - v_workingDays,
@@ -1965,31 +1957,14 @@ BEGIN
             state_vacationPeriod = balanceWorkingDays_vacationPeriod > 0
         WHERE id_vacationPeriod = v_id_vacationPeriod;
     END IF;
-    
-    UPDATE tb_permission
-    SET state_permission = p_state,
-    		carry_permission = v_carry,
-        adminObservation_permission = p_message
-    WHERE id_permission = p_id_permission;
-
     SET message = 'Permiso validado exitosamente.';
     SET success = TRUE;
+  END IF;
 
-  -- Si el estado es cambiado a Rechazado y el estado previo es Aprobado
-  ELSEIF p_state = 'R' AND v_state_permission = 'V' THEN
+  -- Lógica de devolución
+  IF v_should_return THEN
     -- Comprobar si id_reason corresponde a "vacaciones" antes de realizar la devolución
     IF v_id_reason = v_id_reason_vacaciones THEN
-     		
-     		SET @count_permiss = (SELECT COUNT(*) FROM tb_permission
-			WHERE id_reason = v_id_reason_vacaciones AND id_employee = v_id_employee); 
-			
-			IF @count_permiss > 1 THEN
-				 -- Obtener carry anterior
-				SET v_carry = (SELECT carry_permission FROM tb_permission WHERE id_permission <> p_id_permission 
-				AND id_reason = v_id_reason_vacaciones AND id_employee = v_id_employee
-				ORDER BY id_permission DESC LIMIT 1);
-			END IF;
-								
         UPDATE tb_vacationPeriod
         SET balanceDays_vacationPeriod = balanceDays_vacationPeriod + (v_workingDays + v_weekendDays),
             balanceWorkingDays_vacationPeriod = balanceWorkingDays_vacationPeriod + v_workingDays,
@@ -1997,51 +1972,21 @@ BEGIN
             state_vacationPeriod = balanceWorkingDays_vacationPeriod > 0
         WHERE id_vacationPeriod = v_id_vacationPeriod;
     END IF;
-    
-    UPDATE tb_permission
-    SET state_permission = p_state,
-    		carry_permission = v_carry,
-        adminObservation_permission = p_message
-    WHERE id_permission = p_id_permission;
-
-    SET message = 'Permiso rechazado y cambios revertidos.';
+    SET message = 'Permiso rechazado exitosamente.';
     SET success = TRUE;
-
-  -- Si el estado es cambiado a Rechazado y el estado previo es Pendiente
-  ELSEIF p_state = 'R' AND v_state_permission = 'P' THEN
-    -- En caso de ser vacaciones aplica la logica del carry
-		IF v_id_reason = v_id_reason_vacaciones THEN
-			
-			SET @count_permiss = (SELECT COUNT(*) FROM tb_permission
-			WHERE id_reason = v_id_reason_vacaciones AND id_employee = v_id_employee); 
-			
-			IF @count_permiss > 1 THEN
-				 -- Obtener carry anterior
-				SET v_carry = (SELECT carry_permission FROM tb_permission WHERE id_permission <> p_id_permission 
-				AND id_reason = v_id_reason_vacaciones AND id_employee = v_id_employee
-				ORDER BY id_permission DESC LIMIT 1);
-			END IF;
-			   
-		END IF;
-
-	   UPDATE tb_permission
-      SET state_permission = p_state,
-      	carry_permission = v_carry,
-        adminObservation_permission = p_message
-      WHERE id_permission = p_id_permission;
-
-      SET message = 'Permiso rechazado.';
-      SET success = TRUE;
-
-  ELSE
-    SET message = 'Transición de estado no válida.';
-    SET success = FALSE;
   END IF;
+  
+  IF success = TRUE THEN
+  		UPDATE tb_permission
+    	SET state_permission = p_state,
+    		carry_permission = v_carry,
+        	adminObservation_permission = p_message
+    	WHERE id_permission = p_id_permission;
+	END IF;
 
 END $$
 
 DELIMITER ;
-
 
 -- -------------------------------------------------------------------------------------------
 
@@ -2203,8 +2148,8 @@ SELECT
     CONCAT(e.name_employee, ' ', e.lastName_employee) AS full_name,
     DATE_FORMAT(v.startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod,
     DATE_FORMAT(v.endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
-    IF(v.earnedDays_vacationPeriod = 0, 0, ROUND(v.earnedDays_vacationPeriod, 2)) AS earnedDays_vacationPeriod,
-    IF(v.balanceDays_vacationPeriod = 0, 0, ROUND(v.balanceDays_vacationPeriod, 2)) AS balanceDays_vacationPeriod,
+    IF(v.earnedWorkingDays_vacationPeriod = 0, 0, ROUND(v.earnedWorkingDays_vacationPeriod, 2)) AS earnedWorkingDays_vacationPeriod,
+    IF(v.earnedWeekendDays_vacationPeriod = 0, 0, ROUND(v.earnedWeekendDays_vacationPeriod, 2)) AS earnedWeekendDays_vacationPeriod,
     IF(v.balanceWorkingDays_vacationPeriod = 0, 0, ROUND(v.balanceWorkingDays_vacationPeriod, 2)) AS balanceWorkingDays_vacationPeriod,
     IF(v.balanceWeekendDays_vacationPeriod = 0, 0, ROUND(v.balanceWeekendDays_vacationPeriod, 2)) AS balanceWeekendDays_vacationPeriod,
     v.state_vacationPeriod
@@ -2335,11 +2280,13 @@ DATE_FORMAT(vp.startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod
 DATE_FORMAT(vp.endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
 IF(vp.balanceWorkingDays_vacationPeriod = 0, 0, ROUND(vp.balanceWorkingDays_vacationPeriod, 2)) AS balanceWorkingDays_vacationPeriod,
 IF(vp.balanceWeekendDays_vacationPeriod = 0, 0, ROUND(vp.balanceWeekendDays_vacationPeriod, 2)) AS balanceWeekendDays_vacationPeriod,
-IF(vp.balanceDays_vacationPeriod = 0, 0, ROUND(vp.balanceDays_vacationPeriod, 2)) AS balanceDays_vacationPeriod
+IF((vp.balanceWorkingDays_vacationPeriod + vp.balanceWeekendDays_vacationPeriod) = 0, 0, 
+ROUND((vp.balanceWorkingDays_vacationPeriod + vp.balanceWeekendDays_vacationPeriod), 2)) AS balanceDays
 FROM tb_employee e INNER JOIN tb_vacationperiod vp
 ON e.id_employee = vp.id_employee INNER JOIN tb_departament d 
 ON d.id_departament = e.id_departament
 WHERE vp.state_vacationPeriod = 1;
+
 
 
 
@@ -2366,6 +2313,7 @@ INNER JOIN tb_departament d ON d.id_departament = e.id_departament
 ORDER BY p.startDateTime_permission ASC;
 
 
+
 CREATE VIEW vw_dataEmloyeeCertificate AS
 SELECT 
     e.id_employee,
@@ -2385,14 +2333,15 @@ INNER JOIN tb_departament d ON e.id_departament = d.id_departament;
 
 CREATE VIEW vw_balanceEmployee AS
 SELECT 
-		id_employee,
-		DATE_FORMAT(startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod,
-		DATE_FORMAT(endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
-		IF(balanceWorkingDays_vacationPeriod = 0, 0, ROUND(balanceWorkingDays_vacationPeriod, 2)) AS balanceWorkingDays_vacationPeriod,
-		IF(balanceWeekendDays_vacationPeriod = 0, 0, ROUND(balanceWeekendDays_vacationPeriod, 2)) AS balanceWeekendDays_vacationPeriod,
-      IF(balanceDays_vacationPeriod = 0, 0, ROUND(balanceDays_vacationPeriod, 2)) AS balanceDays_vacationPeriod,
-      state_vacationPeriod
-                FROM tb_vacationperiod;
+    id_employee,
+    DATE_FORMAT(startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod,
+    DATE_FORMAT(endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
+    IF(balanceWorkingDays_vacationPeriod = 0, 0, ROUND(balanceWorkingDays_vacationPeriod, 2)) AS balanceWorkingDays_vacationPeriod,
+    IF(balanceWeekendDays_vacationPeriod = 0, 0, ROUND(balanceWeekendDays_vacationPeriod, 2)) AS balanceWeekendDays_vacationPeriod,
+    IF((balanceWorkingDays_vacationPeriod + balanceWeekendDays_vacationPeriod) = 0, 0, ROUND((balanceWorkingDays_vacationPeriod + balanceWeekendDays_vacationPeriod), 2)) AS balanceDays,
+    state_vacationPeriod
+FROM tb_vacationperiod;
+
 
 
 
