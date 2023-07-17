@@ -250,6 +250,24 @@ require_once "assets/php/database.php";
                   ?>
                 </select>
 
+                <label for="idAbbrJob" class="form-label fw-bold">Abreviatura Título</label>
+                <select name="idAbbrJob" id="idAbbrJob" class="form-select">
+                  <?php
+                  $sql = "SELECT id_abbrJob, name_abbrJob FROM tb_abbrJob";
+                  $stmt = $conn->query($sql);
+
+                  // Generar las opciones del select
+                  if ($stmt->rowCount() > 0) {
+                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                      echo '<option value="' . $row["id_abbrJob"] . '">' . $row["name_abbrJob"] . '</option>';
+                    }
+                  } else {
+                    echo '<option value="">No hay datos disponibles</option>';
+                  }
+                  $result->closeCursor();
+                  ?>
+                </select>
+
                 <label for="fechaInicioLaboral" class="form-label fw-bold">Fecha de Inicio Laboral</label>
                 <input type="text" name="datesingleAdmin" id="fechaInicioLaboral" class="form-control">
 
@@ -258,6 +276,7 @@ require_once "assets/php/database.php";
 
               </div>
               <div class="col-md-6">
+
                 <label for="nombreEmpleado" class="form-label fw-bold">Nombres</label>
                 <input type="text" name="single-text" id="nombreEmpleado" class="form-control">
 
@@ -371,6 +390,24 @@ require_once "assets/php/database.php";
                   if ($stmt->rowCount() > 0) {
                     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                       echo '<option value="' . $row["id_jobTitle"] . '">' . $row["name_jobTitle"] . '</option>';
+                    }
+                  } else {
+                    echo '<option value="">No hay datos disponibles</option>';
+                  }
+                  $result->closeCursor();
+                  ?>
+                </select>
+
+                <label for="idAbbrJob" class="form-label fw-bold">Abreviatura Título</label>
+                <select name="idAbbrJobu" id="idAbbrJobu" class="form-select">
+                  <?php
+                  $sql = "SELECT id_abbrJob, name_abbrJob FROM tb_abbrJob";
+                  $stmt = $conn->query($sql);
+
+                  // Generar las opciones del select
+                  if ($stmt->rowCount() > 0) {
+                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                      echo '<option value="' . $row["id_abbrJob"] . '">' . $row["name_abbrJob"] . '</option>';
                     }
                   } else {
                     echo '<option value="">No hay datos disponibles</option>';

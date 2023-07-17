@@ -38,7 +38,7 @@ function enviarDatosLogin(username, password) {
 }
 
 //Gestión de Empleado
-function insertDataEmployee(idTipoCodigo, idTipoContrato, idDepartamento, idJobTitle, cedulaEmpleado, nombreEmpleado,
+function insertDataEmployee(idTipoCodigo, idTipoContrato, idDepartamento, idJobTitle, idAbbrJob, cedulaEmpleado, nombreEmpleado,
     apellidoEmpleado, dateInicioLaboral, telefonoEmpleado, direccionEmpleado, emailEmpleado, salary) {
 
     toastr.options.preventDuplicates = true;
@@ -50,6 +50,7 @@ function insertDataEmployee(idTipoCodigo, idTipoContrato, idDepartamento, idJobT
         idTipoContrato: idTipoContrato,
         idDepartamento: idDepartamento,
         idJobTitle: idJobTitle,
+        idAbbrJob: idAbbrJob,
         cedulaEmpleado: cedulaEmpleado,
         nombreEmpleado: nombreEmpleado,
         apellidoEmpleado: apellidoEmpleado,
@@ -85,7 +86,7 @@ function insertDataEmployee(idTipoCodigo, idTipoContrato, idDepartamento, idJobT
     });
 
 }
-function updateDataEmployee(idEmployee, idTipoCodigo, idTipoContrato, idDepartamento, idJobTitle, cedulaEmpleado, nombreEmpleado,
+function updateDataEmployee(idEmployee, idTipoCodigo, idTipoContrato, idDepartamento, idJobTitle, idAbbrJob, cedulaEmpleado, nombreEmpleado,
     apellidoEmpleado, dateInicioLaboral, telefonoEmpleado, direccionEmpleado, emailEmpleado, salary) {
 
     toastr.options.preventDuplicates = true;
@@ -98,6 +99,7 @@ function updateDataEmployee(idEmployee, idTipoCodigo, idTipoContrato, idDepartam
         idTipoContrato: idTipoContrato,
         idDepartamento: idDepartamento,
         idJobTitle: idJobTitle,
+        idAbbrJob: idAbbrJob,
         cedulaEmpleado: cedulaEmpleado,
         nombreEmpleado: nombreEmpleado,
         apellidoEmpleado: apellidoEmpleado,
@@ -140,15 +142,15 @@ function agregaform(datos) {
     $('#idTipoContratou').val(d[2]);
     $('#idDepartamentou').val(d[3]);
     $('#idJobTitleu').val(d[4]);
-    $('#cedulaEmpleadou').val(d[5]);
-    $('#nombreEmpleadou').val(d[6]);
-    $('#apellidoEmpleadou').val(d[7]);
-    $('#fechaInicioLaboralu').val(d[8]);
-    $('#telefonoEmpleadou').val(d[9]);
-    $('#direccionEmpleadou').val(d[10]);
-    $('#emailEmpleadou').val(d[11]);
-    $('#salaryu').val(d[12]);
-
+    $('#idAbbrJobu').val(d[5]);
+    $('#cedulaEmpleadou').val(d[6]);
+    $('#nombreEmpleadou').val(d[7]);
+    $('#apellidoEmpleadou').val(d[8]);
+    $('#fechaInicioLaboralu').val(d[9]);
+    $('#telefonoEmpleadou').val(d[10]);
+    $('#direccionEmpleadou').val(d[11]);
+    $('#emailEmpleadou').val(d[12]);
+    $('#salaryu').val(d[13]);
 
 }
 function addToModalPermiss(datos) {
@@ -321,12 +323,19 @@ function addToInputJobTitle(datos) {
     $('#btnAddJobTitle').hide();
     $('#btnUpdateJobTitle').show();
 }
+function addToInputAbbrJob(datos) {
+    d = datos.split('||');
+    $('#idAbbrJob').val(d[0]);
+    $('#nameAbbrJob').val(d[1]);
+    $('#btnAddAbbrJob').hide();
+    $('#btnUpdateAbbrJob').show();
+}
 
 
 //Alertas de Si o No
 //Eliminar
 function yesOrNoQuestionDepartament(id) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -339,7 +348,7 @@ function yesOrNoQuestionDepartament(id) {
         });
 }
 function yesOrNoQuestionReason(id) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
     alertify.confirm('Eliminar Razón de Permiso', '¿Esta seguro de eliminar esta Razón de Permiso?',
@@ -351,7 +360,7 @@ function yesOrNoQuestionReason(id) {
         });
 }
 function yesOrNoQuestionContractType(id) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -364,7 +373,7 @@ function yesOrNoQuestionContractType(id) {
         });
 }
 function yesOrNoQuestionJobTitle(id) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -376,9 +385,22 @@ function yesOrNoQuestionJobTitle(id) {
             toastr.error('Se canceló', "MENSAJE");
         });
 }
+function yesOrNoQuestionAbbrJob(id) {
+    toastr.options.preventDuplicates = false;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    alertify.confirm('Eliminar Abreviatura de Título', '¿Esta seguro de eliminar esta abreviatura?',
+        function () {
+            deleteAbbrJob(id);
+        },
+        function () {
+            toastr.error('Se canceló', "MENSAJE");
+        });
+}
 //Opciones Usuario
 function preguntarSiNo(id) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -391,7 +413,7 @@ function preguntarSiNo(id) {
         });
 }
 function yesOrNoQuestionEnableUser(id) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
     
@@ -404,7 +426,7 @@ function yesOrNoQuestionEnableUser(id) {
         });
 }
 function preguntarSiNoReset(id, password) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -417,7 +439,7 @@ function preguntarSiNoReset(id, password) {
         });
 }
 function yesOrNoQuestionDisableEmployee(id) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -431,7 +453,7 @@ function yesOrNoQuestionDisableEmployee(id) {
 }
 //Permisos
 function yesOrNoQuestionSendPermiss(datos) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -447,7 +469,7 @@ function yesOrNoQuestionSendPermiss(datos) {
 //Opciones de Usuario
 function insertUser(idEmployee, typeUser, password) {
 
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -482,7 +504,7 @@ function insertUser(idEmployee, typeUser, password) {
 
 }
 function updateUser(idUser, typeUser, password) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -518,7 +540,7 @@ function updateUser(idUser, typeUser, password) {
 
 }
 function enableUser(id) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -545,7 +567,7 @@ function enableUser(id) {
     });
 }
 function disableUser(id) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -574,7 +596,7 @@ function disableUser(id) {
     });
 }
 function resetPassword(id, password) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -603,7 +625,7 @@ function resetPassword(id, password) {
     });
 }
 function changePasswordUser(passwordNow, passwordNew, confirmPasswordNew) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -635,7 +657,7 @@ function changePasswordUser(passwordNow, passwordNew, confirmPasswordNew) {
     });
 }
 function disableEmployee(id) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -665,7 +687,7 @@ function disableEmployee(id) {
 
 //Gestión de Departamentos
 function insertDepartament(name) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -696,7 +718,7 @@ function insertDepartament(name) {
     });
 }
 function updateDepartament(id, name) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -727,7 +749,7 @@ function updateDepartament(id, name) {
     });
 }
 function deleteDepartament(id) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -760,6 +782,9 @@ function deleteDepartament(id) {
 
 //Gestión de Razones de Permiso
 function insertReason(name) {
+    toastr.options.preventDuplicates = false;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
 
     operation = 'INSERT';
     cadena = "id=" +
@@ -788,6 +813,10 @@ function insertReason(name) {
     });
 }
 function updateReason(id, name) {
+    toastr.options.preventDuplicates = false;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+    
     operation = 'UPDATE';
     cadena = "id=" + id +
         "&name=" + name +
@@ -815,6 +844,9 @@ function updateReason(id, name) {
     });
 }
 function deleteReason(id) {
+    toastr.options.preventDuplicates = false;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
 
     operation = 'DELETE';
     cadena = "id=" + id +
@@ -845,6 +877,9 @@ function deleteReason(id) {
 
 //Gestión de Tipos de Contratación
 function insertContractType(name) {
+    toastr.options.preventDuplicates = false;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
 
     operation = 'INSERT';
     cadena = "id=" +
@@ -873,6 +908,10 @@ function insertContractType(name) {
     });
 }
 function updateContractType(id, name) {
+    toastr.options.preventDuplicates = false;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+    
     operation = 'UPDATE';
     cadena = "id=" + id +
         "&name=" + name +
@@ -900,6 +939,9 @@ function updateContractType(id, name) {
     });
 }
 function deleteContractType(id) {
+    toastr.options.preventDuplicates = false;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
 
     operation = 'DELETE';
     cadena = "id=" + id +
@@ -929,7 +971,7 @@ function deleteContractType(id) {
 
 //Gestión de Cargos
 function insertJobTitle(name) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -960,7 +1002,7 @@ function insertJobTitle(name) {
     });
 }
 function updateJobTitle(id, name) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -991,7 +1033,7 @@ function updateJobTitle(id, name) {
     });
 }
 function deleteJobTitle(id) {
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
 
@@ -1021,11 +1063,105 @@ function deleteJobTitle(id) {
         }
     });
 }
+//Gestión de Abreviaturas de Titulos
+function insertAbbrJob(name) {
+    toastr.options.preventDuplicates = false;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    operation = 'INSERT';
+    cadena = "id=" +
+        "&name=" + name +
+        "&operation=" + operation;
+
+    $.ajax({
+        type: "POST",
+        url: "assets/php/manageAbbrJob.php",
+        data: cadena,
+        dataType: "json",
+        success: function (response) {
+            var success = response.success;
+            var message = response.message;
+            if (success == true) {
+                getData("abbrJob");
+                toastr.success(message, "MENSAJE");
+            } else {
+                toastr.error(message, "MENSAJE");
+            }
+        },
+        error: function (xhr, status, error) {
+            // Manejar errores de la solicitud Ajax
+            console.log("Error en la solicitud Ajax:", error);
+        }
+    });
+}
+function updateAbbrJob(id, name) {
+    toastr.options.preventDuplicates = false;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    operation = 'UPDATE';
+    cadena = "id=" + id +
+        "&name=" + name +
+        "&operation=" + operation;
+
+    $.ajax({
+        type: "POST",
+        url: "assets/php/manageAbbrJob.php",
+        data: cadena,
+        dataType: "json",
+        success: function (response) {
+            var success = response.success;
+            var message = response.message;
+            if (success == true) {
+                getData("abbrJob");
+                toastr.success(message, "MENSAJE");
+            } else {
+                toastr.error(message, "MENSAJE");
+            }
+        },
+        error: function (xhr, status, error) {
+            // Manejar errores de la solicitud Ajax
+            console.log("Error en la solicitud Ajax:", error);
+        }
+    });
+}
+function deleteAbbrJob(id) {
+    toastr.options.preventDuplicates = false;
+    toastr.options.positionClass = 'toast-bottom-right';
+    toastr.options.closeButton = true;
+
+    operation = 'DELETE';
+    cadena = "id=" + id +
+        "&name=" +
+        "&operation=" + operation;
+
+    $.ajax({
+        type: "POST",
+        url: "assets/php/manageAbbrJob.php",
+        data: cadena,
+        dataType: "json",
+        success: function (response) {
+            var success = response.success;
+            var message = response.message;
+            if (success == true) {
+                getData("abbrJob");
+                toastr.success(message, "MENSAJE");
+            } else {
+                toastr.error(message, "MENSAJE");
+            }
+        },
+        error: function (xhr, status, error) {
+            // Manejar errores de la solicitud Ajax
+            console.log("Error en la solicitud Ajax:", error);
+        }
+    });
+}
 
 //Permisos
 function sendRequestPermiss(datos) {
     //Configuraciones de alerta
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
     toastr.options.newestOnTop = false;
@@ -1071,7 +1207,7 @@ function sendRequestPermiss(datos) {
 
 function updateStatePermiss(idPermiss, state, message) {
     //Configuraciones de alerta
-    toastr.options.preventDuplicates = true;
+    toastr.options.preventDuplicates = false;
     toastr.options.positionClass = 'toast-bottom-right';
     toastr.options.closeButton = true;
     toastr.options.newestOnTop = false;

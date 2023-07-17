@@ -50,6 +50,9 @@ include 'assets/php/sessionChecker.php';
         <button class="nav-link custom" id="nav-jobTitle-tab" data-bs-toggle="tab" data-bs-target="#jobTitle"
           type="button" role="tab" aria-controls="nav-jobTitle" aria-selected="true">Cargos</button>
 
+        <button class="nav-link custom" id="nav-abbrJob-tab" data-bs-toggle="tab" data-bs-target="#abbrJob"
+          type="button" role="tab" aria-controls="nav-abbrJob" aria-selected="true">Abreviaturas de Titulos</button>
+
     </nav>
     <div class="tab-content" id="tab-content">
       <div id="departaments" class="tab-pane fade show active">
@@ -319,6 +322,72 @@ include 'assets/php/sessionChecker.php';
         </div>
       </div>
 
+      <div id="abbrJob" class="tab-pane fade">
+
+        <!--Campo de Entrada, botón, Seleccionador de Registros y busqueda -->
+        <div class="row g-4" style="margin-top: 5px;">
+          <div class="col-auto">
+            <input type="text" hidden="" id="idAbbrJob" name="">
+            <label for="nameAbbrJob" class="col-form-label fw-bold">Nombre:</label>
+          </div>
+          <div class="col-auto">
+            <input type="text" class="form-control" id="nameAbbrJob" placeholder="Escriba aqui...">
+          </div>
+          <div class="col-auto">
+            <button type="button" id="btnAddAbbrJob" class="btn btn-dark w-100">Agregar Nuevo</button>
+            <button type="button" id="btnUpdateAbbrJob" class="btn btn-success w-100">Guardar Cambios</button>
+          </div>
+          <div class="col-1"></div>
+          <div class="col-auto">
+            <label for="campo_abbrJob" class="col-form-label fw-bold">Buscar:</label>
+          </div>
+          <div class="col-auto">
+            <input type="text" name="campo_abbrJob" id="campo_abbrJob" class="form-control"
+              placeholder="Escriba aquí...">
+          </div>
+          <div class="col-auto">
+            <label for="num_registros_abbrJob" class="col-form-label fw-bold">Mostrar:</label>
+          </div>
+          <div class="col-auto">
+            <select name="num_registros_abbrJob" id="num_registros_abbrJob" class="form-select">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tabla Titulos -->
+        <div class="row justify-content-center">
+          <div class="col-6">
+            <table class="table table-hover mt-4">
+              <thead class="">
+                <tr class="text-center">
+                  <th class="align-middle">ID Titulo</th>
+                  <th class="align-middle">Nombre de Titulo</th>
+                  <th class="align-middle">Editar</th>
+                  <th class="align-middle">Eliminar</th>
+                </tr>
+              </thead>
+              <tbody id="content_abbrJob">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Paginacion Titulos -->
+        <div class="row">
+          <div class="col-5">
+            <label id="lbl-total-abbrJob"></label>
+          </div>
+          <div class="col-7" id="nav-paginacion-abbrJob"></div>
+          <input type="hidden" id="pagina_abbrJob" value="1">
+          <input type="hidden" id="orderCol_abbrJob" value="0">
+          <input type="hidden" id="orderType_abbrJob" value="asc">
+        </div>
+      </div>
+
 
     </div>
 
@@ -335,6 +404,7 @@ include 'assets/php/sessionChecker.php';
     initializeData("reason");
     initializeData("contractType");
     initializeData("jobTitle");
+    initializeData("abbrJob");
 
     function initializeData(dataType) {
       addInputEventListeners(dataType);
@@ -412,6 +482,10 @@ include 'assets/php/sessionChecker.php';
     function nextPageJobTitle(pagina) {
       document.getElementById('pagina_jobTitle').value = pagina;
       getData("jobTitle");
+    }
+    function nextPageAbbrJob(pagina) {
+      document.getElementById('pagina_abbrJob').value = pagina;
+      getData("abbrJob");
     }
 
     function ordenar(e, dataType) {

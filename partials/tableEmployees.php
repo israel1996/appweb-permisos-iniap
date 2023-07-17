@@ -11,6 +11,8 @@ $columns = [
     'name_departament',
     'id_jobTitle',
     'name_jobTitle',
+    'id_abbrJob',
+    'name_abbrJob',
     'ci_employee',
     'name_employee',
     'lastName_employee',
@@ -96,6 +98,7 @@ if ($num_rows > 0) {
         $idTypeContract = $row['id_typeContract'];
         $idDepartament = $row['id_departament'];
         $idJobTitle = $row['id_jobTitle'];
+        $idAbbrJob = $row['id_abbrJob'];
         $ciEmployee = $row['ci_employee'];
         $nameEmployee = $row['name_employee'];
         $lastNameEmployee = $row['lastName_employee'];
@@ -111,6 +114,7 @@ if ($num_rows > 0) {
             $idTypeContract,
             $idDepartament,
             $idJobTitle,
+            $idAbbrJob,
             $ciEmployee,
             $nameEmployee,
             $lastNameEmployee,

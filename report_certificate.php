@@ -57,13 +57,13 @@ class PDF extends FPDF
         $this->SetFont('Arial', '', 10);
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Mocache, " . $fecha), 0, 1, 'R');
         $this->Ln();
-        $this->MultiCell(0, 5, iconv('UTF-8', 'windows-1252', "Ingeniero/a " . $dataAdmin['fullname_inv2'] . ", Responsable de Administración del Talento Humano, a petición del interesado"), 0, 'L', 0);
+        $this->MultiCell(0, 5, iconv('UTF-8', 'windows-1252', $dataAdmin['name_abbrJob'] ." ". $dataAdmin['fullname_inv2'] . ", Responsable de Administración del Talento Humano, a petición del interesado"), 0, 'L', 0);
         $this->SetFont('Arial', 'B', 11);
         $this->Ln();
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "CERTIFICA:"), 0, 1, 'C');
         $this->Ln();
         $this->SetFont('Arial', '', 10);
-        $this->MultiCell(0, 5, iconv('UTF-8', 'windows-1252', "Que " . strtoupper($dataEmployee['fullname']) . " con cédula de ciudadanía Nro." . $dataEmployee['ci_employee'] . ", labora en esta Institución con la siguiente Información:"), 0, 'L', 0);
+        $this->MultiCell(0, 5, iconv('UTF-8', 'windows-1252', "Que, El/la " . $dataEmployee['name_abbrJob'] ." ". strtoupper($dataEmployee['fullname']) . " con cédula de ciudadanía Nro." . $dataEmployee['ci_employee'] . ", labora en esta Institución con la siguiente Información:"), 0, 'L', 0);
         $this->Ln(5);
 
         $this->SetFont('Arial', 'B', 10);
@@ -73,7 +73,7 @@ class PDF extends FPDF
         $this->SetFont('Arial', 'B', 10);
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Periodo"), 0, 1, 'L');
         $this->SetFont('Arial', '', 10);
-        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', $dataEmployee['startDate_employee'] ." - " . date('d/m/Y')), 0, 1, 'L');
+        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', $dataEmployee['startDate_employee'] ." - Actualmente"), 0, 1, 'L');
         $this->SetFont('Arial', 'B', 10);
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Área / Unidad"), 0, 1, 'L');
         $this->SetFont('Arial', '', 10);
@@ -93,7 +93,7 @@ class PDF extends FPDF
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Atentamente."), 0, 1, 'C');
         $this->Ln(30);
         $this->SetFont('Arial', 'B', 10);
-        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "Ing. ". $dataAdmin['fullname_inv2']), 0, 1, 'C');
+        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', $dataAdmin['name_abbrJob'] ." ". $dataAdmin['fullname_inv2']), 0, 1, 'C');
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "UNIDAD DE ADMINISTRACIÓN DEL TALENTO HUMANO"), 0, 1, 'C');
         $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', "ESTACIÓN EXPERIMENTAL TROPICAL PICHILINGUE"), 0, 1, 'C');
         $this->Ln(5);
@@ -108,7 +108,7 @@ class PDF extends FPDF
 
         // Definir los datos
         $accion = 'Elaborado por';
-        $nombre = 'Ing.'. $dataAdmin['fullname_inv'];
+        $nombre = $dataAdmin['name_abbrJob'] .' '. $dataAdmin['fullname_inv'];
         $cargo = 'Responsable de Administracion de Talento Humano';
 
         // Agregar los datos a la tabla
@@ -146,6 +146,7 @@ fullname,
 fullname_inv,
 fullname_inv2,
 name_jobTitle,
+name_abbrJob,
 startDate_employee,
 name_departament,
 salary_employee,

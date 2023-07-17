@@ -26,6 +26,7 @@ $(document).ready(function () {
   $("#btnUpdateReason").hide();
   $("#btnUpdateContractType").hide();
   $("#btnUpdateJobTitle").hide();
+  $("#btnUpdateAbbrJob").hide();
 
   //Configuración de Selector de hora  y minutos
   $('[name="timeSelector"]')
@@ -247,6 +248,7 @@ $(document).ready(function () {
     var idTipoContrato = $("#idTipoContrato").val();
     var idDepartamento = $("#idDepartamento").val();
     var idJobTitle = $("#idJobTitle").val();
+    var idAbbrJob = $("#idAbbrJob").val();
     var cedulaEmpleado = $("#cedulaEmpleado").val();
     var nombreEmpleado = $("#nombreEmpleado").val();
     var apellidoEmpleado = $("#apellidoEmpleado").val();
@@ -261,6 +263,7 @@ $(document).ready(function () {
       idTipoContrato !== "" &&
       idDepartamento !== "" &&
       idJobTitle !== "" &&
+      idAbbrJob !== "" &&
       cedulaEmpleado.trim() !== "" &&
       nombreEmpleado.trim() !== "" &&
       apellidoEmpleado.trim() !== "" &&
@@ -282,6 +285,7 @@ $(document).ready(function () {
             idTipoContrato,
             idDepartamento,
             idJobTitle,
+            idAbbrJob,
             cedulaEmpleado,
             nombreEmpleado,
             apellidoEmpleado,
@@ -311,6 +315,7 @@ $(document).ready(function () {
     var idTipoContrato = $("#idTipoContratou").val();
     var idDepartamento = $("#idDepartamentou").val();
     var idJobTitle = $("#idJobTitleu").val();
+    var idAbbrJob = $("#idAbbrJobu").val();
     var cedulaEmpleado = $("#cedulaEmpleadou").val();
     var nombreEmpleado = $("#nombreEmpleadou").val();
     var apellidoEmpleado = $("#apellidoEmpleadou").val();
@@ -325,6 +330,7 @@ $(document).ready(function () {
       idTipoContrato !== "" &&
       idDepartamento !== "" &&
       idJobTitle !== "" &&
+      idAbbrJob !== "" &&
       cedulaEmpleado !== "" &&
       nombreEmpleado !== "" &&
       apellidoEmpleado !== "" &&
@@ -347,6 +353,7 @@ $(document).ready(function () {
             idTipoContrato,
             idDepartamento,
             idJobTitle,
+            idAbbrJob,
             cedulaEmpleado,
             nombreEmpleado,
             apellidoEmpleado,
@@ -512,6 +519,36 @@ $(document).ready(function () {
       $("#btnUpdateJobTitle").hide();
     } else {
       toastr.error("Ingrese un nombre de Cargo", "MENSAJE");
+    }
+  });
+  //Enviar datos para Gestión de Abreviaturas de Titulos
+  $("#btnAddAbbrJob").click(function () {
+    //toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = "toast-bottom-right";
+    toastr.options.closeButton = true;
+
+    var name = $("#nameAbbrJob").val();
+
+    if (name !== "") {
+      insertAbbrJob(name);
+    } else {
+      toastr.error("Ingrese una abreviatura de Títulos", "MENSAJE");
+    }
+  });
+  $("#btnUpdateAbbrJob").click(function () {
+    //toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = "toast-bottom-right";
+    toastr.options.closeButton = true;
+
+    var id = $("#idAbbrJob").val();
+    var name = $("#nameAbbrJob").val();
+
+    if (name !== "") {
+      updateAbbrJob(id, name);
+      $("#btnAddAbbrJob").show();
+      $("#btnUpdateAbbrJob").hide();
+    } else {
+      toastr.error("Ingrese una abreviatura de Títulos", "MENSAJE");
     }
   });
 

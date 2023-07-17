@@ -9,6 +9,7 @@ $idTipoCodigo = $_POST['idTipoCodigo'];
 $idTipoContrato = $_POST['idTipoContrato'];
 $idDepartamento = $_POST['idDepartamento'];
 $idJobTitle = $_POST['idJobTitle'];
+$idAbbrJob = $_POST['idAbbrJob'];
 $cedulaEmpleado = $_POST['cedulaEmpleado'];
 $nombreEmpleado = $_POST['nombreEmpleado'];
 $apellidoEmpleado = $_POST['apellidoEmpleado'];
@@ -18,29 +19,28 @@ $direccionEmpleado = $_POST['direccionEmpleado'];
 $emailEmpleado = $_POST['emailEmpleado'];
 $salary = $_POST['salary'];
 
-
-
 if (!empty($idTipoCodigo) && !empty($idTipoContrato)
-  && !empty($idDepartamento) && !empty($idJobTitle) && !empty($cedulaEmpleado) && !empty($nombreEmpleado)
+  && !empty($idDepartamento) && !empty($idJobTitle) && !empty($idAbbrJob) && !empty($cedulaEmpleado) && !empty($nombreEmpleado)
   && !empty($apellidoEmpleado) && !empty($dateInicioLaboral) && !empty($telefonoEmpleado)
   && !empty($direccionEmpleado) && !empty($emailEmpleado) && !empty($salary)
 ) {
   if (validateCedula($cedulaEmpleado)) {
-    $sql = 'CALL pa_insertEmployee(?,?,?,?,?,?,?,?,?,?,?,?, @p_success, @p_message)';
+    $sql = 'CALL pa_insertEmployee(?,?,?,?,?,?,?,?,?,?,?,?,?, @p_success, @p_message)';
     $stmt = $conn->prepare($sql);
 
     $stmt->bindParam(1, $idTipoCodigo, PDO::PARAM_INT);
     $stmt->bindParam(2, $idTipoContrato, PDO::PARAM_INT);
     $stmt->bindParam(3, $idDepartamento, PDO::PARAM_INT);
     $stmt->bindParam(4, $idJobTitle, PDO::PARAM_INT);
-    $stmt->bindParam(5, $cedulaEmpleado, PDO::PARAM_STR);
-    $stmt->bindParam(6, $nombreEmpleado, PDO::PARAM_STR);
-    $stmt->bindParam(7, $apellidoEmpleado, PDO::PARAM_STR);
-    $stmt->bindParam(8, $dateInicioLaboral, PDO::PARAM_STR);
-    $stmt->bindParam(9, $telefonoEmpleado, PDO::PARAM_STR);
-    $stmt->bindParam(10, $direccionEmpleado, PDO::PARAM_STR);
-    $stmt->bindParam(11, $emailEmpleado, PDO::PARAM_STR);
-    $stmt->bindParam(12, $salary, PDO::PARAM_STR);
+    $stmt->bindParam(5, $idAbbrJob, PDO::PARAM_INT);
+    $stmt->bindParam(6, $cedulaEmpleado, PDO::PARAM_STR);
+    $stmt->bindParam(7, $nombreEmpleado, PDO::PARAM_STR);
+    $stmt->bindParam(8, $apellidoEmpleado, PDO::PARAM_STR);
+    $stmt->bindParam(9, $dateInicioLaboral, PDO::PARAM_STR);
+    $stmt->bindParam(10, $telefonoEmpleado, PDO::PARAM_STR);
+    $stmt->bindParam(11, $direccionEmpleado, PDO::PARAM_STR);
+    $stmt->bindParam(12, $emailEmpleado, PDO::PARAM_STR);
+    $stmt->bindParam(13, $salary, PDO::PARAM_STR);
 
 
     $stmt->execute();
