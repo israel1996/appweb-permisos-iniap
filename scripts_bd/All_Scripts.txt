@@ -1695,8 +1695,6 @@ DELIMITER ;
 
 -- ------------------------------------------------------------------------------------------
 
-
-
 DELIMITER $$
 
 CREATE PROCEDURE pa_insertPermissionEmployee(
@@ -1745,7 +1743,15 @@ BEGIN
   ) INTO v_pendingPermissionExists;
 
   IF v_pendingPermissionExists = FALSE THEN
-    IF p_id_reason = v_id_reason_vacaciones THEN
+    -- Obtener los saldos de los periodos activos
+      SELECT COALESCE(SUM(balanceWorkingDays_vacationPeriod + balanceWeekendDays_vacationPeriod), 0),
+      COALESCE(SUM(balanceWorkingDays_vacationPeriod), 0),
+      COALESCE(SUM(balanceWeekendDays_vacationPeriod), 0)
+	   INTO v_balanceDays, v_balanceWorkingDays, v_balanceWeekendDays
+	  FROM tb_vacationperiod
+	  WHERE id_employee = p_id_employee AND state_vacationPeriod = TRUE;
+
+	 IF p_id_reason = v_id_reason_vacaciones THEN
       -- Verificar si existe un periodo de vacaciones activo 
       SELECT EXISTS(
         SELECT 1
@@ -1753,11 +1759,6 @@ BEGIN
         WHERE id_employee = p_id_employee
           AND state_vacationPeriod = TRUE 
       ) INTO v_vacationExists;
-      -- Obtener los saldos de los periodos activos
-      SELECT SUM(balanceWorkingDays_vacationPeriod + balanceWeekendDays_vacationPeriod), SUM(balanceWorkingDays_vacationPeriod), SUM(balanceWeekendDays_vacationPeriod)
-      INTO v_balanceDays, v_balanceWorkingDays, v_balanceWeekendDays
-      FROM tb_vacationperiod 
-		WHERE id_employee = p_id_employee AND state_vacationPeriod = TRUE;
     ELSE 
       SET v_vacationExists = TRUE;
     END IF;
@@ -2021,6 +2022,7 @@ DELIMITER ;
 
 
 
+
 DELIMITER $$
 
 CREATE PROCEDURE pa_updatePermissionState(
@@ -2060,8 +2062,8 @@ BEGIN
   DECLARE cur_return CURSOR FOR
     SELECT id_vacationPeriod, earnedWorkingDays_vacationPeriod, earnedWeekendDays_vacationPeriod, balanceWorkingDays_vacationPeriod, balanceWeekendDays_vacationPeriod
     FROM tb_vacationPeriod
-    WHERE id_employee = v_id_employee AND state_vacationPeriod = TRUE
-    ORDER BY endDate_vacationPeriod DESC;
+    WHERE id_employee = v_id_employee 
+    ORDER BY id_vacationPeriod DESC LIMIT 3;
 
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_id_vacationPeriod = NULL;
 
@@ -2143,6 +2145,14 @@ BEGIN
                     WHERE id_vacationPeriod = v_id_vacationPeriod;
                 END IF;
             END IF;
+            -- Desactivación de periodo
+            SELECT balanceWorkingDays_vacationPeriod INTO @balance_working_days 
+				FROM tb_vacationperiod WHERE id_vacationPeriod = v_id_vacationPeriod;
+            IF @balance_working_days = 0 THEN
+            	UPDATE tb_vacationPeriod
+               SET state_vacationPeriod = FALSE
+               WHERE id_vacationPeriod = v_id_vacationPeriod;
+            END IF;
         END LOOP deduct_loop;
         CLOSE cur_discount;
     END IF;
@@ -2162,10 +2172,14 @@ BEGIN
             END IF;
             IF v_workingDaysToReturn > 0 THEN
                 IF v_workingDaysToReturn <= (v_earnedWorkingDays - v_balanceWorkingDays) THEN
-                    UPDATE tb_vacationPeriod
+						  UPDATE tb_vacationPeriod
                     SET balanceWorkingDays_vacationPeriod = balanceWorkingDays_vacationPeriod + v_workingDaysToReturn
                     WHERE id_vacationPeriod = v_id_vacationPeriod;
                     SET v_workingDaysToReturn = 0;
+                    -- Activación de periodo
+						  UPDATE tb_vacationPeriod
+               	  SET state_vacationPeriod = TRUE
+                    WHERE id_vacationPeriod = v_id_vacationPeriod;
                 ELSE
                     SET v_workingDaysToReturn = v_workingDaysToReturn - (v_earnedWorkingDays - v_balanceWorkingDays);
                     UPDATE tb_vacationPeriod

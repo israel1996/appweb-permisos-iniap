@@ -21,7 +21,7 @@ class PDF extends FPDF
         $this->Ln(5);
 
         $this->SetFont('Arial', 'B', 13);
-        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', 'Permiso Nº '). $data['issueNumber_permission'] .'-'. date('Y'), 0, 1, 'C');
+        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', 'Permiso Nº ') . $data['issueNumber_permission'] . '-' . date('Y'), 0, 1, 'C');
         $this->SetFont('Arial', 'I', 10);
         $this->Cell(170, 5, iconv('UTF-8', 'windows-1252', 'Fecha de Emisión:'), 0, 0, 'C');
         $this->Cell(-122, 5, $data['issueDate_permission'], 0, 1, 'C');
@@ -37,7 +37,7 @@ class PDF extends FPDF
         $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'Nombres y Apellidos:'), 0);
 
         $this->SetFont('Arial', '', 10);
-        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', $data['name_employee'].' '.$data['lastName_employee']), 0, 1);
+        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', $data['name_employee'] . ' ' . $data['lastName_employee']), 0, 1);
 
         $this->SetFont('Arial', 'B', 10);
         $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'Departamento:'), 0);
@@ -64,7 +64,7 @@ class PDF extends FPDF
         $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'Fecha Inicial:'), 0);
 
         $this->SetFont('Arial', '', 10);
-        $this->Cell(60, 5,  $data['startDateTime_permission'], 0); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha
+        $this->Cell(60, 5, $data['startDateTime_permission'], 0); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha
 
         $this->SetFont('Arial', 'B', 10);
         $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'Fecha Final:'), 0);
@@ -76,25 +76,23 @@ class PDF extends FPDF
         $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'Tiempo tomado:'), 0);
 
         $this->SetFont('Arial', '', 10);
-        $this->Cell(0, 5, number_format($data['workingDays_permission'], 2).' dias laborables y '. number_format($data['weekendDays_permission'], 2) .' fines de semana', 0, 1); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha
+        $this->Cell(0, 5, number_format($data['workingDays_permission'], 2) . ' dias laborables y ' . number_format($data['weekendDays_permission'], 2) . ' fines de semana', 0, 1); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha
 
         $this->Ln(2);
         $this->SetFont('Arial', 'B', 10);
         $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'SALDOS ACTUALES:'), 0);
 
         $this->SetFont('Arial', 'B', 10);
-        $this->Cell(60, 5, number_format($data['balanceWorkingDays_permission'], 2).' dias laborables y '. number_format($data['balanceWeekendDays_permission'],2) .' fines de semana', 0, 1); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha
+        $this->Cell(60, 5, number_format($data['balanceWorkingDays_permission'], 2) . ' dias laborables y ' . number_format($data['balanceWeekendDays_permission'], 2) . ' fines de semana', 0, 1); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha
 
-        if($data['balanceWorkingDays_permission'] != 0 && $data['balanceWeekendDays_permission'] != 0){
-            $this->SetFont('Arial', 'B', 10);
-            $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'SALDOS NUEVOS:'), 0);
-    
-            $balanceWorkingDays = number_format($data['balanceWorkingDays_permission'] - $data['workingDays_permission'], 2);
-            $balanceWeekendDays = number_format($data['balanceWeekendDays_permission'] - $data['weekendDays_permission'], 2);
-            $this->SetFont('Arial', 'B', 10);
-            $this->Cell(60, 5, $balanceWorkingDays.' dias laborables y '. $balanceWeekendDays .' fines de semana', 0, 1); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha    
-        }
-        
+        $this->SetFont('Arial', 'B', 10);
+        $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'SALDOS NUEVOS:'), 0);
+
+        $balanceWorkingDays = number_format($data['balanceWorkingDays_permission'] - $data['workingDays_permission'], 2);
+        $balanceWeekendDays = number_format($data['balanceWeekendDays_permission'] - $data['weekendDays_permission'], 2);
+        $this->SetFont('Arial', 'B', 10);
+        $this->Cell(60, 5, $balanceWorkingDays . ' dias laborables y ' . $balanceWeekendDays . ' fines de semana', 0, 1);
+
         $this->SetFont('Arial', 'B', 10);
         $this->Cell(45, 10, 'Estado de Permiso:', 0);
 
@@ -143,7 +141,7 @@ class PDF extends FPDF
     // Contenido del informe para la segunda mitad
     function Content2($data)
     {
-       
+
         $status = array('V' => 'Validado', 'P' => 'Pendiente', 'R' => 'Rechazado');
 
 
@@ -159,7 +157,7 @@ class PDF extends FPDF
 
         $this->SetFont('Arial', 'B', 13);
 
-        $this->Cell(0, 10,iconv('UTF-8', 'windows-1252', 'Permiso Nº '). $data['issueNumber_permission'] .'-'. date('Y'), 0, 1, 'C');
+        $this->Cell(0, 10, iconv('UTF-8', 'windows-1252', 'Permiso Nº ') . $data['issueNumber_permission'] . '-' . date('Y'), 0, 1, 'C');
 
         $this->SetFont('Arial', 'I', 10);
         $this->Cell(170, 0, iconv('UTF-8', 'windows-1252', 'Fecha de Emisión:'), 0, 0, 'C');
@@ -176,7 +174,7 @@ class PDF extends FPDF
         $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'Nombres y Apellidos:'), 0);
 
         $this->SetFont('Arial', '', 10);
-        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', $data['name_employee'].' '.$data['lastName_employee']), 0, 1);
+        $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', $data['name_employee'] . ' ' . $data['lastName_employee']), 0, 1);
 
         $this->SetFont('Arial', 'B', 10);
         $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'Departamento:'), 0);
@@ -203,7 +201,7 @@ class PDF extends FPDF
         $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'Fecha Inicial:'), 0);
 
         $this->SetFont('Arial', '', 10);
-        $this->Cell(60, 5,  $data['startDateTime_permission'], 0); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha
+        $this->Cell(60, 5, $data['startDateTime_permission'], 0); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha
 
         $this->SetFont('Arial', 'B', 10);
         $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'Fecha Final:'), 0);
@@ -215,26 +213,22 @@ class PDF extends FPDF
         $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'Tiempo tomado:'), 0);
 
         $this->SetFont('Arial', '', 10);
-        $this->Cell(0, 5, number_format($data['workingDays_permission'], 2).' dias laborables y '. number_format($data['weekendDays_permission'], 2) .' fines de semana', 0, 1); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha
+        $this->Cell(0, 5, number_format($data['workingDays_permission'], 2) . ' dias laborables y ' . number_format($data['weekendDays_permission'], 2) . ' fines de semana', 0, 1); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha
 
         $this->Ln(2);
         $this->SetFont('Arial', 'B', 10);
         $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'SALDOS ACTUALES:'), 0);
 
         $this->SetFont('Arial', 'B', 10);
-        $this->Cell(60, 5, number_format($data['balanceWorkingDays_permission'], 2).' dias laborables y '. number_format($data['balanceWeekendDays_permission'],2) .' fines de semana', 0, 1); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha
+        $this->Cell(60, 5, number_format($data['balanceWorkingDays_permission'], 2) . ' dias laborables y ' . number_format($data['balanceWeekendDays_permission'], 2) . ' fines de semana', 0, 1); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha
 
-        if($data['balanceWorkingDays_permission'] != 0 && $data['balanceWeekendDays_permission'] != 0){
-            $this->SetFont('Arial', 'B', 10);
-            $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'SALDOS NUEVOS:'), 0);
-    
-            $balanceWorkingDays = number_format($data['balanceWorkingDays_permission'] - $data['workingDays_permission'], 2);
-            $balanceWeekendDays = number_format($data['balanceWeekendDays_permission'] - $data['weekendDays_permission'], 2);
-            $this->SetFont('Arial', 'B', 10);
-            $this->Cell(60, 5, $balanceWorkingDays.' dias laborables y '. $balanceWeekendDays .' fines de semana', 0, 1); // Aumente el ancho de la celda a 40 para dar más espacio para la fecha    
-        }
+        $this->SetFont('Arial', 'B', 10);
+        $this->Cell(45, 5, iconv('UTF-8', 'windows-1252', 'SALDOS NUEVOS:'), 0);
 
-
+        $balanceWorkingDays = number_format($data['balanceWorkingDays_permission'] - $data['workingDays_permission'], 2);
+        $balanceWeekendDays = number_format($data['balanceWeekendDays_permission'] - $data['weekendDays_permission'], 2);
+        $this->SetFont('Arial', 'B', 10);
+        $this->Cell(60, 5, $balanceWorkingDays . ' dias laborables y ' . $balanceWeekendDays . ' fines de semana', 0, 1);
 
         $this->SetFont('Arial', 'B', 10);
         $this->Cell(45, 10, 'Estado de Permiso:', 0);
@@ -290,7 +284,7 @@ if (isset($_GET['idPermiss'])) {
 }
 // Datos del permiso
 
-$sql = "SELECT * FROM vw_permissEmployeeReport WHERE id_permission =". $idPermiss;
+$sql = "SELECT * FROM vw_permissEmployeeReport WHERE id_permission =" . $idPermiss;
 
 $stmt = $conn->prepare($sql);
 $stmt->execute();
