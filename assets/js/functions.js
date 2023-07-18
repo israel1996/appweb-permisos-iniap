@@ -1360,7 +1360,7 @@ function insertPermissBack(idEmployee, datePermissBack, statePermissBack) {
             var success = response.success;
             var message = response.message;
             if (success == true) {
-                $('#tablePermissBack').load('./partials/tablePermissBack.php');
+                getDataPermissBack();
                 toastr.success(message, "MENSAJE");
             } else {
                 toastr.error(message, "MENSAJE");

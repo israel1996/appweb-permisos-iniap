@@ -128,8 +128,8 @@ if ($num_rows > 0) {
     $output['data'] .= '</tr>';
 }
 
-if ($output['totalRegistros'] > 0) {
-    $totalPaginas = ceil($totalRegistros / $limit);
+if ($output['totalFiltro'] > 0) {
+    $totalPaginas = ceil($totalFiltro / $limit);
 
     $output['paginacion'] .= '<nav>';
     $output['paginacion'] .= '<ul class="pagination">';

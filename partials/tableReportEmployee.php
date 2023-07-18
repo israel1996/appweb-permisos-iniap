@@ -102,8 +102,8 @@ foreach ($resultado as $row) {
     $output['data'] .= '</tr>';
 }
 
-if ($output['totalRegistros'] > 0 && $limit > 0) {
-    $totalPaginas = ceil($output['totalRegistros'] / $limit);
+if ($output['totalFiltro'] > 0 && $limit > 0) {
+    $totalPaginas = ceil($output['totalFiltro'] / $limit);
 
     $output['paginacion'] .= '<nav>';
     $output['paginacion'] .= '<ul class="pagination">';

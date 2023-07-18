@@ -133,8 +133,7 @@ if ($num_rows > 0) {
         <img src="./assets/icons/edit-3.svg" alt="Editar">
         </button> </td>';
         
-        $passEncryp = password_hash($ciEmployee, PASSWORD_BCRYPT);
-        $output['data'] .= '<td><button class="btn btn-primary" onclick="preguntarSiNoReset(' . $idUser . ',\'' . $passEncryp . '\')">
+        $output['data'] .= '<td><button class="btn btn-primary" onclick="preguntarSiNoReset(' . $idUser . ',\'' . $ciEmployee . '\')">
         <img src="./assets/icons/key.svg" alt="Resetear">
         </button> </td>';
         
@@ -156,8 +155,8 @@ if ($num_rows > 0) {
     $output['data'] .= '</tr>';
 }
 
-if ($output['totalRegistros'] > 0) {
-    $totalPaginas = ceil($output['totalRegistros'] / $limit);
+if ($output['totalFiltro'] > 0) {
+    $totalPaginas = ceil($output['totalFiltro'] / $limit);
 
     $output['paginacion'] .= '<nav>';
     $output['paginacion'] .= '<ul class="pagination">';

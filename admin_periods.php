@@ -339,35 +339,6 @@ include_once "assets/php/database.php";
 
     }
 
-    var modalPeriodUpdate = document.getElementById("modalPeriodUpdate");
-
-    modalPeriodUpdate.addEventListener("show.bs.modal", function () {
-      idPeriod = $('#idPeriod').val();
-
-      var cadena = "id=" + idPeriod;
-      //alert(cadena);
-      /*
-        $.ajax({
-          type: "POST",
-          data: cadena,
-          dataType: "json",
-          url: './assets/php/getDataEmployee.php',
-          success: function (response) {
-            $('#cedulaEmployeePeriodu').val(response.ci_employee);
-            $('#nameEmployeePeriodu').val(response.name_employee);
-            $('#lastNameEmployeePeriodu').val(response.lastName_employee);
-            $('#departamentEmployeePeriodu').val(response.name_departament);
-
-          },
-          error: function (xhr, status, error) {
-            // Manejar errores de la solicitud Ajax
-            console.log("Error en la solicitud Ajax:", error);
-          } 
-        });  */
-    });
-
-
-
   </script>
 
 
