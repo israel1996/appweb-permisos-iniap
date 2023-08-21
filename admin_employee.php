@@ -70,12 +70,12 @@ require_once "assets/php/database.php";
 
               <div class="col-md-6">
                 <label for="departamentEmployeeCertificate" class="form-label fw-bold">Departamento</label>
-                <input type="text" name="departamentEmployeeCertificate" id="departamentEmployeeCertificate" class="form-control"
-                  disabled>
+                <input type="text" name="departamentEmployeeCertificate" id="departamentEmployeeCertificate"
+                  class="form-control" disabled>
 
                 <label for="startDateEmployeeCertificate" class="form-label  fw-bold">Fecha de Inicio Laboral</label>
-                <input type="date" name="startDateEmployeeCertificate" class="form-control" id="startDateEmployeeCertificate"
-                  disabled>
+                <input type="date" name="startDateEmployeeCertificate" class="form-control"
+                  id="startDateEmployeeCertificate" disabled>
 
                 <br />
                 <div class="form-check">
@@ -441,6 +441,15 @@ require_once "assets/php/database.php";
 
                 <label for="salaryu" class="form-label fw-bold">Remuneración</label>
                 <input type="text" name="numeric" id="salaryu" class="form-control" maxlength="10" placeholder="$00.00">
+
+                <label class="form-label fw-bold" style="margin-top:12px">Activar o Desactivar</label>
+                <div class="form-inline">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="chIsBoss" style="width: 20px; height: 20px; border: 2px solid #969696;">
+                    <label class="form-check-label" for="chIsBoss">Jefe de Departamento</label>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>

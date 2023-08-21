@@ -70,7 +70,9 @@ if (!empty($recd_username) && !empty($recd_pass)) {
             $result2['id_userType'],
             $result1['name_employee'],
             $result1['lastName_employee'],
-            $result1['id_jobTitle']
+            $result1['id_jobTitle'],
+            $result1['id_departament'],
+            $result1['isBoss_employee']
         );
 
         // serializar el objeto User
@@ -152,6 +154,12 @@ if (!empty($recd_username) && !empty($recd_pass)) {
 
                 $subTab2 = new MenuItem('Saldos', $url . $nombreCarpeta . '/employee_balance.php');
                 $tab2->addSubmenu($subTab2);
+
+                if($user->getIsBossEmployee())
+                {
+                    $subTab3 = new MenuItem('Autorizar', $url . $nombreCarpeta . '/boss_permise.php');
+                    $tab2->addSubmenu($subTab3);
+                }
 
 
                 $_SESSION['menu'] = serialize($menu);

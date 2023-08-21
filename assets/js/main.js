@@ -324,6 +324,8 @@ $(document).ready(function () {
     var direccionEmpleado = $("#direccionEmpleadou").val();
     var emailEmpleado = $("#emailEmpleadou").val();
     var salary = $("#salaryu").val();
+    var isBoss = $("#chIsBoss").prop("checked");
+
 
     if (
       idTipoCodigo !== "" &&
@@ -361,8 +363,9 @@ $(document).ready(function () {
             telefonoEmpleado,
             direccionEmpleado,
             emailEmpleado,
-            salary
-          );
+            salary,
+            isBoss
+          ); 
         } else {
           toastr.error("El correo es incorrecto", "MENSAJE");
         }
@@ -765,7 +768,37 @@ $(document).ready(function () {
 
     if (idPermiss != 0) {
       if (validateCheckbox || rejectCheckbox) {
-        var state = validateCheckbox ? "V" : "R";
+        var state = "R";
+        if (validateCheckbox) {
+          state = "V";
+        } 
+        if (message.trim() != "") {
+          updateStatePermiss(idPermiss, state, message);
+        } else {
+          toastr.error("Escriba alguna observación", "MENSAJE");
+        }
+      } else {
+        toastr.error("Seleccione una acción", "MENSAJE");
+      }
+    } else {
+      toastr.error("No hay permiso seleccionado", "MENSAJE");
+    }
+  });
+
+  //Enviar datos para validar permiso - JEFE
+  $("#btnConfirmPermissBoss").click(function () {
+    //toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = "toast-bottom-right";
+    toastr.options.closeButton = true;
+
+    var idPermiss = $("#idPermiss").val();
+    var message = $("#observationBoss").val();
+    var authorizeCheckbox = $("#chStatePermissAuthorize").prop("checked");
+    var rejectCheckbox = $("#chStatePermissReject").prop("checked");
+
+    if (idPermiss != 0) {
+      if (authorizeCheckbox || rejectCheckbox) {
+        var state = authorizeCheckbox ? "A" : "R";
         if (message.trim() != "") {
           updateStatePermiss(idPermiss, state, message);
         } else {
@@ -1010,7 +1043,7 @@ $(document).ready(function () {
 
     var idEmployee = $("#idEmployeeSelectedRow").val();
     var rmu = $("#chRMU").prop("checked");
-    
+
     if (idEmployee != 0) {
       generatePDFCertificate(idEmployee, rmu);
     } else {

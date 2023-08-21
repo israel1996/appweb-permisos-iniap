@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once "../assets/php/database.php";
+require_once "../assets/class/User.php";
 
 $columns = [
     'id_permission',
@@ -18,11 +19,20 @@ $columns = [
     'observation_permission'
 ];
 
+
 $table = "vw_permissAdmin";
 $id = 'id_permission';
+$idDepartament = 0;
+$typeUser = 0;
 
 $campo = isset($_POST['campo']) ? $_POST['campo'] : null;
 $statePermiss = isset($_POST['statePermiss']) ? $_POST['statePermiss'] : null;
+
+if (isset($_SESSION['user'])) {
+    $user = unserialize($_SESSION['user']);
+    $idDepartament = $user->getDepartamentEmployee();
+    $typeUser = $user->getIdUserType();
+}
 
 $where = '';
 $params = [];
@@ -30,6 +40,16 @@ $params = [];
 if ($statePermiss != null) {
     $where = "WHERE state_permission = :statePermiss";
     $params[':statePermiss'] = $statePermiss;
+}
+
+if ($idDepartament != 0 && $typeUser == 2) {
+    if ($where != "") {
+        $where .= " AND ";
+    } else {
+        $where = "WHERE ";
+    }
+    $where .= "id_departament = :idDepartament";
+    $params[':idDepartament'] = $idDepartament;
 }
 
 //Busqueda
@@ -95,7 +115,8 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 $stateNames = [
     'P' => 'Pendiente',
     'R' => 'Rechazado',
-    'V' => 'Validado'
+    'V' => 'Validado',
+    'A' => 'Autorizado'
 ];
 
 
@@ -114,11 +135,11 @@ foreach ($results as $row) {
     $output['data'] .= '<td>' . $row['startDateTime_permission'] . '</td>';
     $output['data'] .= '<td>' . $row['endDateTime_permission'] . '</td>';
     $output['data'] .= '<td>' . $row['workingDays_permission'] . '</td>';
-    $output['data'] .= '<td>' . $row['weekendDays_permission']  . '</td>';
+    $output['data'] .= '<td>' . $row['weekendDays_permission'] . '</td>';
     $output['data'] .= '<td>' . $row['total'] . '</td>';
     $output['data'] .= '<td><button  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalDetailPermiss"
      onclick="addToModalPermiss(\'' . implode("||", $row) . '\')"><img src="./assets/icons/check.svg" alt="Ver"></button></td>';
-     $output['data'] .= '<td><button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalPDFPermiss"
+    $output['data'] .= '<td><button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalPDFPermiss"
     onclick="generatePDFPermiss(\'' . $row['id_permission'] . '\')"><img src="./assets/icons/file-text.svg" alt="Ver"></button></td>';
     $output['data'] .= '</tr>';
 }

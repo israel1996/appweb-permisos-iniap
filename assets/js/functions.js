@@ -87,7 +87,7 @@ function insertDataEmployee(idTipoCodigo, idTipoContrato, idDepartamento, idJobT
 
 }
 function updateDataEmployee(idEmployee, idTipoCodigo, idTipoContrato, idDepartamento, idJobTitle, idAbbrJob, cedulaEmpleado, nombreEmpleado,
-    apellidoEmpleado, dateInicioLaboral, telefonoEmpleado, direccionEmpleado, emailEmpleado, salary) {
+    apellidoEmpleado, dateInicioLaboral, telefonoEmpleado, direccionEmpleado, emailEmpleado, salary, isBoss) {
 
     toastr.options.preventDuplicates = true;
     toastr.options.positionClass = 'toast-bottom-right';
@@ -107,7 +107,8 @@ function updateDataEmployee(idEmployee, idTipoCodigo, idTipoContrato, idDepartam
         telefonoEmpleado: telefonoEmpleado,
         direccionEmpleado: direccionEmpleado,
         emailEmpleado: emailEmpleado,
-        salary: salary
+        salary: salary,
+        isBoss: isBoss
     };
 
     $.ajax({
@@ -152,6 +153,9 @@ function agregaform(datos) {
     $('#emailEmpleadou').val(d[12]);
     $('#salaryu').val(d[13]);
 
+    const chIsBoss = document.getElementById("chIsBoss");
+    chIsBoss.checked =  (d[14] === "1");
+    
 }
 function addToModalPermiss(datos) {
     d = datos.split('||');

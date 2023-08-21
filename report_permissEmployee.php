@@ -8,7 +8,7 @@ class PDF extends FPDF
     // Contenido del informe para la primera mitad
     function Content1($data)
     {
-        $status = array('V' => 'Validado', 'P' => 'Pendiente', 'R' => 'Rechazado');
+        $status = array('V' => 'Validado', 'P' => 'Pendiente', 'R' => 'Rechazado', 'A' => 'Autorizado');
 
         $this->SetAutoPageBreak(false);
 
@@ -145,7 +145,7 @@ class PDF extends FPDF
     function Content2($data)
     {
 
-        $status = array('V' => 'Validado', 'P' => 'Pendiente', 'R' => 'Rechazado');
+        $status = array('V' => 'Validado', 'P' => 'Pendiente', 'R' => 'Rechazado', 'A' => 'Autorizado');
 
 
         $this->SetY($this->GetPageHeight() / 2 - 1);

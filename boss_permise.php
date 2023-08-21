@@ -106,9 +106,9 @@ include_once "assets/php/database.php";
                 <div class="form-inline">
 
                   <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="chStatePermissValidate"
+                    <input class="form-check-input" type="checkbox" id="chStatePermissAuthorize"
                       onclick="toggleCheckbox(this.id)" style="width: 20px; height: 20px; border: 2px solid #969696;">
-                    <label class="form-check-label" for="chStatePermissValidate">Validar</label>
+                    <label class="form-check-label" for="chStatePermissAuthorize">Autorizar</label>
                   </div>
                   <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" id="chStatePermissReject"
@@ -117,15 +117,15 @@ include_once "assets/php/database.php";
                   </div>
                 </div>
 
-                <label for="observationAdmin" class="form-label fw-bold">Respuesta</label>
-                <textarea name="observationAdmin" id="observationAdmin" class="form-control" rows="4"></textarea>
+                <label for="observationBoss" class="form-label fw-bold">Respuesta</label>
+                <textarea name="observationBoss" id="observationBoss" class="form-control" rows="4"></textarea>
 
               </div>
             </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-success w-100" data-dismiss="modal"
-              id="btnConfirmPermiss">Confirmar</button>
+              id="btnConfirmPermissBoss">Confirmar</button>
           </div>
         </div>
       </div>
@@ -137,8 +137,7 @@ include_once "assets/php/database.php";
           <label for="dateDayPermisses" class="col-form-label fw-bold">Buscar:</label>
         </div>
         <div class="col-auto">
-          <input type="text" name="campo_permisses" id="campo_permisses" class="form-control"
-            placeholder="Escriba aquí...">
+          <input type="text" name="campo_permisses" id="campo_permisses" class="form-control" placeholder="Escriba aquí...">
         </div>
         <div class="col-auto">
           <label for="statePermisseSearch" class="col-form-label fw-bold">Mostrar: </label>
@@ -218,10 +217,10 @@ include_once "assets/php/database.php";
   <script>
 
     function toggleCheckbox(clickedId) {
-      const checkbox1 = document.getElementById("chStatePermissValidate");
+      const checkbox1 = document.getElementById("chStatePermissAuthorize");
       const checkbox2 = document.getElementById("chStatePermissReject");
 
-      if (clickedId === "chStatePermissValidate" && checkbox1.checked) {
+      if (clickedId === "chStatePermissAuthorize" && checkbox1.checked) {
         checkbox2.checked = false;
       } else if (clickedId === "chStatePermissReject" && checkbox2.checked) {
         checkbox1.checked = false;

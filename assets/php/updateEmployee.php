@@ -20,6 +20,8 @@ $telefonoEmpleado = $_POST['telefonoEmpleado'];
 $direccionEmpleado = $_POST['direccionEmpleado'];
 $emailEmpleado = $_POST['emailEmpleado'];
 $salary = $_POST['salary'];
+$isBoss = $_POST['isBoss'];
+$isBoss = filter_var($isBoss, FILTER_VALIDATE_BOOLEAN);
 
 
 if (
@@ -32,7 +34,7 @@ if (
 
   if (validateCedula($cedulaEmpleado)) {
 
-    $sql = 'CALL pa_updateEmployee(?,?,?,?,?,?,?,?,?,?,?,?,?,?, @p_success, @p_message)';
+    $sql = 'CALL pa_updateEmployee(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, @p_success, @p_message)';
     $stmt = $conn->prepare($sql);
 
     $stmt->bindParam(1, $idEmployee, PDO::PARAM_INT);
@@ -49,7 +51,7 @@ if (
     $stmt->bindParam(12, $direccionEmpleado, PDO::PARAM_STR);
     $stmt->bindParam(13, $emailEmpleado, PDO::PARAM_STR);
     $stmt->bindParam(14, $salary, PDO::PARAM_STR);
-
+    $stmt->bindParam(15, $isBoss, PDO::PARAM_BOOL);
 
     $stmt->execute();
 
