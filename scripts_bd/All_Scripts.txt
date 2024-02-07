@@ -1470,8 +1470,8 @@ BEGIN
   -- Obtener la fecha de inicio del empleado y el codeType
   SELECT startDate_employee, id_codeType INTO v_startDate, v_codeType FROM tb_employee WHERE id_employee = p_id_employee;
 
-  -- Obtener el año actual
-  SET v_yearCount = YEAR(CURDATE()) - YEAR(v_startDate);
+  -- Obtener la cantidad de años
+  SET v_yearCount = TIMESTAMPDIFF(YEAR, v_startDate, CURDATE());
   
   -- Obtener cantidad de registros de la tabla periodods
   SET @num_rows = (SELECT COUNT(*) FROM tb_vacationperiod WHERE id_employee = p_id_employee);
