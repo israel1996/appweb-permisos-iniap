@@ -1571,8 +1571,8 @@ BEGIN
   -- Obtener la fecha de inicio del empleado y el codeType
   SELECT startDate_employee, id_codeType INTO v_startDate, v_codeType FROM tb_employee WHERE id_employee = p_id_employee;
 
-  -- Obtener el año actual
-  SET v_yearCount = YEAR(CURDATE()) - YEAR(v_startDate);
+-- Obtener la cantidad de años
+  SET v_yearCount = TIMESTAMPDIFF(YEAR, v_startDate, CURDATE());
   
     -- Establecer las fechas de inicio y fin para el período de vacaciones del año actual
     SET v_startDate_currentYear = DATE_ADD(v_startDate, INTERVAL v_yearCount YEAR);
@@ -1736,13 +1736,11 @@ BEGIN
   SELECT id_reason INTO v_id_reason_vacaciones FROM tb_reason
   WHERE LOWER(name_reason) LIKE '%vacaciones%';
 
-  -- Verificar si existe un permiso pendiente
-  SELECT EXISTS(
-    SELECT 1
-    FROM tb_permission
-    WHERE id_employee = p_id_employee
-    AND state_permission = 'P'
-  ) INTO v_pendingPermissionExists;
+  -- Si pasa de 2 permisos pendientes se activa
+	SELECT 
+    IF(COUNT(*) < 2, FALSE, TRUE) 
+	INTO v_pendingPermissionExists FROM tb_permission 
+	WHERE id_employee = p_id_employee AND state_permission = 'P';
 
   IF v_pendingPermissionExists = FALSE THEN
     -- Obtener los saldos de los periodos activos
@@ -2014,7 +2012,7 @@ BEGIN
       END IF;
     END IF;
   ELSE
-    SET message = 'Ya existe un permiso pendiente, espere una respuesta';
+    SET message = 'Ya existen 2 permisos pendientes, espere una respuesta';
     SET success = FALSE;
   END IF;
   
