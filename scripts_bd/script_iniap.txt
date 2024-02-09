@@ -1,0 +1,2751 @@
+/**********************************************************************************************
+ ***                                                                                        ***
+ ***                                      BASE DE DATOS                                     ***
+ ***                                                                                        ***
+ *********************************************************************************************/
+
+
+DROP DATABASE IF EXISTS iniap;
+CREATE DATABASE iniap;
+USE iniap;
+
+
+CREATE TABLE `tb_user` (
+  `id_user` int PRIMARY KEY AUTO_INCREMENT,
+  `id_userType` int,
+  `id_employee` int,
+  `name_user` varchar(100) UNIQUE,
+  `password_user` varchar(200),
+  `state_user` bool,
+  `createdDate_user` datetime,
+  `lastSession_user` datetime
+);
+
+CREATE TABLE `tb_employee` (
+  `id_employee` int PRIMARY KEY AUTO_INCREMENT,
+  `id_codeType` int,
+  `id_typeContract` int,
+  `id_departament` int,
+  `id_jobTitle` int, 
+  `id_abbrJob` int, 
+  `ci_employee` varchar(13),
+  `name_employee` varchar(100),
+  `lastName_employee` varchar(150),
+  `startDate_employee` date,
+  `phoneNumber_employee` varchar(13),
+  `address_employee` text,
+  `email_employee` varchar(100),
+  `salary_employee` decimal(10,2),
+  `isBoss_employee` bool
+);
+
+CREATE TABLE `tb_departament` (
+  `id_departament` int PRIMARY KEY AUTO_INCREMENT,
+  `name_departament` text
+);
+
+CREATE TABLE `tb_userType` (
+  `id_userType` int PRIMARY KEY AUTO_INCREMENT,
+  `name_userType` text
+);
+
+CREATE TABLE `tb_permission` (
+  `id_permission` int PRIMARY KEY AUTO_INCREMENT,
+  `id_employee` int,
+  `id_reason` int,
+  `id_numberPeriod` int,
+  `issueNumber_permission` int,
+  `issueDate_permission` date,
+  `state_permission` char(1),
+  `startDateTime_permission` datetime,
+  `endDateTime_permission` datetime,
+  `workingDays_permission` decimal(10,3),
+  `weekendDays_permission` decimal(10,3),
+  `carry_permission` decimal(10,3),
+  `balanceWorkingDays_permission` decimal(10,3),
+  `balanceWeekendDays_permission` decimal(10,3),
+  `observation_permission` text,
+  `adminObservation_permission` text
+);
+
+CREATE TABLE `tb_permissionBack` (
+  `id_permissionBack` int PRIMARY KEY AUTO_INCREMENT,
+  `id_employee` int,
+  `issueDate_permissionBack` datetime,
+  `minDate_permissionBack` date,
+  `state_permissionBack` bool
+);
+
+
+CREATE TABLE `tb_typeContract` (
+  `id_typeContract` int PRIMARY KEY AUTO_INCREMENT,
+  `name_typeContract` text
+);
+
+CREATE TABLE `tb_reason` (
+  `id_reason` int PRIMARY KEY AUTO_INCREMENT,
+  `name_reason` text
+);
+
+CREATE TABLE `tb_codeType` (
+  `id_codeType` int PRIMARY KEY AUTO_INCREMENT,
+  `name_codeType` text
+);
+
+CREATE TABLE `tb_jobTitle` (
+  `id_jobTitle` int PRIMARY KEY AUTO_INCREMENT,
+  `name_jobTitle` text
+);
+
+CREATE TABLE `tb_abbrJob` (
+  `id_abbrJob` int PRIMARY KEY AUTO_INCREMENT,
+  `name_abbrJob` text
+);
+
+CREATE TABLE `tb_vacationPeriod` (
+  `id_vacationPeriod` int PRIMARY KEY AUTO_INCREMENT,
+  `id_employee` int,
+  `startDate_vacationPeriod` date,
+  `endDate_vacationPeriod` date,
+  `earnedWorkingDays_vacationPeriod` decimal(10,3),
+  `earnedWeekendDays_vacationPeriod` decimal(10,3),
+  `balanceWorkingDays_vacationPeriod` decimal(10,3),
+  `balanceWeekendDays_vacationPeriod` decimal(10,3),
+  `state_vacationPeriod` bool
+);
+
+CREATE TABLE `tb_numberPeriod` (
+  `id_numberPeriod` int PRIMARY KEY AUTO_INCREMENT,
+  `year_numberPeriod` YEAR,
+  `count_numberPeriod` int,
+  `countCertificate_numberPeriod` int,
+  `state_numberPeriod` bool
+);
+
+ALTER TABLE `tb_user` ADD FOREIGN KEY (`id_userType`) REFERENCES `tb_userType` (`id_userType`);
+
+ALTER TABLE `tb_user` ADD FOREIGN KEY (`id_employee`) REFERENCES `tb_employee` (`id_employee`);
+
+ALTER TABLE `tb_employee` ADD FOREIGN KEY (`id_codeType`) REFERENCES `tb_codeType` (`id_codeType`);
+
+ALTER TABLE `tb_employee` ADD FOREIGN KEY (`id_typeContract`) REFERENCES `tb_typeContract` (`id_typeContract`);
+
+ALTER TABLE `tb_employee` ADD FOREIGN KEY (`id_departament`) REFERENCES `tb_departament` (`id_departament`);
+
+ALTER TABLE `tb_employee` ADD FOREIGN KEY (`id_jobTitle`) REFERENCES `tb_jobTitle` (`id_jobTitle`);
+
+ALTER TABLE `tb_employee` ADD FOREIGN KEY (`id_abbrJob`) REFERENCES `tb_abbrJob` (`id_abbrJob`);
+
+ALTER TABLE `tb_permission` ADD FOREIGN KEY (`id_employee`) REFERENCES `tb_employee` (`id_employee`);
+
+ALTER TABLE `tb_permission` ADD FOREIGN KEY (`id_reason`) REFERENCES `tb_reason` (`id_reason`);
+
+ALTER TABLE `tb_permission` ADD FOREIGN KEY (`id_numberPeriod`) REFERENCES `tb_numberPeriod` (`id_numberPeriod`);
+
+ALTER TABLE `tb_permissionBack` ADD FOREIGN KEY (`id_employee`) REFERENCES `tb_employee` (`id_employee`);
+
+ALTER TABLE `tb_vacationPeriod` ADD FOREIGN KEY (`id_employee`) REFERENCES `tb_employee` (`id_employee`);
+
+
+
+
+/**********************************************************************************************
+ ***                                                                                        ***
+ ***                              PROCEDIMIENTOS ALMACENADOS                                ***
+ ***                                                                                        ***
+ *********************************************************************************************/
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_insertEmployee(
+    IN p_id_codeType INT,
+    IN p_id_typeContract INT,
+    IN p_id_departament INT,
+    IN p_id_jobTitle INT,
+    IN p_id_abbrJob INT,
+    IN p_ci_employee VARCHAR(13),
+    IN p_name_employee VARCHAR(100),
+    IN p_lastName_employee VARCHAR(150),
+    IN p_startDate_employee DATE,
+    IN p_phoneNumber_employee VARCHAR(13),
+    IN p_address_employee TEXT,
+    IN p_email_employee VARCHAR(100),
+    IN p_salary_employee DECIMAL(10,2),
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE ciExists INT DEFAULT 0;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(NEW.MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+
+    -- Verificar si el número de cédula ya existe
+    SELECT COUNT(*) INTO ciExists FROM tb_employee WHERE ci_employee = p_ci_employee;
+
+    IF ciExists > 0 THEN
+        SET p_success = FALSE;
+        SET p_message = 'Ya existe un empleado con ese número de cédula';
+    ELSE
+        START TRANSACTION;
+        -- Inserción en la tabla tb_employee
+        INSERT INTO tb_employee (id_codeType, id_typeContract, id_departament, id_jobTitle, id_abbrJob, ci_employee, name_employee, lastName_employee, startDate_employee, phoneNumber_employee, address_employee, email_employee, salary_employee, isBoss_employee)
+        VALUES (p_id_codeType, p_id_typeContract, p_id_departament, p_id_jobTitle, p_id_abbrJob, p_ci_employee, p_name_employee, p_lastName_employee, p_startDate_employee, p_phoneNumber_employee, p_address_employee, p_email_employee, p_salary_employee, FALSE);
+
+        COMMIT;
+
+        SET p_success = TRUE;
+        SET p_message = 'Inserción exitosa';
+    END IF;
+END $$
+DELIMITER ;
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_insertUser(
+    IN p_id_employee INT,
+    IN p_id_userType INT,
+    IN p_password_user VARCHAR(200),
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE username VARCHAR(255);
+    DECLARE counter INT DEFAULT 0;
+    DECLARE usernameExists INT DEFAULT 0;
+    DECLARE p_name_employee_n VARCHAR(255);
+    DECLARE p_lastName_employee_n VARCHAR(255);
+    DECLARE p_name_employee VARCHAR(255);
+    DECLARE p_lastName_employee VARCHAR(255);
+    DECLARE ciExists INT DEFAULT 0;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(NEW.MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+START TRANSACTION;
+
+		SELECT name_employee, lastName_employee INTO p_name_employee, p_lastName_employee
+		FROM tb_employee WHERE id_employee = p_id_employee;
+
+        -- Obtener el primer nombre y el primer apellido
+        SET p_name_employee = TRIM(p_name_employee);
+        SET p_lastName_employee = TRIM(p_lastName_employee);
+        SET p_name_employee_n = SUBSTRING_INDEX(p_name_employee, ' ', 1);
+        SET p_lastName_employee_n = SUBSTRING_INDEX(p_lastName_employee, ' ', 1);
+
+        -- Generar el nombre de usuario
+        SET username = CONCAT(LOWER(p_name_employee_n), '.', LOWER(p_lastName_employee_n));
+
+        -- Verificar si el nombre de usuario ya existe
+        SELECT COUNT(*) INTO usernameExists FROM tb_user WHERE name_user = username;
+    
+        -- Si el nombre de usuario ya existe, agregar un número al final
+        WHILE usernameExists > 0 DO
+            SET counter = counter + 1;
+            SET username = CONCAT(LOWER(p_name_employee_n), '.', LOWER(p_lastName_employee_n), counter);
+            SELECT COUNT(*) INTO usernameExists FROM tb_user WHERE name_user = username;
+        END WHILE;
+
+        -- Inserción en la tabla tb_user
+        INSERT INTO tb_user (id_userType, id_employee, name_user, password_user, state_user,  createdDate_user, lastSession_user)
+        VALUES (p_id_userType, p_id_employee, username, p_password_user, TRUE, NOW(), NOW());
+
+        COMMIT;
+
+        SET p_success = TRUE;
+        SET p_message = 'Inserción exitosa';
+END $$
+DELIMITER ;
+
+
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_updateEmployee(
+    IN p_employeeId INT,
+    IN p_id_codeType INT,
+    IN p_id_typeContract INT,
+    IN p_id_departament INT,
+    IN p_id_jobTitle INT,
+    IN p_id_abbrJob INT,
+    IN p_ci_employee VARCHAR(13),
+    IN p_name_employee VARCHAR(100),
+    IN p_lastName_employee VARCHAR(150),
+    IN p_startDate_employee DATE,
+    IN p_phoneNumber_employee VARCHAR(13),
+    IN p_address_employee TEXT,
+    IN p_email_employee VARCHAR(100),
+    IN p_salary_employee DECIMAL(10,2),
+    IN p_isBoss_employee BOOLEAN,
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE cedulaExists INT DEFAULT 0;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(NEW.MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+
+    START TRANSACTION;
+
+    -- Verificar si el número de cédula ya existe en otro empleado
+    SELECT COUNT(*) INTO cedulaExists FROM tb_employee WHERE ci_employee = p_ci_employee AND id_employee <> p_employeeId;
+    
+    IF cedulaExists > 0 THEN
+        SET p_success = FALSE;
+        SET p_message = 'El número de cédula ya existe en otro empleado';
+        ROLLBACK;
+    ELSE
+        -- Actualización en la tabla tb_employee
+        UPDATE tb_employee
+        SET
+            id_codeType = p_id_codeType,
+            id_typeContract = p_id_typeContract,
+            id_departament = p_id_departament,
+            id_jobTitle = p_id_jobTitle,
+            id_abbrJob = p_id_abbrJob,
+            ci_employee = p_ci_employee,
+            name_employee = p_name_employee,
+            lastName_employee = p_lastName_employee,
+            startDate_employee = p_startDate_employee,
+            phoneNumber_employee = p_phoneNumber_employee,
+            address_employee = p_address_employee,
+            email_employee = p_email_employee,
+            salary_employee = p_salary_employee,
+            isBoss_employee = p_isBoss_employee
+        WHERE id_employee = p_employeeId;
+
+        COMMIT;
+
+        SET p_success = TRUE;
+        SET p_message = 'Actualización exitosa';
+    END IF;
+END $$
+
+DELIMITER ;
+
+
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_disableEmployee(
+    IN p_employee_id INT,
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE v_user_id INT;
+    DECLARE v_exists INT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+
+    START TRANSACTION;
+    
+    -- Verificar si hay registros de vacationPeriod para el id_employee
+    SELECT COUNT(*) INTO v_exists FROM tb_vacationPeriod WHERE id_employee = p_employee_id;
+
+    IF v_exists > 0 THEN
+        -- Deshabilitar usuario
+        UPDATE tb_vacationPeriod
+        SET 
+            balanceWorkingDays_vacationPeriod = 0,
+            balanceWeekendDays_vacationPeriod = 0,
+            state_vacationPeriod = 0
+        WHERE id_employee = p_employee_id;
+        
+        -- Desactivar usuarios relacionados al empleado
+        UPDATE tb_user 
+      	SET state_user = 0 WHERE id_employee = p_employee_id;
+        
+        -- Verificar si se actualizó algún registro
+        IF ROW_COUNT() = 0 THEN
+            SET p_success = FALSE;
+            SET p_message = 'No se pudo deshabilitar el empleado';
+            ROLLBACK;
+        ELSE
+            COMMIT;
+            SET p_success = TRUE;
+            SET p_message = 'Empleado deshabilitado exitosamente';
+        END IF;
+    ELSE
+        SET p_success = FALSE;
+        SET p_message = 'No se encontraron registros de periodos de vacaciones para este empleado';
+        ROLLBACK;
+    END IF;
+    
+END $$
+DELIMITER ;
+
+
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_updateUser(
+    IN p_id_user INT,
+    IN p_id_userType INT,
+    IN p_password_user VARCHAR(200),
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(NEW.MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+START TRANSACTION;
+        -- Update a la tabla
+        UPDATE tb_user 
+		  SET id_userType = p_id_userType, 
+		  password_user = p_password_user
+        WHERE id_user = p_id_user;
+
+        COMMIT;
+
+        SET p_success = TRUE;
+        SET p_message = 'Actualización exitosa';
+END $$
+DELIMITER ;
+
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_disableUser(
+    IN p_user_id INT,
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE v_user_id INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+
+    START TRANSACTION;
+    
+    -- Deshabilitar usuario
+    UPDATE tb_user
+    SET state_user = FALSE
+    WHERE id_user = p_user_id;
+    
+    COMMIT;
+    
+    SET p_success = TRUE;
+    SET p_message = 'Usuario deshabilitado exitosamente';
+END $$
+DELIMITER ;
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_enableUser(
+    IN p_user_id INT,
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE v_user_id INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+
+    START TRANSACTION;
+    
+    -- Habilitar usuario
+    UPDATE tb_user
+    SET state_user = TRUE
+    WHERE id_user = p_user_id;
+    
+    COMMIT;
+    
+    SET p_success = TRUE;
+    SET p_message = 'Usuario habilitado exitosamente';
+END $$
+
+DELIMITER ;
+
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_validateUser(
+    IN p_username VARCHAR(100),
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT,
+    OUT p_employee_id INT,
+    OUT p_user_id INT,
+    OUT p_password_user VARCHAR(200)
+)
+BEGIN
+    DECLARE v_state_user BOOLEAN;
+    
+    -- Verificar si el usuario existe en la base de datos
+    SELECT id_employee, id_user, state_user, password_user INTO p_employee_id, p_user_id, v_state_user, p_password_user
+    FROM tb_user
+    WHERE name_user = p_username;
+
+    IF p_user_id IS NOT NULL THEN
+        IF v_state_user THEN
+            SET p_success = TRUE;
+            SET p_message = 'El usuario existe en la base de datos y tiene acceso.';
+        ELSE
+            SET p_success = FALSE;
+            SET p_message = 'El usuario existe en la base de datos pero no tiene acceso.';
+        END IF;
+    ELSE
+        SET p_success = FALSE;
+        SET p_message = 'El usuario no existe en la base de datos.';
+    END IF;
+END $$
+DELIMITER ;
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_getPasswordUser(
+    IN p_id_user INT,
+    OUT p_password_user VARCHAR(200),
+    OUT p_success BOOLEAN
+)
+BEGIN
+    DECLARE v_user_count INT;
+
+    -- Verificar si el usuario existe en la base de datos
+    SELECT COUNT(*) INTO v_user_count
+    FROM tb_user
+    WHERE id_user = p_id_user;
+
+    IF v_user_count > 0 THEN
+        -- Obtener la contraseña del usuario
+        SELECT password_user INTO p_password_user
+        FROM tb_user
+        WHERE id_user = p_id_user;
+
+        SET p_success = TRUE;
+    ELSE
+        SET p_success = FALSE;
+    END IF;
+END $$
+DELIMITER ;
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_updatePasswordUser(
+    IN p_id_user INT,
+    IN p_new_password VARCHAR(200),
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE v_user_count INT;
+
+    -- Iniciar la transacción
+    START TRANSACTION;
+
+    -- Verificar si el usuario existe en la base de datos
+    SELECT COUNT(*) INTO v_user_count
+    FROM tb_user
+    WHERE id_user = p_id_user;
+
+    IF v_user_count > 0 THEN
+        -- Actualizar la contraseña del usuario dentro de la transacción
+        BEGIN
+            UPDATE tb_user
+            SET password_user = p_new_password
+            WHERE id_user = p_id_user;
+
+            -- Marcar la transacción como exitosa
+            SET p_success = TRUE;
+            SET p_message = 'La contraseña del usuario ha sido actualizada correctamente.';
+        END;
+    ELSE
+        -- Marcar la transacción como fallida
+        SET p_success = FALSE;
+        SET p_message = 'No se encontró un usuario con el ID especificado.';
+    END IF;
+
+    -- Confirmar o revertir la transacción
+    IF p_success THEN
+        COMMIT;
+    ELSE
+        ROLLBACK;
+    END IF;
+END $$
+DELIMITER ;
+
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_updateLastSession(
+    IN p_id_user INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    UPDATE tb_user
+    SET lastSession_user = CURRENT_TIMESTAMP
+    WHERE id_user = p_id_user;
+
+    IF ROW_COUNT() > 0 THEN
+        COMMIT;
+    ELSE
+        ROLLBACK;
+    END IF;
+
+END $$
+
+DELIMITER ;
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_getEmployeeDataByID(
+    IN p_employee_id INT
+)
+BEGIN
+    -- Obtener los datos del empleado basado en el ID de empleado
+    SELECT *
+    FROM tb_employee
+    WHERE id_employee = p_employee_id;
+END $$
+DELIMITER ;
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_getUserDataByID(
+    IN p_user_id INT
+)
+BEGIN
+    -- Obtener los datos del usuario basado en el ID de empleado
+    SELECT *
+    FROM tb_user
+    WHERE id_user = p_user_id;
+END $$
+DELIMITER ;
+
+
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_resetPasswordUser(
+    IN p_user_id INT,
+    IN p_new_password VARCHAR(200),
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+    
+    START TRANSACTION;
+    
+    -- Verificar si el usuario existe
+    IF p_user_id IS NOT NULL THEN
+        -- Actualizar la contraseña del usuario
+        UPDATE tb_user
+        SET password_user = p_new_password
+        WHERE id_user = p_user_id;
+        
+        COMMIT;
+        
+        SET p_success = TRUE;
+        SET p_message = 'Contraseña restablecida exitosamente.';
+    ELSE
+        SET p_success = FALSE;
+        SET p_message = 'No se encontró un usuario.';
+    END IF;
+END $$
+
+DELIMITER ;
+
+
+
+-- -----------------------------------------------------------------------------------------------------
+
+DELIMITER $$
+CREATE PROCEDURE pa_manageDepartament(
+    IN p_id_departament INT,
+    IN p_name_departament TEXT,
+    IN p_operation VARCHAR(10),
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE num_occurrences_dept INT;
+    DECLARE num_occurrences_emp INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(NEW.MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+
+    START TRANSACTION;
+
+    IF p_operation = 'INSERT' THEN
+        IF p_name_departament IS NULL OR p_name_departament = '' THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el nombre del departamento para la operación de inserción';
+        ELSE
+            INSERT INTO tb_departament (name_departament)
+            VALUES (p_name_departament);
+
+            SET p_success = TRUE;
+            SET p_message = 'Inserción exitosa';
+        END IF;
+
+    ELSEIF p_operation = 'UPDATE' THEN
+        IF p_id_departament IS NULL THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el ID del departamento para la operación de actualización';
+        ELSEIF p_name_departament IS NULL OR p_name_departament = '' THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el nombre del departamento para la operación de actualización';
+        ELSE
+            UPDATE tb_departament
+            SET name_departament = p_name_departament
+            WHERE id_departament = p_id_departament;
+
+            SET p_success = TRUE;
+            SET p_message = 'Actualización exitosa';
+        END IF;
+
+    ELSEIF p_operation = 'DELETE' THEN
+        IF p_id_departament IS NULL THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el ID del departamento para la operación de eliminación';
+        ELSE
+            -- Validar si el ID está presente en la tabla tb_departament
+            SET num_occurrences_dept = (SELECT COUNT(*) FROM tb_departament WHERE id_departament = p_id_departament);
+            
+            IF num_occurrences_dept = 0 THEN
+                SET p_success = FALSE;
+                SET p_message = 'El departamento con el ID proporcionado no existe en la tabla tb_departament';
+            ELSE
+                -- Validar si el ID está presente en la tabla tb_employee
+                SET num_occurrences_emp = (SELECT COUNT(*) FROM tb_employee WHERE id_departament = p_id_departament);
+                
+                IF num_occurrences_emp > 0 THEN
+                    SET p_success = FALSE;
+                    SET p_message = 'No se puede eliminar el departamento porque está siendo utilizado en la tabla tb_employee';
+                ELSE
+                    DELETE FROM tb_departament
+                    WHERE id_departament = p_id_departament;
+
+                    SET p_success = TRUE;
+                    SET p_message = 'Eliminación exitosa';
+                END IF;
+            END IF;
+        END IF;
+
+    ELSE
+        SET p_success = FALSE;
+        SET p_message = 'Operación no válida';
+
+    END IF;
+
+    COMMIT;
+    
+END $$
+DELIMITER ;
+
+
+-- -----------------------------------------------------------------------------------------
+
+DELIMITER $$
+CREATE PROCEDURE pa_manageTypeContract(
+    IN p_id_typeContract INT,
+    IN p_name_typeContract TEXT,
+    IN p_operation ENUM('INSERT', 'UPDATE', 'DELETE'),
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE num_occurrences_contract INT;
+    DECLARE num_occurrences_emp INT;
+    
+    -- Manejo de excepciones
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, @errmsg = MESSAGE_TEXT;
+        SET p_message = CONCAT('Error en la transacción: ', @errmsg);
+    END;
+
+    START TRANSACTION;
+
+    IF p_operation = 'INSERT' THEN
+        IF p_name_typeContract IS NULL OR p_name_typeContract = '' THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el nombre del tipo de contrato para la operación de inserción';
+            ROLLBACK;
+        ELSE
+            INSERT INTO tb_typeContract (name_typeContract)
+            VALUES (p_name_typeContract);
+
+            SET p_success = TRUE;
+            SET p_message = 'Inserción exitosa';
+            COMMIT;
+        END IF;
+
+    ELSEIF p_operation = 'UPDATE' THEN
+        IF p_id_typeContract IS NULL THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el ID del tipo de contrato para la operación de actualización';
+            ROLLBACK;
+        ELSEIF p_name_typeContract IS NULL OR p_name_typeContract = '' THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el nombre del tipo de contrato para la operación de actualización';
+            ROLLBACK;
+        ELSE
+            UPDATE tb_typeContract
+            SET name_typeContract = p_name_typeContract
+            WHERE id_typeContract = p_id_typeContract;
+
+            SET p_success = TRUE;
+            SET p_message = 'Actualización exitosa';
+            COMMIT;
+        END IF;
+
+    ELSEIF p_operation = 'DELETE' THEN
+        IF p_id_typeContract IS NULL THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el ID del tipo de contrato para la operación de eliminación';
+            ROLLBACK;
+        ELSE
+            SET num_occurrences_contract = (SELECT COUNT(*) FROM tb_typeContract WHERE id_typeContract = p_id_typeContract);
+            
+            IF num_occurrences_contract = 0 THEN
+                SET p_success = FALSE;
+                SET p_message = 'El tipo de contrato con el ID proporcionado no existe en la tabla tb_typeContract';
+                ROLLBACK;
+            ELSE
+                SET num_occurrences_emp = (SELECT COUNT(*) FROM tb_employee WHERE id_typeContract = p_id_typeContract);
+                
+                IF num_occurrences_emp > 0 THEN
+                    SET p_success = FALSE;
+                    SET p_message = 'No se puede eliminar el tipo de contrato porque está siendo utilizado en la tabla tb_employee';
+                    ROLLBACK;
+                ELSE
+                    DELETE FROM tb_typeContract
+                    WHERE id_typeContract = p_id_typeContract;
+
+                    SET p_success = TRUE;
+                    SET p_message = 'Eliminación exitosa';
+                    COMMIT;
+                END IF;
+            END IF;
+        END IF;
+
+    ELSE
+        SET p_success = FALSE;
+        SET p_message = 'Operación no válida';
+        ROLLBACK;
+
+    END IF;
+
+END $$
+
+DELIMITER ;
+
+
+-- -------------------------------------------------------------------------------------------------------------------------
+
+DELIMITER $$
+CREATE PROCEDURE pa_manageReason(
+    IN p_id_reason INT,
+    IN p_name_reason TEXT,
+    IN p_operation VARCHAR(10),
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE num_occurrences_reason INT;
+    DECLARE num_occurrences_perm INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(NEW.MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+
+    START TRANSACTION;
+
+    IF p_operation = 'INSERT' THEN
+        IF p_name_reason IS NULL OR p_name_reason = '' THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el nombre de la razón para la operación de inserción';
+        ELSE
+            INSERT INTO tb_reason (name_reason)
+            VALUES (p_name_reason);
+
+            SET p_success = TRUE;
+            SET p_message = 'Inserción exitosa';
+        END IF;
+
+    ELSEIF p_operation = 'UPDATE' THEN
+        IF p_id_reason IS NULL THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el ID de la razón para la operación de actualización';
+        ELSEIF p_name_reason IS NULL OR p_name_reason = '' THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el nombre de la razón para la operación de actualización';
+        ELSE
+            UPDATE tb_reason
+            SET name_reason = p_name_reason
+            WHERE id_reason = p_id_reason;
+
+            SET p_success = TRUE;
+            SET p_message = 'Actualización exitosa';
+        END IF;
+
+    ELSEIF p_operation = 'DELETE' THEN
+        IF p_id_reason IS NULL THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el ID de la razón para la operación de eliminación';
+        ELSE
+            -- Validar si el ID está presente en la tabla tb_reason
+            SET num_occurrences_reason = (SELECT COUNT(*) FROM tb_reason WHERE id_reason = p_id_reason);
+            
+            IF num_occurrences_reason = 0 THEN
+                SET p_success = FALSE;
+                SET p_message = 'La razón con el ID proporcionado no existe en la tabla tb_reason';
+            ELSE
+                -- Validar si el ID está presente en la tabla tb_permission
+                SET num_occurrences_perm = (SELECT COUNT(*) FROM tb_permission WHERE id_reason = p_id_reason);
+                
+                IF num_occurrences_perm > 0 THEN
+                    SET p_success = FALSE;
+                    SET p_message = 'No se puede eliminar la razón porque está siendo utilizada en la tabla tb_permission';
+                ELSE
+                    DELETE FROM tb_reason
+                    WHERE id_reason = p_id_reason;
+
+                    SET p_success = TRUE;
+                    SET p_message = 'Eliminación exitosa';
+                END IF;
+            END IF;
+        END IF;
+
+    ELSE
+        SET p_success = FALSE;
+        SET p_message = 'Operación no válida';
+
+    END IF;
+
+    COMMIT;
+
+END $$
+
+DELIMITER ;
+
+
+-- ----------------------------------------------------------------------------------
+DELIMITER $$
+CREATE PROCEDURE pa_manageJobTitle(
+    IN p_id_jobTitle INT,
+    IN p_name_jobTitle TEXT,
+    IN p_operation VARCHAR(10),
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE num_occurrences_job INT;
+    DECLARE num_occurrences_emp INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(NEW.MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+
+    START TRANSACTION;
+
+    IF p_operation = 'INSERT' THEN
+        IF p_name_jobTitle IS NULL OR p_name_jobTitle = '' THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el nombre del título del trabajo para la operación de inserción';
+        ELSE
+            INSERT INTO tb_jobTitle (name_jobTitle)
+            VALUES (p_name_jobTitle);
+
+            SET p_success = TRUE;
+            SET p_message = 'Inserción exitosa';
+        END IF;
+
+    ELSEIF p_operation = 'UPDATE' THEN
+        IF p_id_jobTitle IS NULL THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el ID del título del trabajo para la operación de actualización';
+        ELSEIF p_name_jobTitle IS NULL OR p_name_jobTitle = '' THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el nombre del título del trabajo para la operación de actualización';
+        ELSE
+            UPDATE tb_jobTitle
+            SET name_jobTitle = p_name_jobTitle
+            WHERE id_jobTitle = p_id_jobTitle;
+
+            SET p_success = TRUE;
+            SET p_message = 'Actualización exitosa';
+        END IF;
+
+    ELSEIF p_operation = 'DELETE' THEN
+        IF p_id_jobTitle IS NULL THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el ID del título del trabajo para la operación de eliminación';
+        ELSE
+            -- Validar si el ID está presente en la tabla tb_jobTitle
+            SET num_occurrences_job = (SELECT COUNT(*) FROM tb_jobTitle WHERE id_jobTitle = p_id_jobTitle);
+            
+            IF num_occurrences_job = 0 THEN
+                SET p_success = FALSE;
+                SET p_message = 'El título del trabajo con el ID proporcionado no existe en la tabla tb_jobTitle';
+            ELSE
+                -- Validar si el ID está presente en la tabla tb_employee
+                SET num_occurrences_emp = (SELECT COUNT(*) FROM tb_employee WHERE id_jobTitle = p_id_jobTitle);
+                
+                IF num_occurrences_emp > 0 THEN
+                    SET p_success = FALSE;
+                    SET p_message = 'No se puede eliminar el título del trabajo porque está siendo utilizado en la tabla tb_employee';
+                ELSE
+                    DELETE FROM tb_jobTitle
+                    WHERE id_jobTitle = p_id_jobTitle;
+
+                    SET p_success = TRUE;
+                    SET p_message = 'Eliminación exitosa';
+                END IF;
+            END IF;
+        END IF;
+
+    ELSE
+        SET p_success = FALSE;
+        SET p_message = 'Operación no válida';
+
+    END IF;
+
+    COMMIT;
+    
+END $$
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------------
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_manageAbbrJob(
+    IN p_id_abbrJob INT,
+    IN p_name_abbrJob TEXT,
+    IN p_operation VARCHAR(10),
+    OUT p_success BOOLEAN,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE num_occurrences_abbr INT;
+    DECLARE num_occurrences_emp INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_success = FALSE;
+        SET p_message = CONCAT('Error en la transacción: ', SUBSTRING_INDEX(SUBSTRING_INDEX(LEFT(NEW.MESSAGE, 100), ' at ', -1), ':', 1));
+    END;
+
+    START TRANSACTION;
+
+    IF p_operation = 'INSERT' THEN
+        IF p_name_abbrJob IS NULL OR p_name_abbrJob = '' THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el nombre de la abreviatura del trabajo para la operación de inserción';
+        ELSE
+            INSERT INTO tb_abbrJob (name_abbrJob)
+            VALUES (p_name_abbrJob);
+
+            SET p_success = TRUE;
+            SET p_message = 'Inserción exitosa';
+        END IF;
+
+    ELSEIF p_operation = 'UPDATE' THEN
+        IF p_id_abbrJob IS NULL THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el ID de la abreviatura del trabajo para la operación de actualización';
+        ELSEIF p_name_abbrJob IS NULL OR p_name_abbrJob = '' THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el nombre de la abreviatura del trabajo para la operación de actualización';
+        ELSE
+            UPDATE tb_abbrJob
+            SET name_abbrJob = p_name_abbrJob
+            WHERE id_abbrJob = p_id_abbrJob;
+
+            SET p_success = TRUE;
+            SET p_message = 'Actualización exitosa';
+        END IF;
+
+    ELSEIF p_operation = 'DELETE' THEN
+        IF p_id_abbrJob IS NULL THEN
+            SET p_success = FALSE;
+            SET p_message = 'Se requiere proporcionar el ID de la abreviatura del trabajo para la operación de eliminación';
+        ELSE
+            -- Validar si el ID está presente en la tabla tb_abbrJob
+            SET num_occurrences_abbr = (SELECT COUNT(*) FROM tb_abbrJob WHERE id_abbrJob = p_id_abbrJob);
+            
+            IF num_occurrences_abbr = 0 THEN
+                SET p_success = FALSE;
+                SET p_message = 'La abreviatura del trabajo con el ID proporcionado no existe en la tabla tb_abbrJob';
+            ELSE
+                -- Validar si el ID está presente en la tabla tb_employee
+                SET num_occurrences_emp = (SELECT COUNT(*) FROM tb_employee WHERE id_abbrJob = p_id_abbrJob);
+                
+                IF num_occurrences_emp > 0 THEN
+                    SET p_success = FALSE;
+                    SET p_message = 'No se puede eliminar la abreviatura del trabajo porque está siendo utilizada en la tabla tb_employee';
+                ELSE
+                    DELETE FROM tb_abbrJob
+                    WHERE id_abbrJob = p_id_abbrJob;
+
+                    SET p_success = TRUE;
+                    SET p_message = 'Eliminación exitosa';
+                END IF;
+            END IF;
+        END IF;
+
+    ELSE
+        SET p_success = FALSE;
+        SET p_message = 'Operación no válida';
+
+    END IF;
+
+    COMMIT;
+    
+END $$
+DELIMITER ;
+
+
+
+-- ------------------------------------------------------------------------------------
+
+CREATE EVENT AssignVacationDaysEvent
+    ON SCHEDULE EVERY 1 DAY -- Se ejecuta cada dia
+    DO CALL pa_assignVacationDays();
+
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_assignVacationDays()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE _id_employee INT;
+    DECLARE _start_date_origin DATE;
+    DECLARE _id_codeType INT;
+    DECLARE _earned_days INT;
+    DECLARE _working_days INT;
+    DECLARE _weekend_days INT;
+    DECLARE _balance_periods DECIMAL(10,3);
+    DECLARE _id_vacationPeriod INT;
+    DECLARE _count_periods INT;
+    DECLARE cur CURSOR FOR
+	 SELECT 
+	    e.id_employee,
+	    e.id_codeType,
+	    e.startDate_employee
+	 FROM tb_employee e WHERE DATEDIFF(CURDATE(), e.startDate_employee) >= 365;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO _id_employee, _id_codeType, _start_date_origin;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        
+        -- Generar los periodos  
+        CALL pa_insertVacationPeriods(_id_employee, @message, @success);
+        -- Creación de nuevo periodo
+		  CALL pa_insertVacationPeriod(_id_employee, @message, @success);
+        
+        IF @success = TRUE THEN
+        	-- Condicionales LOSEP
+        	IF _id_codeType = 1 THEN
+        			SET _working_days = 22;
+        			SET _weekend_days = 8;
+        			SET _earned_days = _working_days + _weekend_days;
+        		
+        			-- Suma de los saldo de los periodos
+   	  			SET _balance_periods = (SELECT IFNULL(SUM(balanceWorkingDays_vacationPeriod + balanceWeekendDays_vacationPeriod), 0)
+					FROM tb_vacationPeriod WHERE id_employee = _id_employee AND state_vacationPeriod = TRUE);
+        		
+					-- Desactivación de periodo más antiguo
+					IF (_balance_periods + _earned_days) > 60 THEN
+						-- Captura el id, del periodo más antiguo, activo
+						SET _id_vacationPeriod = (SELECT id_vacationPeriod FROM tb_vacationPeriod
+						WHERE id_employee = _id_employee AND state_vacationPeriod = TRUE
+						ORDER BY startDate_vacationPeriod ASC LIMIT 1);
+						-- Desactiva el periodo más antiguo
+						UPDATE tb_vacationPeriod 
+        				SET state_vacationPeriod = FALSE WHERE id_vacationPeriod = _id_vacationPeriod;
+        			END IF;
+        		
+        	-- Condicionales código de trabajo
+        	ELSEIF _id_codeType = 2 THEN
+			    	-- Cantidad de periodos activos
+			    	SET _count_periods = (SELECT COUNT(*) FROM tb_vacationperiod 
+				 	WHERE id_employee = _id_employee AND state_vacationPeriod = 1);
+        		
+					-- Desactivación de periodo más antiguo
+					IF (_count_periods + 1) > 3 THEN
+						-- Captura el id, del periodo más antiguo, activo
+						SET _id_vacationPeriod = (SELECT id_vacationPeriod FROM tb_vacationPeriod
+						WHERE id_employee = _id_employee AND state_vacationPeriod = 1
+						ORDER BY startDate_vacationPeriod ASC LIMIT 1);
+						-- Desactiva el periodo más antiguo
+						UPDATE tb_vacationPeriod 
+        				SET state_vacationPeriod = 0 WHERE id_vacationPeriod = _id_vacationPeriod; 
+					END IF;
+        	END IF;
+        END IF;
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+
+
+
+
+
+-- ---------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE EVENT resetNumberPeriod
+ON SCHEDULE EVERY 1 YEAR STARTS CONCAT(YEAR(NOW()), '-01-01 00:00:00')
+DO CALL pa_resetNumberPeriod() $$
+
+DELIMITER ;
+
+
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_resetNumberPeriod()
+BEGIN
+    DECLARE thisYear YEAR;
+    DECLARE existingId INT;
+
+    -- Obtener el año actual
+    SET thisYear = YEAR(CURDATE());
+
+    -- Verificar si ya existe un registro para este año
+    SELECT id_numberPeriod INTO existingId
+    FROM tb_numberPeriod
+    WHERE year_numberPeriod = thisYear
+    LIMIT 1;
+
+    -- Si no existe un registro para este año
+    IF existingId IS NULL THEN
+        -- Deshabilitar todos los registros anteriores
+        UPDATE tb_numberPeriod
+        SET state_numberPeriod = FALSE
+        WHERE year_numberPeriod < thisYear;
+
+        -- Crear un nuevo registro para este año
+        INSERT INTO tb_numberPeriod (year_numberPeriod, countCertificate_numberPeriod, count_numberPeriod, state_numberPeriod)
+        VALUES (thisYear, 0, 0, TRUE);
+    END IF;
+END $$
+
+DELIMITER ;
+
+
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_incrementCountCertificate()
+BEGIN
+    DECLARE thisYear YEAR;
+
+    -- Obtener el año actual
+    SET thisYear = YEAR(CURDATE());
+
+    -- Incrementar el valor de countCertificate_numberPeriod para este año
+    UPDATE tb_numberPeriod
+    SET countCertificate_numberPeriod = countCertificate_numberPeriod + 1
+    WHERE year_numberPeriod = thisYear AND state_numberPeriod = TRUE;
+END $$
+
+DELIMITER ;
+
+
+-- --------------------------------------------------------------------------------------------------
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_insertVacationPeriods(
+  IN p_id_employee INT,
+  OUT p_message VARCHAR(255),
+  OUT p_success BOOLEAN
+)
+BEGIN
+  DECLARE v_yearCount INT DEFAULT 0;
+  DECLARE v_startDate DATE;
+  DECLARE v_startDate_while DATE;
+  DECLARE v_endDate_while DATE;
+  DECLARE v_exists INT;
+  DECLARE v_lastID INT;
+  DECLARE v_id_codeType INT;
+  DECLARE v_maxYearCount INT;
+  DECLARE v_earnedWorkingDays INT;
+  DECLARE v_earnedWeekendDays INT;
+  DECLARE v_employeeEligible BOOLEAN DEFAULT TRUE;
+
+  -- Iniciar la transacción
+  START TRANSACTION;
+  
+-- Obtener el tipo de còdigo del empleado
+  SELECT id_codeType INTO v_id_codeType FROM tb_employee WHERE id_employee = p_id_employee;
+
+  -- Obtener la fecha de inicio del empleado
+  SELECT startDate_employee INTO v_startDate FROM tb_employee WHERE id_employee = p_id_employee;
+
+  -- Establecer el número de años que han pasado desde la fecha de inicio hasta un año antes de la fecha actual
+  SET v_maxYearCount = TIMESTAMPDIFF(YEAR, v_startDate, CURDATE()) - 1;
+
+  -- Verificar si el empleado tiene menos de un año de inicio laboral
+  IF v_maxYearCount < 0 THEN
+    SET v_employeeEligible = FALSE;
+  END IF;
+
+  IF v_employeeEligible THEN
+    -- Verificar si ya existen periodos de vacaciones para el empleado
+    SELECT COUNT(*) INTO v_exists FROM tb_vacationPeriod WHERE id_employee = p_id_employee;
+
+    IF v_exists = 0 THEN
+    	-- Asignar el valor inicial de los dias laborables
+    	IF v_id_codeType = 1 THEN
+    		SET v_earnedWorkingDays = 22;
+    		SET v_earnedWeekendDays = 8;
+    	ELSEIF v_id_codeType = 2 THEN
+    		SET v_earnedWorkingDays = 11;
+    		SET v_earnedWeekendDays = 4;
+    	END IF;
+      -- Insertar un período de vacaciones para cada año desde la fecha de inicio hasta un año antes de la fecha actual
+      WHILE v_yearCount <= v_maxYearCount DO
+        -- Establecer las fechas de inicio y fin para el período de vacaciones
+        SET v_startDate_while = DATE_ADD(v_startDate, INTERVAL v_yearCount YEAR);
+        SET v_endDate_while = DATE_SUB(DATE_ADD(v_startDate, INTERVAL (v_yearCount + 1) YEAR), INTERVAL 1 DAY);
+         -- En caso de ser còdigo de trabajo que haga los incrementos de acuerdo al tiempo
+		  	IF v_id_codeType = 2 THEN
+				-- Establecer los días acumulados y laborables para el id_codeType 2 a partir del sexto año
+        		IF v_yearCount >= 5 AND v_yearCount < 20 THEN
+          		SET v_earnedWorkingDays = v_earnedWorkingDays + 1;
+        		ELSEIF v_yearCount >= 20 THEN
+          		SET v_earnedWorkingDays = 26;
+        		END IF;
+    		END IF; 
+        
+        -- Insertar el período de vacaciones
+        INSERT INTO tb_vacationPeriod (
+          id_employee,
+          startDate_vacationPeriod,
+          endDate_vacationPeriod,
+          earnedWorkingDays_vacationPeriod,
+          earnedWeekendDays_vacationPeriod,
+          balanceWorkingDays_vacationPeriod,
+          balanceWeekendDays_vacationPeriod,
+          state_vacationPeriod
+        )
+        VALUES (
+          p_id_employee,
+          v_startDate_while,
+          v_endDate_while,
+          v_earnedWorkingDays,
+          v_earnedWeekendDays,
+          0,
+          0,
+          FALSE
+        );
+
+        -- Guardar el último id insertado
+        SET v_lastID = LAST_INSERT_ID();
+
+        -- Incrementar el contador de años
+        SET v_yearCount = v_yearCount + 1;
+      END WHILE;
+
+     -- Actualizar el último periodo de vacaciones con los valores especificados dependiendo del id_codeType
+      IF v_id_codeType = 1 THEN
+        UPDATE tb_vacationPeriod 
+        SET 
+          earnedWorkingDays_vacationPeriod = 22,
+          earnedWeekendDays_vacationPeriod = 8,
+          balanceWorkingDays_vacationPeriod = 22,
+          balanceWeekendDays_vacationPeriod = 8,
+          state_vacationPeriod = TRUE
+        WHERE 
+          id_vacationPeriod = v_lastID;
+      ELSEIF v_id_codeType = 2 THEN
+        UPDATE tb_vacationPeriod 
+        SET 
+          earnedWorkingDays_vacationPeriod = v_earnedWorkingDays,
+          earnedWeekendDays_vacationPeriod = 4,
+          balanceWorkingDays_vacationPeriod = v_earnedWorkingDays,
+          balanceWeekendDays_vacationPeriod = 4,
+          state_vacationPeriod = TRUE
+        WHERE 
+          id_vacationPeriod = v_lastID;
+      END IF;
+
+      -- Commit de la transacción
+      COMMIT;
+      SET p_success = TRUE;
+      SET p_message = "Períodos de vacaciones insertados correctamente";
+    ELSE
+      -- Rollback de la transacción
+      ROLLBACK;
+      SET p_success = FALSE;
+      SET p_message = "Los periodos de vacaciones ya existen para el empleado.";
+    END IF;
+  ELSE
+    -- Rollback de la transacción
+    ROLLBACK;
+    SET p_success = FALSE;
+    SET p_message = "El empleado aún no cumple un año laboral.";
+  END IF;
+END $$
+
+DELIMITER ;
+
+
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_nextVacationPeriod(
+  IN p_id_employee INT,
+  OUT p_message VARCHAR(255),
+  OUT p_success BOOLEAN
+)
+BEGIN
+  DECLARE v_yearCount INT;
+  DECLARE v_startDate DATE;
+  DECLARE v_startDate_currentYear DATE;
+  DECLARE v_endDate_currentYear DATE;
+  DECLARE v_exists INT;
+  DECLARE v_codeType INT;
+  DECLARE v_workingDays INT;
+  DECLARE v_weekendDays INT;
+  
+  -- Obtener la fecha de inicio del empleado y el codeType
+  SELECT startDate_employee, id_codeType INTO v_startDate, v_codeType FROM tb_employee WHERE id_employee = p_id_employee;
+
+  -- Obtener la cantidad de años
+  SET v_yearCount = TIMESTAMPDIFF(YEAR, v_startDate, CURDATE());
+  
+  -- Obtener cantidad de registros de la tabla periodods
+  SET @num_rows = (SELECT COUNT(*) FROM tb_vacationperiod WHERE id_employee = p_id_employee);
+
+  -- Comprobar si el empleado tiene años de antigüedad
+  IF @num_rows = 0 AND v_yearCount > 0 THEN
+    SET p_success = FALSE;
+    SET p_message = "Primero debe generar los periodos";
+  ELSE
+    -- Establecer las fechas de inicio y fin para el período de vacaciones del año actual
+    SET v_startDate_currentYear = DATE_ADD(v_startDate, INTERVAL v_yearCount YEAR);
+    SET v_endDate_currentYear = DATE_SUB(DATE_ADD(v_startDate, INTERVAL (v_yearCount + 1) YEAR), INTERVAL 1 DAY);
+
+    -- Verificar si ya existe un período de vacaciones para el año actual
+    SELECT COUNT(*) INTO v_exists
+    FROM tb_vacationPeriod
+    WHERE id_employee = p_id_employee
+      AND startDate_vacationPeriod = v_startDate_currentYear
+      AND endDate_vacationPeriod = v_endDate_currentYear;
+
+    IF v_exists = 0 THEN
+    	IF @num_rows = 0 THEN
+    		-- Establecer los valores de días según el codeType
+      	IF v_codeType = 1 THEN
+        		SET v_workingDays = 22;
+        		SET v_weekendDays = 8;
+      	ELSEIF v_codeType = 2 THEN
+        		SET v_workingDays = 11;
+        		SET v_weekendDays = 4;
+      	END IF;
+      ELSE
+      	SELECT earnedWorkingDays_vacationPeriod, earnedWeekendDays_vacationPeriod
+			INTO v_workingDays, v_weekendDays FROM tb_vacationperiod 
+			WHERE id_employee = p_id_employee ORDER BY id_vacationPeriod DESC LIMIT 1;
+			IF v_codeType = 2 THEN
+        		IF v_yearCount >= 5 AND v_yearCount < 20 THEN
+          		SET v_workingDays = v_workingDays + 1;
+        		ELSEIF v_yearCount >= 20 THEN
+          		SET v_workingDays = 26;
+        		END IF;
+    		END IF;
+    	END IF;
+      -- Insertar el período de vacaciones para el año actual
+      INSERT INTO tb_vacationPeriod (
+        id_employee,
+        startDate_vacationPeriod,
+        endDate_vacationPeriod,
+        earnedWorkingDays_vacationPeriod,
+        earnedWeekendDays_vacationPeriod,
+        balanceWorkingDays_vacationPeriod,
+        balanceWeekendDays_vacationPeriod,
+        state_vacationPeriod
+      )
+      VALUES (
+        p_id_employee,
+        v_startDate_currentYear,
+        v_endDate_currentYear,
+        v_workingDays,
+        v_weekendDays,
+        v_workingDays,
+        v_weekendDays,
+        TRUE
+      );
+
+      SET p_success = TRUE;
+      SET p_message = "Período de vacaciones creado correctamente para el año actual";
+    ELSE
+      SET p_success = FALSE;
+      SET p_message = "Ya existe un período de vacaciones para el año actual";
+    END IF;
+  END IF;
+END $$
+
+DELIMITER ;
+
+
+
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_insertVacationPeriod(
+  IN p_id_employee INT,
+  OUT p_message VARCHAR(255),
+  OUT p_success BOOLEAN
+)
+BEGIN
+  DECLARE v_yearCount INT;
+  DECLARE v_startDate DATE;
+  DECLARE v_endDate_vacationPeriod DATE;
+  DECLARE v_startDate_currentYear DATE;
+  DECLARE v_endDate_currentYear DATE;
+  DECLARE v_exists INT;
+  DECLARE v_codeType INT;
+  DECLARE v_workingDays INT;
+  DECLARE v_weekendDays INT;
+  
+  -- Obtener la fecha de inicio del empleado y el codeType
+  SELECT startDate_employee, id_codeType INTO v_startDate, v_codeType FROM tb_employee WHERE id_employee = p_id_employee;
+
+-- Obtener la cantidad de años
+  SET v_yearCount = TIMESTAMPDIFF(YEAR, v_startDate, CURDATE());
+  
+    -- Establecer las fechas de inicio y fin para el período de vacaciones del año actual
+    SET v_startDate_currentYear = DATE_ADD(v_startDate, INTERVAL v_yearCount YEAR);
+    SET v_endDate_currentYear = DATE_SUB(DATE_ADD(v_startDate, INTERVAL (v_yearCount + 1) YEAR), INTERVAL 1 DAY);
+    
+    -- Obtener la ultima fecha de fin de periodo
+    SELECT MAX(endDate_vacationPeriod) INTO v_endDate_vacationPeriod 
+	 FROM tb_vacationperiod WHERE id_employee = p_id_employee;
+    
+    IF DATEDIFF(CURDATE(), v_endDate_vacationPeriod) >= 365 THEN
+    	IF @num_rows = 0 THEN
+    		-- Establecer los valores de días según el codeType
+      	IF v_codeType = 1 THEN
+        		SET v_workingDays = 22;
+        		SET v_weekendDays = 8;
+      	ELSEIF v_codeType = 2 THEN
+        		SET v_workingDays = 11;
+        		SET v_weekendDays = 4;
+      	END IF;
+      ELSE
+      	SELECT earnedWorkingDays_vacationPeriod, earnedWeekendDays_vacationPeriod
+			INTO v_workingDays, v_weekendDays FROM tb_vacationperiod 
+			WHERE id_employee = p_id_employee ORDER BY id_vacationPeriod DESC LIMIT 1;
+			IF v_codeType = 2 THEN
+        		IF v_yearCount >= 5 AND v_yearCount < 20 THEN
+          		SET v_workingDays = v_workingDays + 1;
+        		ELSEIF v_yearCount >= 20 THEN
+          		SET v_workingDays = 26;
+        		END IF;
+    		END IF;
+    	END IF;
+      -- Insertar el período de vacaciones para el año actual
+      INSERT INTO tb_vacationPeriod (
+        id_employee,
+        startDate_vacationPeriod,
+        endDate_vacationPeriod,
+        earnedWorkingDays_vacationPeriod,
+        earnedWeekendDays_vacationPeriod,
+        balanceWorkingDays_vacationPeriod,
+        balanceWeekendDays_vacationPeriod,
+        state_vacationPeriod
+      )
+      VALUES (
+        p_id_employee,
+        v_startDate_currentYear,
+        v_endDate_currentYear,
+        v_workingDays,
+        v_weekendDays,
+        v_workingDays,
+        v_weekendDays,
+        TRUE
+      );
+
+      SET p_success = TRUE;
+      SET p_message = "Período de vacaciones creado correctamente para el año actual";
+    ELSE
+      SET p_success = FALSE;
+      SET p_message = "Aun no sumple el año";
+    END IF;
+
+END $$
+
+DELIMITER ;
+
+
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_updateVacationPeriod(
+  IN p_id_vacationPeriod INT,
+  IN p_startDate_vacationPeriod DATE,
+  IN p_endDate_vacationPeriod DATE,
+  IN p_balanceWorkingDays_vacationPeriod DECIMAL(10, 3),
+  IN p_balanceWeekendDays_vacationPeriod DECIMAL(10, 3),
+  IN p_state_vacationPeriod BOOL,
+  OUT p_message VARCHAR(255),
+  OUT p_success BOOL
+)
+BEGIN
+  DECLARE error_message TEXT DEFAULT NULL;
+  DECLARE error_code INT DEFAULT NULL;
+
+  DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+  BEGIN
+    GET DIAGNOSTICS CONDITION 1
+      error_code = MYSQL_ERRNO,
+      error_message = MESSAGE_TEXT;
+  END;
+
+  START TRANSACTION;
+
+  UPDATE tb_vacationPeriod
+  SET
+    startDate_vacationPeriod = p_startDate_vacationPeriod,
+    endDate_vacationPeriod = p_endDate_vacationPeriod,
+    balanceWorkingDays_vacationPeriod = p_balanceWorkingDays_vacationPeriod,
+    balanceWeekendDays_vacationPeriod = p_balanceWeekendDays_vacationPeriod,
+    state_vacationPeriod = p_state_vacationPeriod
+  WHERE id_vacationPeriod = p_id_vacationPeriod;
+
+  IF error_message IS NOT NULL THEN
+    ROLLBACK;
+    SET p_message = error_message;
+    SET p_success = FALSE;
+  ELSE
+    IF ROW_COUNT() > 0 THEN
+      COMMIT;
+      SET p_message = 'Datos actualizados correctamente';
+      SET p_success = TRUE;
+    ELSE
+      ROLLBACK;
+      SET p_message = 'No se encontró ningún registro con el ID proporcionado';
+      SET p_success = FALSE;
+    END IF;
+  END IF;
+END $$
+
+DELIMITER ;
+
+
+
+
+-- ------------------------------------------------------------------------------------------
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_insertPermissionEmployee(
+  IN p_id_employee INT,
+  IN p_id_reason INT,
+  IN p_startDate DATETIME,
+  IN p_endDate DATETIME,
+  IN p_observation_permission VARCHAR(255),
+  OUT message VARCHAR(255),
+  OUT success BOOLEAN
+)
+BEGIN
+  DECLARE v_id_numberPeriod INT DEFAULT 1;
+  DECLARE v_workingDays DECIMAL(10,3) DEFAULT 0;
+  DECLARE v_weekendDays DECIMAL(10,3) DEFAULT 0;
+  DECLARE v_tempDate DATE;
+  DECLARE v_balanceDays DECIMAL(10,3); 
+  DECLARE v_balanceWorkingDays DECIMAL(10,3) DEFAULT 0;
+  DECLARE v_balanceWeekendDays DECIMAL(10,3) DEFAULT 0;
+  DECLARE v_id_vacationPeriod INT;
+  DECLARE v_vacationExists BOOLEAN;
+  DECLARE v_pendingPermissionExists BOOLEAN;
+  DECLARE v_codeType INT;
+  DECLARE v_startTime TIME;
+  DECLARE v_endTime TIME;
+  DECLARE v_timeDiff INT;
+  DECLARE v_dayDiff INT;
+  DECLARE v_timeInDays DECIMAL(10,3);
+  DECLARE v_carry DECIMAL(10,3) DEFAULT 0;
+  DECLARE v_issueNumber INT;
+  DECLARE v_id_reason_vacaciones INT;
+
+  -- Obtener el id_codeType del empleado
+  SELECT id_codeType INTO v_codeType FROM tb_employee WHERE id_employee = p_id_employee;
+  
+   -- Obtener el id_reason para "vacaciones"
+  SELECT id_reason INTO v_id_reason_vacaciones FROM tb_reason
+  WHERE LOWER(name_reason) LIKE '%vacaciones%';
+
+  -- Si pasa de 2 permisos pendientes se activa
+	SELECT 
+    IF(COUNT(*) < 2, FALSE, TRUE) 
+	INTO v_pendingPermissionExists FROM tb_permission 
+	WHERE id_employee = p_id_employee AND state_permission = 'P';
+
+  IF v_pendingPermissionExists = FALSE THEN
+    -- Obtener los saldos de los periodos activos
+      SELECT COALESCE(SUM(balanceWorkingDays_vacationPeriod + balanceWeekendDays_vacationPeriod), 0),
+      COALESCE(SUM(balanceWorkingDays_vacationPeriod), 0),
+      COALESCE(SUM(balanceWeekendDays_vacationPeriod), 0)
+	   INTO v_balanceDays, v_balanceWorkingDays, v_balanceWeekendDays
+	  FROM tb_vacationperiod
+	  WHERE id_employee = p_id_employee AND state_vacationPeriod = TRUE;
+
+	 IF p_id_reason = v_id_reason_vacaciones THEN
+      -- Verificar si existe un periodo de vacaciones activo 
+      SELECT EXISTS(
+        SELECT 1
+        FROM tb_vacationPeriod 
+        WHERE id_employee = p_id_employee
+          AND state_vacationPeriod = TRUE 
+      ) INTO v_vacationExists;
+    ELSE 
+      SET v_vacationExists = TRUE;
+    END IF;
+   
+    IF v_vacationExists = FALSE THEN
+      SET message = 'No tiene periodo de vacaciones activo';
+      SET success = FALSE;
+    ELSE
+      -- Obtener el id_numberPeriod activo
+      SELECT id_numberPeriod
+      INTO v_id_numberPeriod
+      FROM tb_numberPeriod
+      WHERE state_numberPeriod = TRUE;
+      -- Obtener la diferencia de tiempos en dias y en minutos.
+      SET v_dayDiff = ABS(DATEDIFF(p_startDate, p_endDate));
+      SET v_timeDiff = ABS(TIMESTAMPDIFF(MINUTE, p_startDate, p_endDate));
+      -- Validar si las fechas ingresadas son la misma, es decir para comprobar las horas
+      IF (v_dayDiff = 0) AND (v_timeDiff > 0) THEN
+        -- Validar que no sea dias de fin de semana (sábado o domingo)
+        IF WEEKDAY(p_startDate) <> 5 AND WEEKDAY(p_startDate) <> 6 THEN
+          -- Validar el rango de horario según el id_codeType
+          IF v_codeType = 1 AND (TIME(p_startDate) < '08:00:00' OR TIME(p_endDate) > '16:30:00') THEN
+            SET message = 'Las horas seleccionadas no están de acuerdo a su horario. El rango de horario debe ser de 8:00 a 16:30.';
+            SET success = FALSE;
+          ELSEIF v_codeType = 2 AND (TIME(p_startDate) < '07:00:00' OR TIME(p_endDate) > '15:30:00') THEN
+            SET message = 'Las horas seleccionadas no están de acuerdo a su horario. El rango de horario debe ser de 7:00 a 15:30.';
+            SET success = FALSE;
+          ELSE
+            -- Verificar Rango de fecha y hora
+            IF TIME(p_startDate) >= TIME(p_endDate) THEN
+              SET message = 'El rango de hora es incorrecto.';
+              SET success = FALSE;
+            ELSE
+              -- Calcular la diferencia de tiempo en minutos
+              SET v_timeDiff = TIME_TO_SEC(TIMEDIFF(p_endDate, p_startDate)) / 60;
+              -- Convertir saldo de dias laborales en minutos
+              SET v_balanceDays = v_balanceDays * 8 * 60;     
+              -- Devuelve media hora si pide permiso en horario especifico y cuando pasa las 5 horas y media
+              IF (TIME(p_startDate) = '12:00:00' AND TIME(p_endDate) = '14:00:00') OR v_timeDiff = 330 OR v_timeDiff = 510 THEN
+                SET v_timeDiff = v_timeDiff - 30;
+              END IF;
+              
+              -- Convertir la diferencia de tiempo en días
+              SET v_workingDays = v_timeDiff / (8 * 60);
+              
+              SET success = TRUE;
+              
+              -- Control de dias laboales en caso de que sean vacaciones
+              IF p_id_reason = v_id_reason_vacaciones THEN
+                IF v_timeDiff  > v_balanceDays  THEN
+                  SET message = CONCAT('Se excede en ', ROUND(ABS(v_timeDiff - v_balanceDays),2) , ' minutos del saldo.');
+                  SET success = FALSE;
+                ELSE 
+                  -- Obtener carry anterior
+                  SET v_carry = (SELECT IFNULL((
+                      SELECT carry_permission
+                      FROM tb_permission
+                      WHERE id_reason = v_id_reason_vacaciones AND id_employee = p_id_employee
+                      ORDER BY id_permission DESC
+                      LIMIT 1
+                    ), 0));
+                  
+                  -- Validar si pasa de los 5 dias acumulados le descuente 2 dias de fines de semana
+                  IF (v_carry + v_workingDays) < 5 THEN 
+                    SET v_carry = v_carry + v_workingDays;
+                  ELSEIF (v_carry + v_workingDays) >= 5 AND v_balanceWeekendDays > 0 THEN
+                    SET v_weekendDays = 2;
+                    SET v_carry = (v_carry + v_workingDays) - 5;
+                  END IF;
+                END IF;
+              END IF;
+              
+              IF success = TRUE THEN
+                INSERT INTO tb_permission (
+                  id_employee,
+                  id_reason,
+                  id_numberPeriod,
+                  issueDate_permission,
+                  state_permission,
+                  startDateTime_permission,
+                  endDateTime_permission,
+                  workingDays_permission,
+                  weekendDays_permission,
+                  carry_permission,
+                  balanceWorkingDays_permission,
+                  balanceWeekendDays_permission,
+                  observation_permission
+                )
+                VALUES (
+                  p_id_employee,
+                  p_id_reason,
+                  v_id_numberPeriod,
+                  CURRENT_DATE(),
+                  'P',
+                  p_startDate,
+                  p_endDate,
+                  v_workingDays,
+                  v_weekendDays,
+                  v_carry,
+                  v_balanceWorkingDays,
+                  v_balanceWeekendDays,
+                  p_observation_permission
+                );
+                -- Actualizar el contador en tb_numberPeriod
+                UPDATE tb_numberPeriod
+                SET count_numberPeriod = count_numberPeriod + 1
+                WHERE id_numberPeriod = v_id_numberPeriod;
+                -- Actualizar el estado de la fecha atrasado en caso de haber
+                UPDATE tb_permissionBack
+                SET state_permissionBack = 0
+                WHERE id_employee = p_id_employee AND state_permissionBack = 1;
+                -- Obtener contador actual
+                SELECT count_numberPeriod
+                INTO v_issueNumber
+                FROM tb_numberPeriod
+                WHERE id_numberPeriod = v_id_numberPeriod;
+                -- Actualizar numero de documento
+                SET @lastInsertId = LAST_INSERT_ID();
+                UPDATE tb_permission
+                SET issueNumber_permission = v_issueNumber
+                WHERE id_permission = @lastInsertId;
+
+                SET message = 'Permiso solicitado exitosamente.';
+                SET success = TRUE;
+              END IF;
+              -- SET message = v_balanceWorkingDays;
+            END IF;
+          END IF;
+        ELSE
+          SET message = 'Solo aplica para dias laborables';
+          SET success = FALSE;
+        END IF;
+      ELSE
+        SET success = TRUE;
+        -- Validar cuando escogen 1 dia sábado o domingo
+        IF (v_dayDiff = 0 AND (WEEKDAY(p_startDate) = 5 OR WEEKDAY(p_startDate) = 6)) THEN
+          SET message = 'Solo aplica para dias laborables';
+          SET success = FALSE;
+         -- Validar cuando escogen 2 dias, solo sábado y domingo
+         ELSEIF (v_dayDiff = 1 AND (WEEKDAY(p_startDate) = 5 AND WEEKDAY(p_endDate) = 6)) THEN
+          SET message = 'Solo aplica para dias laborables';
+          SET success = FALSE;
+         -- Validar el rango de las fehcas
+         ELSEIF (DATE(p_startDate) > DATE(p_endDate)) THEN
+          SET message = 'El rango de fechas es incorrecto.';
+          SET success = FALSE;
+        END IF;
+        -- Validar que no sea dias de fin de semana (sábado o domingo)
+        IF success = TRUE THEN
+          SET v_workingDays = 0;
+          SET v_weekendDays = 0;
+          SET v_tempDate = DATE(p_startDate);
+
+          -- Calcular los dias laborales y fines de semana
+          WHILE v_tempDate <= DATE(p_endDate) DO
+            IF WEEKDAY(v_tempDate) BETWEEN 0 AND 4 THEN
+              SET v_workingDays = v_workingDays + 1;
+            ELSEIF WEEKDAY(v_tempDate) IN (5, 6) THEN
+              SET v_weekendDays = v_weekendDays + 1;
+            END IF;
+            SET v_tempDate = DATE_ADD(v_tempDate, INTERVAL 1 DAY);
+          END WHILE;
+            
+          -- Control de dias laborales en caso de que sean vacaciones
+          IF p_id_reason = v_id_reason_vacaciones THEN
+            -- Verificar que si los dias laborales y fines de semanas no exceden del saldo de dias.
+            IF (v_workingDays + v_weekendDays) > v_balanceDays THEN
+              SET message = CONCAT('Se excede en ',ROUND(ABS(v_balanceDays - (v_workingDays + v_balanceWeekendDays)),2), ' día(s).');
+              SET success = FALSE;
+            ELSE
+              -- Obtener carry anterior
+              SET v_carry = (SELECT IFNULL((
+                  SELECT carry_permission
+                  FROM tb_permission
+                  WHERE id_reason = v_id_reason_vacaciones AND id_employee = p_id_employee
+                  ORDER BY id_permission DESC
+                  LIMIT 1
+                ), 0));
+              
+              -- Validar si pasa de los 5 dias acumulados le descuente 2 dias de fines de semana
+              IF (v_carry + v_workingDays) < 5 THEN 
+                SET v_carry = v_carry + v_workingDays;
+              ELSEIF (v_carry + v_workingDays) >= 5 AND v_workingDays <= 5 AND v_balanceWeekendDays > 0 THEN
+                SET v_weekendDays = 2;
+                SET v_carry = (v_carry + v_workingDays) - 5;
+              ELSE
+              	 SET v_carry = 0;
+              END IF;
+              
+              -- Validar si los fines de semana exceden al saldo de fines de semana
+              IF v_weekendDays > v_balanceWeekendDays THEN
+                SET v_workingDays = v_workingDays + (v_weekendDays - v_balanceWeekendDays);
+                SET v_weekendDays = v_balanceWeekendDays;
+              END IF;
+            END IF;
+          END IF;
+            IF success = TRUE THEN
+                INSERT INTO tb_permission (
+                  id_employee,
+                  id_reason,
+                  id_numberPeriod,
+                  issueDate_permission,
+                  state_permission,
+                  startDateTime_permission,
+                  endDateTime_permission,
+                  workingDays_permission,
+                  weekendDays_permission,
+                  carry_permission,
+                  balanceWorkingDays_permission,
+                  balanceWeekendDays_permission,
+                  observation_permission
+                )
+                VALUES (
+                  p_id_employee,
+                  p_id_reason,
+                  v_id_numberPeriod,
+                  CURRENT_DATE(),
+                  'P',
+                  p_startDate,
+                  p_endDate,
+                  v_workingDays,
+                  v_weekendDays,
+                  v_carry,
+                  v_balanceWorkingDays,
+                  v_balanceWeekendDays,
+                  p_observation_permission
+                );
+                
+                -- Actualizar el contador en tb_numberPeriod
+                UPDATE tb_numberPeriod
+                SET count_numberPeriod = count_numberPeriod + 1
+                WHERE id_numberPeriod = v_id_numberPeriod;
+                -- Actualizar el estado de la fecha atrasado en caso de haber
+                UPDATE tb_permissionBack
+                SET state_permissionBack = 0
+                WHERE id_employee = p_id_employee AND state_permissionBack = 1;
+                -- Obtener contador actual
+                SELECT count_numberPeriod
+                INTO v_issueNumber
+                FROM tb_numberPeriod
+                WHERE id_numberPeriod = v_id_numberPeriod;
+                -- Actualizar numero de documento
+                SET @lastInsertId = LAST_INSERT_ID();
+                UPDATE tb_permission
+                SET issueNumber_permission = v_issueNumber
+                WHERE id_permission = @lastInsertId;
+
+                SET message = 'Permiso solicitado exitosamente.';
+              END IF;
+        END IF;
+      END IF;
+    END IF;
+  ELSE
+    SET message = 'Ya existen 2 permisos pendientes, espere una respuesta';
+    SET success = FALSE;
+  END IF;
+  
+END $$
+
+DELIMITER ;
+
+
+
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_updatePermissionState(
+  IN p_id_permission INT,
+  IN p_state CHAR(1),
+  IN p_message VARCHAR(255),
+  OUT message VARCHAR(255),
+  OUT success BOOLEAN
+)
+BEGIN
+  DECLARE v_id_employee INT;
+  DECLARE v_id_reason INT;
+  DECLARE v_workingDays DECIMAL(10,3);
+  DECLARE v_weekendDays DECIMAL(10,3);
+  DECLARE v_id_vacationPeriod INT;
+  DECLARE v_state_permission CHAR(1);
+  DECLARE v_id_reason_vacaciones INT;
+  DECLARE v_carry_now INT;
+  DECLARE v_carry INT DEFAULT 0;
+  DECLARE v_should_deduct BOOLEAN DEFAULT FALSE;
+  DECLARE v_should_return BOOLEAN DEFAULT FALSE;
+  DECLARE v_earnedWorkingDays DECIMAL(10,3);
+  DECLARE v_earnedWeekendDays DECIMAL(10,3);
+  DECLARE v_balanceWorkingDays DECIMAL(10,3);
+  DECLARE v_balanceWeekendDays DECIMAL(10,3);
+  DECLARE v_workingDaysToDeduct DECIMAL(10,3);
+  DECLARE v_weekendDaysToDeduct DECIMAL(10,3);
+  DECLARE v_workingDaysToReturn DECIMAL(10,3);
+  DECLARE v_weekendDaysToReturn DECIMAL(10,3);
+
+  DECLARE cur_discount CURSOR FOR
+    SELECT id_vacationPeriod, earnedWorkingDays_vacationPeriod, earnedWeekendDays_vacationPeriod, balanceWorkingDays_vacationPeriod, balanceWeekendDays_vacationPeriod
+    FROM tb_vacationPeriod
+    WHERE id_employee = v_id_employee AND state_vacationPeriod = TRUE
+    ORDER BY endDate_vacationPeriod ASC;
+
+  DECLARE cur_return CURSOR FOR
+    SELECT id_vacationPeriod, earnedWorkingDays_vacationPeriod, earnedWeekendDays_vacationPeriod, balanceWorkingDays_vacationPeriod, balanceWeekendDays_vacationPeriod
+    FROM tb_vacationPeriod
+    WHERE id_employee = v_id_employee 
+    ORDER BY id_vacationPeriod DESC LIMIT 3;
+
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_id_vacationPeriod = NULL;
+
+  SELECT id_reason INTO v_id_reason_vacaciones
+  FROM tb_reason
+  WHERE LOWER(name_reason) LIKE '%vacaciones%';
+
+  SELECT id_employee, id_reason, workingDays_permission, weekendDays_permission, state_permission, carry_permission
+  INTO v_id_employee, v_id_reason, v_workingDays, v_weekendDays, v_state_permission, v_carry_now
+  FROM tb_permission
+  WHERE id_permission = p_id_permission;
+
+  IF (p_state = 'V' AND v_state_permission = 'P') OR (p_state = 'V' AND v_state_permission = 'R') OR (p_state = 'V' AND v_state_permission = 'A') THEN
+  		IF v_id_reason = v_id_reason_vacaciones THEN
+    		IF (p_state = 'V' AND v_state_permission = 'P') OR (p_state = 'V' AND v_state_permission = 'A') THEN
+    			SET v_carry = v_carry_now;
+    		ELSEIF p_state = 'V' AND v_state_permission = 'R' THEN
+    			IF (v_workingDays + v_carry_now) >= 5 THEN
+    				SET v_carry = (v_workingDays + v_carry_now) - 5;
+    			ELSE
+    				SET v_carry = v_carry_now + v_workingDays;
+    			END IF;
+    		END IF;
+    	END IF;
+    	SET v_should_deduct = TRUE;
+  ELSEIF p_state = 'R' AND v_state_permission = 'V' THEN
+  		IF  v_id_reason = v_id_reason_vacaciones THEN
+  			SET @count_permiss = (SELECT COUNT(*) FROM tb_permission
+			WHERE id_reason = v_id_reason_vacaciones AND id_employee = v_id_employee); 
+			IF @count_permiss > 1 THEN
+				 -- Obtener carry anterior
+				SET v_carry = (SELECT carry_permission FROM tb_permission WHERE id_permission <> p_id_permission 
+				AND id_reason = v_id_reason_vacaciones AND id_employee = v_id_employee
+				ORDER BY id_permission DESC LIMIT 1);
+			END IF;
+		END IF;
+    	SET v_should_return = TRUE;
+  ELSEIF (p_state = 'R' AND v_state_permission = 'P') OR (p_state = 'R' AND v_state_permission = 'A') THEN
+    SET message = 'Permiso rechazado.';
+    SET success = TRUE;
+  ELSEIF (p_state = 'A' AND v_state_permission = 'P') OR (p_state = 'A' AND v_state_permission = 'R') THEN
+    SET message = 'Permiso autorizado exitosamente.';
+    SET success = TRUE;
+  ELSE
+    SET message = 'Transición de estado no válida.';
+    SET success = FALSE;
+  END IF;
+
+  IF v_should_deduct THEN
+    IF v_id_reason = v_id_reason_vacaciones THEN
+        SET v_workingDaysToDeduct = v_workingDays;
+        SET v_weekendDaysToDeduct = v_weekendDays;
+        OPEN cur_discount;
+        deduct_loop: LOOP
+            FETCH cur_discount INTO v_id_vacationPeriod, v_earnedWorkingDays, v_earnedWeekendDays, v_balanceWorkingDays, v_balanceWeekendDays;
+            IF v_id_vacationPeriod IS NULL THEN
+                LEAVE deduct_loop;
+            END IF;
+            IF v_workingDaysToDeduct > 0 THEN
+                IF v_workingDaysToDeduct <= v_balanceWorkingDays THEN
+                    UPDATE tb_vacationPeriod
+                    SET balanceWorkingDays_vacationPeriod = balanceWorkingDays_vacationPeriod - v_workingDaysToDeduct
+                    WHERE id_vacationPeriod = v_id_vacationPeriod;
+                    SET v_workingDaysToDeduct = 0;
+                ELSE
+                    SET v_workingDaysToDeduct = v_workingDaysToDeduct - v_balanceWorkingDays;
+                    UPDATE tb_vacationPeriod
+                    SET balanceWorkingDays_vacationPeriod = 0
+                    WHERE id_vacationPeriod = v_id_vacationPeriod;
+                END IF;
+            END IF;
+            IF v_weekendDaysToDeduct > 0 THEN
+                IF v_weekendDaysToDeduct <= v_balanceWeekendDays THEN
+                    UPDATE tb_vacationPeriod
+                    SET balanceWeekendDays_vacationPeriod = balanceWeekendDays_vacationPeriod - v_weekendDaysToDeduct
+                    WHERE id_vacationPeriod = v_id_vacationPeriod;
+                    SET v_weekendDaysToDeduct = 0;
+                ELSE
+                    SET v_weekendDaysToDeduct = v_weekendDaysToDeduct - v_balanceWeekendDays;
+                    UPDATE tb_vacationPeriod
+                    SET balanceWeekendDays_vacationPeriod = 0
+                    WHERE id_vacationPeriod = v_id_vacationPeriod;
+                END IF;
+            END IF;
+            -- Desactivación de periodo
+            SELECT balanceWorkingDays_vacationPeriod INTO @balance_working_days 
+				FROM tb_vacationperiod WHERE id_vacationPeriod = v_id_vacationPeriod;
+            IF @balance_working_days = 0 THEN
+            	UPDATE tb_vacationPeriod
+               SET state_vacationPeriod = FALSE
+               WHERE id_vacationPeriod = v_id_vacationPeriod;
+            END IF;
+        END LOOP deduct_loop;
+        CLOSE cur_discount;
+    END IF;
+    SET message = 'Permiso validado exitosamente.';
+    SET success = TRUE;
+  END IF;
+
+  IF v_should_return THEN
+    IF v_id_reason = v_id_reason_vacaciones THEN
+        SET v_workingDaysToReturn = v_workingDays;
+        SET v_weekendDaysToReturn = v_weekendDays;
+        OPEN cur_return;
+        return_loop: LOOP
+            FETCH cur_return INTO v_id_vacationPeriod, v_earnedWorkingDays, v_earnedWeekendDays, v_balanceWorkingDays, v_balanceWeekendDays;
+            IF v_id_vacationPeriod IS NULL THEN
+                LEAVE return_loop;
+            END IF;
+            IF v_workingDaysToReturn > 0 THEN
+                IF v_workingDaysToReturn <= (v_earnedWorkingDays - v_balanceWorkingDays) THEN
+						  UPDATE tb_vacationPeriod
+                    SET balanceWorkingDays_vacationPeriod = balanceWorkingDays_vacationPeriod + v_workingDaysToReturn
+                    WHERE id_vacationPeriod = v_id_vacationPeriod;
+                    SET v_workingDaysToReturn = 0;
+                    -- Activación de periodo
+						  UPDATE tb_vacationPeriod
+               	  SET state_vacationPeriod = TRUE
+                    WHERE id_vacationPeriod = v_id_vacationPeriod;
+                ELSE
+                    SET v_workingDaysToReturn = v_workingDaysToReturn - (v_earnedWorkingDays - v_balanceWorkingDays);
+                    UPDATE tb_vacationPeriod
+                    SET balanceWorkingDays_vacationPeriod = v_earnedWorkingDays
+                    WHERE id_vacationPeriod = v_id_vacationPeriod;
+                END IF;
+            END IF;
+            IF v_weekendDaysToReturn > 0 THEN
+                IF v_weekendDaysToReturn <= (v_earnedWeekendDays - v_balanceWeekendDays) THEN
+                    UPDATE tb_vacationPeriod
+                    SET balanceWeekendDays_vacationPeriod = balanceWeekendDays_vacationPeriod + v_weekendDaysToReturn
+                    WHERE id_vacationPeriod = v_id_vacationPeriod;
+                    SET v_weekendDaysToReturn = 0;
+                ELSE
+                    SET v_weekendDaysToReturn = v_weekendDaysToReturn - (v_earnedWeekendDays - v_balanceWeekendDays);
+                    UPDATE tb_vacationPeriod
+                    SET balanceWeekendDays_vacationPeriod = v_earnedWeekendDays
+                    WHERE id_vacationPeriod = v_id_vacationPeriod;
+                END IF;
+            END IF;
+        END LOOP return_loop;
+        CLOSE cur_return;
+    END IF;
+    SET message = 'Permiso rechazado exitosamente.';
+    SET success = TRUE;
+  END IF;
+  
+  IF success = TRUE THEN
+        UPDATE tb_permission
+        SET state_permission = p_state,
+            carry_permission = v_carry,
+            adminObservation_permission = p_message
+        WHERE id_permission = p_id_permission;
+    END IF;
+
+END $$
+
+DELIMITER ;
+
+-- -------------------------------------------------------------------------------------------
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_insertPermissionBack(
+    IN id_employee INT,
+    IN minDate_permissionBack DATE,
+    IN state_permissionBack BOOLEAN,
+    OUT message VARCHAR(255),
+    OUT success BOOLEAN
+)
+BEGIN
+    DECLARE error INT DEFAULT 0;
+    DECLARE employeeCount INT DEFAULT 0;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET error = 1;
+        SET message = 'Error al insertar el registro en tb_permissionBack.';
+        SET success = FALSE;
+    END;
+    
+    START TRANSACTION;
+    
+    -- Verificar si el id_employee existe
+    SELECT COUNT(*) INTO employeeCount FROM tb_employee WHERE id_employee = id_employee;
+    
+    IF employeeCount = 0 THEN
+        SET message = 'El id_employee no existe.';
+        SET success = FALSE;
+        SET error = 1;
+    ELSE
+        SET @issueDate_permissionBack = CURRENT_TIMESTAMP();
+        
+        INSERT INTO tb_permissionBack (id_employee, issueDate_permissionBack, minDate_permissionBack, state_permissionBack)
+        VALUES (id_employee, @issueDate_permissionBack, minDate_permissionBack, state_permissionBack);
+        
+        IF error = 0 THEN
+            COMMIT;
+            SET message = 'El registro se insertó correctamente';
+            SET success = TRUE;
+        ELSE
+            ROLLBACK;
+        END IF;
+    END IF;
+    
+END $$
+
+DELIMITER ;
+
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_updatePermissionBack(
+    IN p_id_permissionBack INT,
+    IN p_minDate_permissionBack DATE,
+    IN p_state_permissionBack BOOLEAN,
+    OUT message VARCHAR(255),
+    OUT success BOOLEAN
+)
+BEGIN
+    DECLARE error INT DEFAULT 0;
+    DECLARE permissionCount INT DEFAULT 0;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET error = 1;
+        SET message = 'Error al insertar el registro en tb_permissionBack.';
+        SET success = FALSE;
+    END;
+    
+    START TRANSACTION;
+    
+    -- Verificar si el p_id_permissionBack existe
+    SELECT COUNT(*) INTO permissionCount FROM tb_permissionBack WHERE id_employee = id_employee;
+    
+    IF permissionCount = 0 THEN
+        SET message = 'El id_permissionBack no existe.';
+        SET success = FALSE;
+        SET error = 1;
+    ELSE
+        
+        UPDATE tb_permissionback SET
+		 minDate_permissionBack = p_minDate_permissionBack, 
+		 state_permissionBack = p_state_permissionBack
+      WHERE id_permissionBack = p_id_permissionBack;
+        
+        IF error = 0 THEN
+            COMMIT;
+            SET message = 'Se actualizó correctamente';
+            SET success = TRUE;
+        ELSE
+            ROLLBACK;
+        END IF;
+    END IF;
+    
+END $$
+
+DELIMITER ;
+
+
+
+
+
+DELIMITER $$
+
+CREATE PROCEDURE pa_getPermissionBackDate(
+  IN p_id_employee INT,
+  OUT p_date_permissionBack DATETIME
+)
+BEGIN
+  DECLARE v_exist INT;
+
+  -- Verificar si existe un registro con el id_employee y state específicos
+  SELECT COUNT(*) INTO v_exist
+  FROM tb_permissionBack
+  WHERE id_employee = p_id_employee AND state_permissionBack = 1;
+
+  IF v_exist > 0 THEN
+    -- Obtener la fecha del registro correspondiente
+    SELECT minDate_permissionBack INTO p_date_permissionBack
+    FROM tb_permissionBack
+    WHERE id_employee = p_id_employee AND state_permissionBack = 1;
+  ELSE
+    -- No existe un registro válido, retornar la fecha actual
+    SET p_date_permissionBack = NOW();
+  END IF;
+END $$
+
+DELIMITER ;
+
+/**********************************************************************************************
+ ***                                                                                        ***
+ ***                                          VISTAS                                        ***
+ ***                                                                                        ***
+ *********************************************************************************************/
+
+
+CREATE VIEW vw_users AS
+SELECT u.id_user,
+	e.id_employee,
+	u.id_userType,
+	e.ci_employee,
+	CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+	u.name_user,
+	u.password_user,
+	u.state_user,
+	u.createdDate_user,
+	u.lastSession_user 
+FROM tb_user u INNER JOIN tb_employee e
+ON u.id_employee=e.id_employee;
+
+
+CREATE VIEW view_vacationperiod AS
+SELECT 
+    v.id_vacationPeriod,
+    v.id_employee,
+    CONCAT(e.name_employee, ' ', e.lastName_employee) AS full_name,
+    DATE_FORMAT(v.startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod,
+    DATE_FORMAT(v.endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
+    IF(v.earnedWorkingDays_vacationPeriod = 0, 0, ROUND(v.earnedWorkingDays_vacationPeriod, 2)) AS earnedWorkingDays_vacationPeriod,
+    IF(v.earnedWeekendDays_vacationPeriod = 0, 0, ROUND(v.earnedWeekendDays_vacationPeriod, 2)) AS earnedWeekendDays_vacationPeriod,
+    IF(v.balanceWorkingDays_vacationPeriod = 0, 0, ROUND(v.balanceWorkingDays_vacationPeriod, 2)) AS balanceWorkingDays_vacationPeriod,
+    IF(v.balanceWeekendDays_vacationPeriod = 0, 0, ROUND(v.balanceWeekendDays_vacationPeriod, 2)) AS balanceWeekendDays_vacationPeriod,
+    v.state_vacationPeriod
+FROM tb_vacationperiod v
+INNER JOIN tb_employee e ON v.id_employee = e.id_employee;
+
+
+
+CREATE VIEW vw_permissVacation AS
+SELECT
+  p.id_permission,
+  e.id_employee,
+  CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+  p.id_reason,
+  DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
+  p.state_permission,
+  IF(p.workingDays_permission = 0, 0, ROUND(p.workingDays_permission, 2)) AS workingDays_permission,
+  IF(p.weekendDays_permission = 0, 0, ROUND(p.weekendDays_permission, 2)) AS weekendDays_permission,
+  IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, ROUND(p.workingDays_permission + p.weekendDays_permission, 2)) AS total,
+  p.observation_permission
+FROM
+  tb_permission p
+INNER JOIN
+  tb_employee e ON p.id_employee = e.id_employee;
+
+
+
+CREATE VIEW vw_permissAdmin AS
+SELECT
+  p.id_permission,
+  p.issueNumber_permission,
+  e.id_employee,
+  e.id_departament,
+  CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+  r.name_reason,
+  DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
+  p.state_permission,
+  IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
+  IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
+  IF(p.workingDays_permission = 0, 0, ROUND(p.workingDays_permission, 2)) AS workingDays_permission,
+  IF(p.weekendDays_permission = 0, 0, ROUND(p.weekendDays_permission, 2)) AS weekendDays_permission,
+  IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, ROUND(p.workingDays_permission + p.weekendDays_permission, 2)) AS total,
+  p.observation_permission
+FROM
+  tb_permission p
+INNER JOIN
+  tb_employee e ON p.id_employee = e.id_employee
+INNER JOIN 
+  tb_reason r ON r.id_reason = p.id_reason;
+
+
+
+CREATE VIEW vw_permissEmployeeReport AS
+SELECT 
+    p.id_permission,
+    p.issueNumber_permission,
+    DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
+    e.ci_employee,
+    e.name_employee,
+    e.lastName_employee,
+    d.name_departament,
+    r.name_reason,
+    p.observation_permission,
+    IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
+    IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
+    IF(p.workingDays_permission = 0, 0, ROUND(p.workingDays_permission, 2)) AS workingDays_permission,
+    IF(p.weekendDays_permission = 0, 0, ROUND(p.weekendDays_permission, 2)) AS weekendDays_permission,
+    IF(p.balanceWorkingDays_permission = 0, 0, ROUND(p.balanceWorkingDays_permission, 2)) AS balanceWorkingDays_permission,
+    IF(p.balanceWeekendDays_permission = 0, 0, ROUND(p.balanceWeekendDays_permission, 2)) AS balanceWeekendDays_permission,
+    p.state_permission,
+    p.adminObservation_permission
+FROM tb_permission p
+INNER JOIN tb_employee e ON p.id_employee = e.id_employee
+INNER JOIN tb_departament d ON d.id_departament = e.id_departament
+INNER JOIN tb_reason r ON r.id_reason = p.id_reason;
+
+
+  
+
+CREATE VIEW vw_permissBack AS
+SELECT pb.id_permissionBack,
+pb.id_employee,
+CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+DATE_FORMAT(pb.issueDate_permissionBack, '%d/%m/%Y %H:%i:%s') AS issueDate_permissionBack,
+DATE_FORMAT(pb.minDate_permissionBack, '%d/%m/%Y') AS minDate_permissionBack,
+pb.state_permissionBack 
+FROM tb_permissionback pb
+INNER JOIN tb_employee e ON pb.id_employee = e.id_employee;
+
+
+
+CREATE VIEW vw_Employees AS
+SELECT
+e.id_employee,
+ct.id_codeType,
+    ct.name_codeType,
+    tc.id_typeContract,
+    tc.name_typeContract,
+    d.id_departament,
+    jt.id_jobTitle,
+    jt.name_jobTitle,
+    d.name_departament,
+    aj.id_abbrJob,
+    aj.name_abbrJob,
+    e.ci_employee,
+    e.name_employee,
+    e.lastName_employee,
+    DATE_FORMAT(e.startDate_employee, '%d/%m/%Y') AS startDate_employee,
+    e.phoneNumber_employee,
+    e.address_employee,
+    e.email_employee,
+    e.salary_employee,
+    e.isBoss_employee
+ FROM tb_employee e 
+INNER JOIN tb_codetype ct ON e.id_codeType = ct.id_codeType
+INNER JOIN tb_typecontract tc ON e.id_typeContract = tc.id_typeContract
+INNER JOIN tb_departament d ON e.id_departament = d.id_departament
+INNER JOIN tb_jobtitle jt ON e.id_jobTitle = jt.id_jobTitle
+INNER JOIN tb_abbrjob aj ON e.id_abbrJob = aj.id_abbrJob;
+
+
+CREATE VIEW vw_reportGeneral AS
+SELECT 
+e.id_employee,
+e.ci_employee,
+CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,  
+DATE_FORMAT(e.startDate_employee, '%d/%m/%Y') AS startDate_employee,
+d.id_departament,
+d.name_departament,
+DATE_FORMAT(vp.startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod,
+DATE_FORMAT(vp.endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
+IF(vp.balanceWorkingDays_vacationPeriod = 0, 0, ROUND(vp.balanceWorkingDays_vacationPeriod, 2)) AS balanceWorkingDays_vacationPeriod,
+IF(vp.balanceWeekendDays_vacationPeriod = 0, 0, ROUND(vp.balanceWeekendDays_vacationPeriod, 2)) AS balanceWeekendDays_vacationPeriod,
+IF((vp.balanceWorkingDays_vacationPeriod + vp.balanceWeekendDays_vacationPeriod) = 0, 0, 
+ROUND((vp.balanceWorkingDays_vacationPeriod + vp.balanceWeekendDays_vacationPeriod), 2)) AS balanceDays
+FROM tb_employee e INNER JOIN tb_vacationperiod vp
+ON e.id_employee = vp.id_employee INNER JOIN tb_departament d 
+ON d.id_departament = e.id_departament
+WHERE vp.state_vacationPeriod = 1;
+
+
+
+CREATE VIEW vw_reportPermiss AS
+SELECT 
+    p.id_permission,
+    e.ci_employee,
+    CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+    DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
+    CASE 
+        WHEN p.state_permission = 'V' THEN 'Validado'
+        WHEN p.state_permission = 'P' THEN 'Pendiente'
+        WHEN p.state_permission = 'R' THEN 'Rechazado'
+        WHEN p.state_permission = 'A' THEN 'Autorizado'
+        ELSE p.state_permission
+    END AS state_permission,
+    IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
+    IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
+    IF(p.workingDays_permission = 0, 0, ROUND(p.workingDays_permission, 2)) AS workingDays_permission,
+    IF(p.weekendDays_permission = 0, 0, ROUND(p.weekendDays_permission, 2)) AS weekendDays_permission,
+    IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, ROUND(p.workingDays_permission + p.weekendDays_permission, 2)) AS total
+FROM tb_permission p
+INNER JOIN tb_employee e ON p.id_employee = e.id_employee
+INNER JOIN tb_departament d ON d.id_departament = e.id_departament
+ORDER BY p.startDateTime_permission ASC;
+
+
+
+CREATE VIEW vw_dataEmloyeeCertificate AS
+SELECT 
+    e.id_employee,
+    e.ci_employee,
+    CONCAT(e.lastName_employee, ' ', e.name_employee) AS fullname,
+    CONCAT(SUBSTRING_INDEX(e.name_employee, ' ', 1), ' ', SUBSTRING_INDEX(e.lastName_employee, ' ', 1)) AS fullname_inv,
+    CONCAT(SUBSTRING_INDEX(e.name_employee, ' ', 1), ' ', e.lastName_employee) AS fullname_inv2,
+    jt.name_jobTitle,
+    aj.name_abbrJob,
+    DATE_FORMAT(e.startDate_employee, '%d/%m/%Y') AS startDate_employee,
+    d.name_departament,
+    e.salary_employee,
+    (SELECT np.countCertificate_numberPeriod FROM tb_numberPeriod np WHERE np.year_numberPeriod = YEAR(CURDATE()) AND np.state_numberPeriod = TRUE) AS countCertificate_numberPeriod
+FROM tb_employee e 
+INNER JOIN tb_jobtitle jt ON e.id_jobTitle = jt.id_jobTitle
+INNER JOIN tb_departament d ON e.id_departament = d.id_departament
+INNER JOIN tb_abbrjob aj ON e.id_abbrjob = aj.id_abbrJob;
+
+
+CREATE VIEW vw_balanceEmployee AS
+SELECT 
+    id_employee,
+    DATE_FORMAT(startDate_vacationPeriod, '%d/%m/%Y') AS startDate_vacationPeriod,
+    DATE_FORMAT(endDate_vacationPeriod, '%d/%m/%Y') AS endDate_vacationPeriod,
+    IF(balanceWorkingDays_vacationPeriod = 0, 0, ROUND(balanceWorkingDays_vacationPeriod, 2)) AS balanceWorkingDays_vacationPeriod,
+    IF(balanceWeekendDays_vacationPeriod = 0, 0, ROUND(balanceWeekendDays_vacationPeriod, 2)) AS balanceWeekendDays_vacationPeriod,
+    IF((balanceWorkingDays_vacationPeriod + balanceWeekendDays_vacationPeriod) = 0, 0, ROUND((balanceWorkingDays_vacationPeriod + balanceWeekendDays_vacationPeriod), 2)) AS balanceDays,
+    state_vacationPeriod
+FROM tb_vacationperiod;
+
+
+
+
+
+
+/**********************************************************************************************
+ ***                                                                                         **
+ ***                                      DATOS INICIALES                                    **
+ ***                                                                                         **
+ *********************************************************************************************/
+
+
+-- ---------------------------TIPOS DE USUARIO-------------------------------------------------
+INSERT INTO tb_userType (name_userType) VALUES ('Aministrador');
+INSERT INTO tb_userType (name_userType) VALUES ('Empleado');
+
+-- ---------------------------TIPOS DE CODIGO-------------------------------------------------
+INSERT INTO tb_codetype (name_codeType) VALUES('LOSEP');
+INSERT INTO tb_codetype (name_codeType) VALUES('Código de Trabajo');
+
+-- --------------------------- ABREVIATURAS DE TITULOS-------------------------------------------------
+INSERT INTO tb_abbrJob (name_abbrJob) VALUES('Sr.');
+INSERT INTO tb_abbrJob (name_abbrJob) VALUES('Sra.');
+INSERT INTO tb_abbrJob (name_abbrJob) VALUES('Srta.');
+INSERT INTO tb_abbrJob (name_abbrJob) VALUES('Ing.');
+INSERT INTO tb_abbrJob (name_abbrJob) VALUES('Econ.');
+INSERT INTO tb_abbrJob (name_abbrJob) VALUES('PhD.');
+INSERT INTO tb_abbrJob (name_abbrJob) VALUES('Mgs.');
+INSERT INTO tb_abbrJob (name_abbrJob) VALUES('MsC.');
+INSERT INTO tb_abbrJob (name_abbrJob) VALUES('CPA.');
+INSERT INTO tb_abbrJob (name_abbrJob) VALUES('Mv.Z.');
+
+
+-- ---------------------------TIPOS DE CONTRATO------------------------------------------------
+INSERT INTO tb_typecontract (name_typeContract) VALUES('Nombramiento');
+INSERT INTO tb_typecontract (name_typeContract) VALUES('Nombramiento Libre Remoción');
+INSERT INTO tb_typecontract (name_typeContract) VALUES('Nombramiento Provisional');
+INSERT INTO tb_typecontract (name_typeContract) VALUES('Indefinido');
+INSERT INTO tb_typecontract (name_typeContract) VALUES('Servicios Ocasionales');
+
+
+-- ---------------------------CONTADOR DE PERIODO---------------------------------------------
+INSERT INTO tb_numberPeriod (year_numberPeriod, countCertificate_numberPeriod, count_numberPeriod, state_numberPeriod) VALUES (YEAR(CURRENT_DATE()), 0, 0, 1);
+
+-- ---------------------------RAZONES----------------------------------------------------
+INSERT INTO tb_reason (name_reason) VALUES ('Comparecencia para versión en trámite judicial');
+INSERT INTO tb_reason (name_reason) VALUES ('Cita Médica y/o Enfermedad');
+INSERT INTO tb_reason (name_reason) VALUES ('Calamidad Doméstica');
+INSERT INTO tb_reason (name_reason) VALUES ('PERMISO con cargo a vacaciones');
+INSERT INTO tb_reason (name_reason) VALUES ('Estudio de Posgrado');
+INSERT INTO tb_reason (name_reason) VALUES ('Matrícula Escolar');
+INSERT INTO tb_reason (name_reason) VALUES ('Tiempo Compensatorio-CT');
+INSERT INTO tb_reason (name_reason) VALUES ('Licencia por Matrimonio');
+INSERT INTO tb_reason (name_reason) VALUES ('Licencia por Maternidad y/o Paternidad');
+INSERT INTO tb_reason (name_reason) VALUES ('Elecciones 2021');
+INSERT INTO tb_reason (name_reason) VALUES ('Reunión del Sindicato de Trabajadores');
+INSERT INTO tb_reason (name_reason) VALUES ('Cuidado del Menor');
+
+-- -----------------------------DEPARTAMENTOS--------------------------------------------------
+INSERT INTO tb_departament (name_departament) VALUES ('Producción y Servicios Especializados');
+INSERT INTO tb_departament (name_departament) VALUES ('Ganadería y Pastos');
+INSERT INTO tb_departament (name_departament) VALUES ('Administración Técnica');
+INSERT INTO tb_departament (name_departament) VALUES ('Suelos y Aguas');
+INSERT INTO tb_departament (name_departament) VALUES ('Cacao y Café');
+INSERT INTO tb_departament (name_departament) VALUES ('Producción y Servicios');
+INSERT INTO tb_departament (name_departament) VALUES ('Protección Vegetal');
+INSERT INTO tb_departament (name_departament) VALUES ('Banano, Plátano y Otras Musáceas');
+INSERT INTO tb_departament (name_departament) VALUES ('Recursos Fitogenéticos');
+INSERT INTO tb_departament (name_departament) VALUES ('Maíz');
+INSERT INTO tb_departament (name_departament) VALUES ('Biotecnología');
+INSERT INTO tb_departament (name_departament) VALUES ('Bodega');
+INSERT INTO tb_departament (name_departament) VALUES ('Informática');
+INSERT INTO tb_departament (name_departament) VALUES ('Administración Financiera');
+INSERT INTO tb_departament (name_departament) VALUES ('Núcleo de Transferencia de Tecnología Y Capacitación');
+INSERT INTO tb_departament (name_departament) VALUES ('Talento Humano');
+INSERT INTO tb_departament (name_departament) VALUES ('Dirección De Estación');
+INSERT INTO tb_departament (name_departament) VALUES ('Transferencia de Tecnología');
+INSERT INTO tb_departament (name_departament) VALUES ('Subdirección de Posicionamiento Estratégico');
+INSERT INTO tb_departament (name_departament) VALUES ('Planificación y Gestión Estratégica');
+INSERT INTO tb_departament (name_departament) VALUES ('Proyecto DAPME');
+
+
+-- -----------------------------CARGOS--------------------------------------------------
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Trabajador Agrícola');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Chofer');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Jardinero');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Conserje');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Asistente Administrativo');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Electricista');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Auxiliar De Electricista');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Auxiliar De Bodega');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Mecánico');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Auxiliar de Servicios');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Técnico de Servicios Especializados de Estación Experimental');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Asistente de tecnologías de la Información y Comunicación 1 de Estación Experimental');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Guardalmacen, Delegada');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Investigador Agropecuario');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Responsable de Área');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Administrador 1 de Estación Experimental');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Investigador Auxiliar 1');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Transferencista Agropecuario');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Entomóloga, Delegada');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Responsable de Presupuesto');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Tesorera, Delegada');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Analista de Adaptación y Eficiencia de Tecnología de Estación Experimental');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Director de Estación');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Asistente de Investigación');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Secretaría Ejecutiva');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Oficinista de Estación Experimental');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Asistente Contable');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Analista de Servicios Especializados de Estación Experimental');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Técnico de Producción');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Responsable de Mecánica');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Subdirectora de Posicionamiento Estratégico');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Investigador Agregado 1');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Responsable de Nómina');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Aspirante a Investigador 2');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Aspirante a Investigador 4');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Responsable de Comunicación Social');
+INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Responsable de Seguimiento y Evaluación del Proyecto');
+
+
+-- -------------------------- DATOS EMPLEADOS / USUARIOS -------------------------------------
+-- EMPLEADOS
+INSERT INTO `tb_employee` (`id_employee`, `id_codeType`, `id_typeContract`, `id_departament`, `id_jobTitle`, `id_abbrJob`, `ci_employee`, `name_employee`, `lastName_employee`, `startDate_employee`, `phoneNumber_employee`, `address_employee`, `email_employee`, `salary_employee`, `isBoss_employee`) VALUES
+	(1, 1, 1, 17, 23, 1, '1307209526', 'Carlos Alberto', 'Molina Hidrovo', '2001-01-01', '0', 's/n', 's/n', 2368.00, 0),
+	(2, 1, 5, 16, 15, 1, '1204454464', 'Carlos Julio', 'Macias Loor', '2014-06-01', '0', 's/n', 's/n', 1676.00, 0),
+	(3, 1, 5, 21, 17, 1, '0201854486', 'Edwin Jose', 'Borja Borja', '2022-02-01', '0', 's/n', 's/n', 1676.00, 0),
+	(4, 1, 5, 21, 36, 1, '0502292733', 'Carlos Jose', 'Erazo Checa', '2022-02-01', '0', 's/n', 's/n', 1212.00, 0),
+	(5, 1, 5, 21, 35, 1, '1311156275', 'Karen Rafaela', 'Mayorga Morejon', '2022-03-01', '0', 's/n', 's/n', 1212.00, 0),
+	(6, 1, 5, 21, 34, 1, '0202342853', 'Liseth Mariela', 'Carvajal Guerrero', '2022-09-01', '0', 's/n', 's/n', 986.00, 0),
+	(7, 1, 5, 21, 17, 1, '1725033821', 'Pedro Isaias', 'Terrero Yepez', '2022-09-01', '0', 's/n', 's/n', 1676.00, 0),
+	(8, 1, 5, 21, 17, 1, '3050411770', 'Paola Manoella Andrea', 'Rodulfo Acuña', '2022-09-01', '0', 's/n', 's/n', 1676.00, 0),
+	(9, 1, 5, 21, 26, 1, '0927883892', 'Alexandra Mariuxi', 'Jimenez Barzola', '2023-02-01', '0', 's/n', 's/n', 585.00, 0),
+	(10, 1, 5, 21, 37, 1, '1205948332', 'Yasmina Maricela', 'Lino Ganchozo', '2023-02-01', '0', 's/n', 's/n', 1212.00, 0),
+	(11, 1, 5, 21, 34, 1, '1207248079', 'Yordy Ariel', 'Arcos Palma', '2023-03-01', '0', 's/n', 's/n', 986.00, 0),
+	(12, 1, 5, 21, 35, 1, '1204129728', 'Ruben Dario', 'Vacacela Guerrero', '2023-04-01', '0', 's/n', 's/n', 1212.00, 0),
+	(13, 1, 5, 21, 35, 1, '0802107276', 'Octavio Roberto', 'Carrasco Dueñas', '2023-05-01', '0', 's/n', 's/n', 1212.00, 0),
+	(14, 1, 5, 21, 34, 1, '1206514711', 'Willian Gerardo', 'Camacho Peralta', '2023-05-01', '0', 's/n', 's/n', 986.00, 0),
+	(15, 1, 5, 16, 15, 1, '1206514711', 'Veronica Carlina', 'Zambrano Saltos', '2002-04-01', '0', 's/n', 's/n', 675.00, 0);
+
+-- USUARIOS
+INSERT INTO `tb_user` (`id_user`, `id_userType`, `id_employee`, `name_user`, `password_user`, `state_user`, `createdDate_user`, `lastSession_user`) VALUES
+	(1, 2, 1, 'carlos.molina', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(2, 2, 2, 'carlos.macias', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(3, 2, 3, 'edwin.borja', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(4, 2, 4, 'carlos.erazo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(5, 2, 5, 'karen.mayorga', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(6, 2, 6, 'liseth.carvajal', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(7, 2, 7, 'pedro.terrero', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(8, 2, 8, 'paola.rodulfo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(9, 2, 9, 'alexandra.jimenez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(10, 2, 10, 'yasmina.lino', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(11, 2, 11, 'yordy.arcos', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(12, 2, 12, 'ruben.vacacela', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(13, 2, 13, 'octavio.carrasco', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(14, 2, 14, 'willian.camacho', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+        (15, 1, 2, 'carlos.macias1', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+        (16, 1, 15, 'veronica.zambrano1', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW());
+
+
+-- ------------------------------------------- Asignar Vacaciones -----------------------------------
+
+CALL pa_assignVacationDays();
+
+
+
+
