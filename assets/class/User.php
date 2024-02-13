@@ -10,10 +10,11 @@ class User
     private $jobTitle_employee;
     private $departament_employee;
     private $isBoss_employee;
+    private $isDirector_employee;
 
 
     // constructor
-    public function __construct($id_employee, $id_user, $type_user, $name_employee, $lastName_employee, $jobTitle_employee, $departament_employee, $isBoss_employee)
+    public function __construct($id_employee, $id_user, $type_user, $name_employee, $lastName_employee, $jobTitle_employee, $departament_employee, $isBoss_employee, $isDirector_employee)
     {
         $this->id_employee = $id_employee;
         $this->id_user = $id_user;
@@ -23,6 +24,7 @@ class User
         $this->jobTitle_employee = $jobTitle_employee; 
         $this->departament_employee = $departament_employee; 
         $this->isBoss_employee = $isBoss_employee; 
+        $this->isDirector_employee = $isDirector_employee;
     }
 
     // getters
@@ -57,6 +59,10 @@ class User
     public function getIsBossEmployee()
     {
         return $this->isBoss_employee;
+    }
+    public function getIsDirectorEmployee()
+    {
+        return $this->isDirector_employee;
     }
 
 
@@ -96,6 +102,10 @@ class User
     public function setIsBossEmployee($isBoss_employee)
     {
         $this->isBoss_employee = $isBoss_employee;
+    }
+    public function setIsDirectorEmployee($isDirector_employee)
+    {
+        $this->isDirector_employee = $isDirector_employee;
     }
 
 }

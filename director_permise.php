@@ -117,7 +117,7 @@ include_once "assets/php/database.php";
                   </div>
                 </div>
 
-                <label for="observationBoss" class="form-label fw-bold">Respuesta</label>
+                <label for="observationDirector" class="form-label fw-bold">Respuesta</label>
                 <textarea name="observationBoss" id="observationBoss" class="form-control" rows="4"></textarea>
 
               </div>
@@ -125,7 +125,7 @@ include_once "assets/php/database.php";
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-success w-100" data-dismiss="modal"
-              id="btnConfirmPermissBoss">Confirmar</button>
+              id="btnConfirmPermissDirector">Confirmar</button>
           </div>
         </div>
       </div>
@@ -259,7 +259,7 @@ include_once "assets/php/database.php";
         pagina = 1;
       }
 
-      let url = "./partials/tablePermissBoss.php";
+      let url = "./partials/tablePermissDirector.php";
       let formaData = new FormData();
 
       formaData.append('campo', input);

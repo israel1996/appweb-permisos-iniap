@@ -36,7 +36,8 @@ CREATE TABLE `tb_employee` (
   `address_employee` text,
   `email_employee` varchar(100),
   `salary_employee` decimal(10,2),
-  `isBoss_employee` bool
+  `isBoss_employee` BOOL,
+  `isDirector_employee` BOOL
 );
 
 CREATE TABLE `tb_departament` (
@@ -192,8 +193,8 @@ BEGIN
     ELSE
         START TRANSACTION;
         -- Inserción en la tabla tb_employee
-        INSERT INTO tb_employee (id_codeType, id_typeContract, id_departament, id_jobTitle, id_abbrJob, ci_employee, name_employee, lastName_employee, startDate_employee, phoneNumber_employee, address_employee, email_employee, salary_employee, isBoss_employee)
-        VALUES (p_id_codeType, p_id_typeContract, p_id_departament, p_id_jobTitle, p_id_abbrJob, p_ci_employee, p_name_employee, p_lastName_employee, p_startDate_employee, p_phoneNumber_employee, p_address_employee, p_email_employee, p_salary_employee, FALSE);
+        INSERT INTO tb_employee (id_codeType, id_typeContract, id_departament, id_jobTitle, id_abbrJob, ci_employee, name_employee, lastName_employee, startDate_employee, phoneNumber_employee, address_employee, email_employee, salary_employee, isBoss_employee, isDirector_employee)
+        VALUES (p_id_codeType, p_id_typeContract, p_id_departament, p_id_jobTitle, p_id_abbrJob, p_ci_employee, p_name_employee, p_lastName_employee, p_startDate_employee, p_phoneNumber_employee, p_address_employee, p_email_employee, p_salary_employee, FALSE, FALSE);
 
         COMMIT;
 
@@ -282,6 +283,7 @@ CREATE PROCEDURE pa_updateEmployee(
     IN p_email_employee VARCHAR(100),
     IN p_salary_employee DECIMAL(10,2),
     IN p_isBoss_employee BOOLEAN,
+    IN p_isDirector_employee BOOLEAN,
     OUT p_success BOOLEAN,
     OUT p_message TEXT
 )
@@ -305,6 +307,12 @@ BEGIN
         SET p_message = 'El número de cédula ya existe en otro empleado';
         ROLLBACK;
     ELSE
+    	  IF p_isBoss_employee = TRUE THEN
+            UPDATE tb_employee SET isBoss_employee = 0 WHERE id_departament = p_id_departament;
+        ELSEIF p_isDirector_employee = TRUE THEN
+           UPDATE tb_employee SET isDirector_employee = 0;
+        END IF;
+
         -- Actualización en la tabla tb_employee
         UPDATE tb_employee
         SET
@@ -321,7 +329,8 @@ BEGIN
             address_employee = p_address_employee,
             email_employee = p_email_employee,
             salary_employee = p_salary_employee,
-            isBoss_employee = p_isBoss_employee
+            isBoss_employee = p_isBoss_employee,
+            isDirector_employee = p_isDirector_employee
         WHERE id_employee = p_employeeId;
 
         COMMIT;
@@ -332,7 +341,6 @@ BEGIN
 END $$
 
 DELIMITER ;
-
 
 
 
@@ -685,6 +693,85 @@ BEGIN
     END IF;
 END $$
 
+DELIMITER ;
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_searchCurrentDirector(
+    IN p_id_employee INT,
+    IN p_isdirector BOOL,
+    OUT p_success BOOL,
+    OUT p_message TEXT
+)
+BEGIN
+    DECLARE v_count INT;
+    
+    -- Verificar si el empleado es director 
+    SELECT COUNT(*) INTO v_count FROM tb_employee
+    WHERE id_employee = p_id_employee AND isDirector_employee = TRUE;
+    
+    IF p_isdirector = TRUE AND v_count > 0 THEN
+        SET p_success = FALSE;
+        SET p_message = 'Es director';
+    ELSE
+        SELECT name_employee, lastName_employee INTO @name, @lastName
+        FROM tb_employee
+        WHERE isDirector_employee = TRUE
+        LIMIT 1;
+
+        IF @name IS NOT NULL AND @lastName IS NOT NULL THEN
+            SET p_success = TRUE;
+            SET p_message = CONCAT(@name, ' ', @lastName);
+        ELSE
+            SET p_success = FALSE;
+            SET p_message = 'No hay director';
+        END IF;
+    END IF;
+END$$
+DELIMITER ;
+
+
+DELIMITER $$
+CREATE PROCEDURE pa_searchCurrentBoss(
+    IN p_id_employee INT,
+    IN p_isboss BOOL,
+    OUT p_success BOOL,
+    OUT p_fullname TEXT,
+    OUT p_departament TEXT
+)
+BEGIN
+    DECLARE v_count INT;
+    DECLARE v_id_departament INT;
+    
+    -- Captura de id departamento
+    SELECT id_departament INTO v_id_departament 
+	 FROM tb_employee WHERE id_employee = p_id_employee;
+    
+    -- Verificar si el empleado es director 
+    SELECT COUNT(*) INTO v_count FROM tb_employee
+    WHERE id_employee = p_id_employee AND isBoss_employee = TRUE AND id_departament = v_id_departament;
+    
+    IF p_isboss = TRUE AND v_count > 0 THEN
+        SET p_success = FALSE;
+        SET p_fullname = 'Es Jefe';
+        SET p_departament = v_id_departament;
+    ELSE
+        SELECT name_employee, lastName_employee INTO @name, @lastName
+        FROM tb_employee
+        WHERE isBoss_employee = TRUE AND id_departament = v_id_departament
+        LIMIT 1;
+
+        IF @name IS NOT NULL AND @lastName IS NOT NULL THEN
+            SET p_success = TRUE;
+            SET p_fullname = CONCAT(@name, ' ', @lastName);
+            SET p_departament = (SELECT name_departament FROM tb_departament WHERE id_departament = v_id_departament);
+        ELSE
+            SET p_success = FALSE;
+            SET p_fullname = 'No hay Jefe';
+            SET p_departament = v_id_departament;
+        END IF;
+    END IF;
+END$$
 DELIMITER ;
 
 
@@ -2436,6 +2523,32 @@ INNER JOIN
 
 
 
+CREATE VIEW vw_permissDirector AS
+SELECT
+  p.id_permission,
+  p.issueNumber_permission,
+  e.id_employee,
+  e.id_departament,
+  CONCAT(e.name_employee, ' ', e.lastName_employee) AS fullname,
+  r.name_reason,
+  DATE_FORMAT(p.issueDate_permission, '%d/%m/%Y') AS issueDate_permission,
+  p.state_permission,
+  e.isBoss_employee,
+  IF(TIME(p.startDateTime_permission) = '00:00:00', DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.startDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS startDateTime_permission,
+  IF(TIME(p.endDateTime_permission) = '00:00:00', DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y'), DATE_FORMAT(p.endDateTime_permission, '%d/%m/%Y %H:%i:%s')) AS endDateTime_permission,
+  IF(p.workingDays_permission = 0, 0, ROUND(p.workingDays_permission, 2)) AS workingDays_permission,
+  IF(p.weekendDays_permission = 0, 0, ROUND(p.weekendDays_permission, 2)) AS weekendDays_permission,
+  IF((p.workingDays_permission + p.weekendDays_permission) = 0, 0, ROUND(p.workingDays_permission + p.weekendDays_permission, 2)) AS total,
+  p.observation_permission
+FROM
+  tb_permission p
+INNER JOIN
+  tb_employee e ON p.id_employee = e.id_employee
+INNER JOIN 
+  tb_reason r ON r.id_reason = p.id_reason;
+
+
+
 CREATE VIEW vw_permissEmployeeReport AS
 SELECT 
     p.id_permission,
@@ -2496,7 +2609,8 @@ ct.id_codeType,
     e.address_employee,
     e.email_employee,
     e.salary_employee,
-    e.isBoss_employee
+    e.isBoss_employee,
+    e.isDirector_employee
  FROM tb_employee e 
 INNER JOIN tb_codetype ct ON e.id_codeType = ct.id_codeType
 INNER JOIN tb_typecontract tc ON e.id_typeContract = tc.id_typeContract
@@ -2705,325 +2819,44 @@ INSERT INTO tb_jobTitle (name_jobTitle) VALUES ('Responsable de Seguimiento y Ev
 
 -- -------------------------- DATOS EMPLEADOS / USUARIOS -------------------------------------
 -- EMPLEADOS
-INSERT INTO `tb_employee` (`id_employee`, `id_codeType`, `id_typeContract`, `id_departament`, `id_jobTitle`, `id_abbrJob`, `ci_employee`, `name_employee`, `lastName_employee`, `startDate_employee`, `phoneNumber_employee`, `address_employee`, `email_employee`, `salary_employee`, `isBoss_employee`) VALUES
-	(1, 1, 1, 5, 17, 1, '1201169669', 'Teresa De Jesus', 'Casanova Mendoza', '1980-02-01', '0', 's/n', 's/n', 1676.00, 0),
-	(2, 1, 1, 9, 24, 1, '0907932388', 'Milton Moises', 'Teran Muñoz', '1984-02-01', '0', 's/n', 's/n', 817.00, 0),
-	(3, 1, 1, 11, 15, 1, '1705671400', 'Arturo Ivan', 'Garzon Catota', '1987-07-07', '0', 's/n', 's/n', 1760.00, 0),
-	(4, 1, 1, 14, 27, 1, '1201754650', 'Sonia Catalina', 'Rivera Castellano', '1988-10-01', '0', 's/n', 's/n', 986.00, 0),
-	(5, 2, 4, 3, 9, 1, '1202105928', 'Klever Nelson', 'Sanchez Bravo', '1990-09-10', '0', 's/n', 's/n', 590.00, 0),
-	(6, 1, 1, 1, 29, 1, '0602099459', 'Juan Neptali', 'Rosero Balseca', '1992-04-01', '0', 's/n', 's/n', 817.00, 0),
-	(7, 1, 1, 15, 18, 1, '1202831754', 'Franklin Ramon', 'Cedeño Barreiro', '1992-04-23', '0', 's/n', 's/n', 817.00, 0),
-	(8, 1, 1, 4, 15, 1, '0102294378', 'Manuel Danilo', 'Carrillo Zenteno', '1993-03-19', '0', 's/n', 's/n', 2308.00, 0),
-	(9, 1, 1, 1, 29, 1, '1304879560', 'John Lider', 'Vera Alcivar', '1996-08-07', '0', 's/n', 's/n', 1212.00, 0),
-	(10, 1, 1, 4, 14, 1, '1202611263', 'Betty Janet', 'Rivadeneira Moreira', '1997-04-01', '0', 's/n', 's/n', 986.00, 0),
-	(11, 1, 1, 1, 5, 1, '1203742778', 'Jinjer Jessica', 'Coello Perez', '1997-04-01', '0', 's/n', 's/n', 733.00, 0),
-	(12, 1, 1, 15, 18, 1, '0701903536', 'Miranda Consuelo', 'Diaz Diaz', '1998-11-01', '0', 's/n', 's/n', 1212.00, 0),
-	(13, 1, 1, 5, 15, 1, '1306984079', 'Rey Gaston', 'Loor Solorzano', '1999-07-01', '0', 's/n', 's/n', 2308.00, 0),
-	(14, 1, 1, 7, 15, 1, '1204678971', 'Sofia Lorena', 'Peñaherrera Villafuerte', '1999-08-01', '0', 's/n', 's/n', 817.00, 0),
-	(15, 1, 1, 19, 31, 1, '1203471063', 'Zoila Karina', 'Solis Hidalgo', '2000-01-01', '0', 's/n', 's/n', 3247.00, 0),
-	(16, 1, 1, 7, 32, 1, '0915146682', 'Danilo Isaac', 'Vera Coello', '2000-02-01', '0', 's/n', 's/n', 2034.00, 0),
-	(17, 1, 1, 1, 14, 1, '1307203669', 'Jean Paul', 'Villavicencio Linzan', '2000-02-01', '0', 's/n', 's/n', 1212.00, 0),
-	(18, 1, 1, 4, 11, 1, '1203430887', 'Maira Alexandra', 'Macias Bustamante', '2001-01-01', '0', 's/n', 's/n', 675.00, 0),
-	(19, 1, 1, 17, 23, 1, '1307209526', 'Carlos Alberto', 'Molina Hidrovo', '2001-01-01', '0', 's/n', 's/n', 2368.00, 0),
-	(20, 1, 1, 1, 15, 1, '0910656552', 'Galo Efrain', 'Lara Hidalgo', '2001-03-01', '0', 's/n', 's/n', 1084.00, 0),
-	(21, 1, 1, 10, 15, 1, '1802659928', 'Marlon Brainer', 'Caicedo Villafuerte', '2001-05-01', '0', 's/n', 's/n', 1676.00, 0),
-	(22, 1, 1, 4, 17, 1, '0915115562', 'Wuellins Dennis', 'Durango Cabanilla', '2001-11-01', '0', 's/n', 's/n', 1676.00, 0),
-	(23, 1, 1, 20, 15, 1, '1203984008', 'Ruth Marjorie', 'Tenesaca Mera', '2002-04-01', '0', 's/n', 's/n', 901.00, 0),
-	(24, 1, 1, 16, 33, 1, '1204112229', 'Veronica Carlina', 'Zambrano Saltos', '2002-04-01', '0', 's/n', 's/n', 675.00, 0),
-	(25, 1, 1, 4, 17, 1, '1203915200', 'Braulio Jose', 'Lahuathe Mendoza', '2002-06-03', '0', 's/n', 's/n', 1676.00, 0),
-	(26, 1, 1, 5, 14, 1, '0201204252', 'Juan Carlos', 'Jimenez Barragan', '2002-07-01', '0', 's/n', 's/n', 1212.00, 0),
-	(27, 1, 1, 3, 30, 1, '1203892490', 'Luis Omar', 'Sanchez Carranza', '2004-07-01', '0', 's/n', 's/n', 585.00, 0),
-	(28, 1, 1, 14, 15, 1, '1204509465', 'Shirley Maribel', 'Muñoz Ronquillo', '2004-07-01', '0', 's/n', 's/n', 733.00, 0),
-	(29, 1, 1, 14, 20, 1, '1203850852', 'Deisy Francisca', 'Fernandez Gomez', '2006-02-01', '0', 's/n', 's/n', 901.00, 0),
-	(30, 2, 4, 3, 3, 1, '1307064574', 'Victor Manuel', 'Aviles Rodriguez', '2007-09-01', '0', 's/n', 's/n', 500.00, 0),
-	(31, 2, 4, 2, 1, 1, '0916529258', 'Henry Washington', 'Castro Peñafiel', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(32, 2, 4, 1, 1, 1, '0916940331', 'Leonel Lizardo', 'Lorenti Lopez', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(33, 2, 4, 2, 1, 1, '0917519860', 'Justo Agapo', 'Mayorga Tomala', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(34, 2, 4, 8, 1, 1, '0920527603', 'Edison Eliseo', 'Moran Flores', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(35, 2, 4, 2, 1, 1, '0922700331', 'Mauricio Jose', 'Alvarado Aguirre', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(36, 2, 4, 5, 1, 1, '1201509518', 'Jose Steban', 'Bustamante Suarez', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(37, 2, 4, 5, 1, 1, '1202007066', 'Alberto Emilio', 'Aspiazu Bustamante', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(38, 2, 4, 3, 1, 1, '1202089957', 'Jorge Antonio', 'Moreira Cadena', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(39, 2, 4, 3, 1, 1, '1202617617', 'Oscar Ruben', 'Vargas Moncayo', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(40, 2, 4, 7, 1, 1, '1202622229', 'Jorge Calixto', 'Moran Flores', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(41, 2, 4, 1, 1, 1, '1202849236', 'Amado Eulogio', 'Lopez Vera', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(42, 2, 4, 4, 1, 1, '1202877393', 'Victor Franklin', 'Sanchez Campuzano', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(43, 2, 4, 3, 1, 1, '1202969091', 'Angel Mauricio', 'Vascones Torres', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(44, 2, 4, 3, 6, 1, '1203238421', 'Angel Fidel', 'Mendoza Figueroa', '2009-01-01', '0', 's/n', 's/n', 555.00, 0),
-	(45, 2, 4, 1, 1, 1, '1203421985', 'Freddy Eustaquio', 'Lopez Arevalo', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(46, 2, 4, 1, 1, 1, '1203565138', 'Gustavo Francisco', 'Cisneros Vargas', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(47, 2, 4, 4, 1, 1, '1203891419', 'Rolando Alfredo', 'Garcia Franco', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(48, 2, 4, 8, 1, 1, '1203959463', 'Wilter Fabricio', 'Intriago Romero', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(49, 2, 4, 1, 1, 1, '1204104085', 'Edinson Esteban', 'Vera Villamar', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(50, 2, 4, 1, 1, 1, '1204120719', 'Juan Carlos', 'Mayancha Arellano', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(51, 2, 4, 4, 5, 1, '1204173874', 'Celso Miguel', 'Cevallos Parraga', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(52, 2, 4, 4, 1, 1, '1204192528', 'Lorenzo Carlos', 'Sanchez Tubay', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(53, 2, 4, 3, 2, 1, '1204538639', 'Andres Enrique', 'Montiel Maquilon', '2009-01-01', '0', 's/n', 's/n', 590.00, 0),
-	(54, 2, 4, 5, 1, 1, '1204620981', 'Kleber Arquimides', 'Parraga Moran', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(55, 2, 4, 3, 1, 1, '1204812687', 'Carlos Arturo', 'Figueroa Zambrano', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(56, 2, 4, 1, 1, 1, '1204816118', 'Kleber Xavier', 'Vera Zambrano', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(57, 2, 4, 3, 1, 1, '1204945560', 'Fabricio Fernando', 'Barcia Zambrano', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(58, 2, 4, 1, 1, 1, '1204977019', 'Jorge Luis', 'Moreira Quimis', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(59, 2, 4, 3, 1, 1, '1205599861', 'Rene Javier', 'Flores Campuzano', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(60, 2, 4, 9, 1, 1, '1205639683', 'Victor Orlando', 'Tejada Silva', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(61, 2, 4, 3, 1, 1, '1205659566', 'Pedro Lorenzo', 'Montoya Muñoz', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(62, 2, 4, 11, 1, 1, '1205785171', 'Byron Ivan', 'Flores Campuzano', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(63, 2, 4, 9, 1, 1, '1205972001', 'Leonardo Leonel', 'Catagua Briones', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(64, 2, 4, 3, 1, 1, '1206245563', 'Juan Ramon', 'Tubay Sanchez', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(65, 2, 4, 1, 1, 1, '1206247775', 'Mario Mauricio', 'Mayancha Maquilon', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(66, 2, 4, 12, 8, 1, '1206354233', 'Sixto David', 'Parraga Matamba', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(67, 2, 4, 3, 4, 1, '1308579679', 'Klever Hegberto', 'Farfan Vera', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(68, 2, 4, 7, 1, 1, '1311149742', 'Julio Cesar', 'Sanchez Tubay', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(69, 2, 4, 5, 1, 1, '1311243800', 'Oscar Alfredo', 'Parraga Moran', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(70, 2, 4, 1, 1, 1, '1707607956', 'Modesto Edilberto', 'Ochoa Mora', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(71, 2, 4, 5, 1, 1, '1711641645', 'Wellington Freddy', 'Sanchez Vilela', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(72, 2, 4, 1, 1, 1, '1711641678', 'España Maria', 'Franco Flores', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(73, 2, 4, 1, 1, 1, '1712150695', 'Maximiliano Jenrry', 'Arevalo Franco', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(74, 2, 4, 4, 1, 1, '1715355200', 'Walter Rafael', 'Sanchez Franco', '2009-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(75, 1, 1, 5, 17, 1, '1204862336', 'Ignacio Antonio', 'Sotomayor Cantos', '2009-02-01', '0', 's/n', 's/n', 1676.00, 0),
-	(76, 1, 1, 17, 25, 1, '1717333155', 'Elizabeth Herlinda', 'Perez Quinto', '2009-07-01', '0', 's/n', 's/n', 622.00, 0),
-	(77, 2, 4, 3, 2, 1, '1204661696', 'Carlos Fabricio', 'Muñoz Mauyin', '2009-11-01', '0', 's/n', 's/n', 590.00, 0),
-	(78, 2, 4, 2, 1, 1, '0929786473', 'Luis Vicente', 'Vera Castro', '2010-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(79, 2, 4, 10, 1, 1, '1204672727', 'Luis Gilberto', 'Espinoza Intriago', '2010-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(80, 2, 4, 6, 1, 1, '1204877045', 'Sergio Alberto', 'Bustamante Zamora', '2010-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(81, 2, 4, 4, 1, 1, '1712399730', 'Simon Eduardo', 'Arguello Alvarado', '2010-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(82, 2, 4, 11, 1, 1, '1205232737', 'Silvia Marianela', 'Delgado Suarez', '2010-06-01', '0', 's/n', 's/n', 450.00, 0),
-	(83, 1, 1, 8, 14, 1, '1205594110', 'Antonio Javier', 'Bustamante Gonzalez', '2010-06-01', '0', 's/n', 's/n', 901.00, 0),
-	(84, 2, 4, 5, 1, 1, '1205663659', 'Mario Marcelo', 'Zurita Veloz', '2010-06-01', '0', 's/n', 's/n', 450.00, 0),
-	(85, 2, 4, 11, 1, 1, '1205731118', 'Joseline Teresa', 'Gavilanes Arreaga', '2010-08-02', '0', 's/n', 's/n', 450.00, 0),
-	(86, 2, 4, 11, 1, 1, '0922835202', 'Walter Javier', 'Sanchez Campuzano', '2010-09-01', '0', 's/n', 's/n', 450.00, 0),
-	(87, 2, 4, 1, 1, 1, '1202108443', 'Cristino Fernando', 'Almeida Chiriguaya', '2011-01-03', '0', 's/n', 's/n', 450.00, 0),
-	(88, 2, 4, 2, 1, 1, '1204621559', 'Pedro Daniel', 'Cedeño Gonzalez', '2011-01-03', '0', 's/n', 's/n', 450.00, 0),
-	(89, 2, 4, 10, 1, 1, '1205359951', 'Jose Luis', 'Sacon Cedeño', '2011-01-03', '0', 's/n', 's/n', 450.00, 0),
-	(90, 2, 4, 1, 1, 1, '1205539123', 'Javier Florentino', 'Mendez Vilela', '2011-01-03', '0', 's/n', 's/n', 450.00, 0),
-	(91, 2, 4, 1, 1, 1, '1205978891', 'Pedro Honorato', 'Flores Lopez', '2011-01-03', '0', 's/n', 's/n', 450.00, 0),
-	(92, 2, 4, 1, 1, 1, '1206248237', 'Carlos Alfredo', 'Almeida Garcia', '2011-01-03', '0', 's/n', 's/n', 450.00, 0),
-	(93, 2, 4, 2, 1, 1, '1206304907', 'Oscar Omar', 'Sanchez Tejada', '2011-01-03', '0', 's/n', 's/n', 450.00, 0),
-	(94, 2, 4, 3, 4, 1, '1707792576', 'Alejandro Roberto', 'Flores Lima', '2011-01-03', '0', 's/n', 's/n', 450.00, 0),
-	(95, 2, 4, 4, 1, 1, '1710813948', 'Francisco Ali', 'Franco Flores', '2011-01-03', '0', 's/n', 's/n', 450.00, 0),
-	(96, 1, 5, 8, 14, 1, '1750150706', 'Aracelly', 'Lopez Diana', '2011-04-01', '0', 's/n', 's/n', 901.00, 0),
-	(97, 2, 4, 7, 1, 1, '1205006990', 'Jaime Vicente', 'Carranza Sanchez', '2011-05-01', '0', 's/n', 's/n', 450.00, 0),
-	(98, 2, 4, 1, 1, 1, '1204753642', 'Milton Felix', 'Arguello Alvarado', '2012-01-01', '0', 's/n', 's/n', 450.00, 0),
-	(99, 2, 4, 8, 1, 1, '1204526469', 'Milton Freddy', 'Carranza Sanchez', '2012-02-01', '0', 's/n', 's/n', 450.00, 0),
-	(100, 2, 4, 10, 1, 1, '1204398737', 'Maximo Bienvenido', 'Cedeño Burgos', '2012-05-02', '0', 's/n', 's/n', 450.00, 0),
-	(101, 2, 4, 3, 4, 1, '1205692302', 'Jose Luis', 'Bravo Figueroa', '2012-08-01', '0', 's/n', 's/n', 450.00, 0),
-	(102, 2, 4, 2, 1, 1, '1204743908', 'Medardo Alejandro', 'Zambrano Vilela', '2013-05-02', '0', 's/n', 's/n', 450.00, 0),
-	(103, 2, 4, 5, 1, 1, '1204357840', 'Jaime Nolberto', 'Parraga Zamora', '2014-04-01', '0', 's/n', 's/n', 450.00, 0),
-	(104, 1, 5, 5, 28, 1, '1205173618', 'Gladys Angelica', 'Rodriguez Zamora', '2014-04-01', '0', 's/n', 's/n', 901.00, 0),
-	(105, 2, 4, 1, 1, 1, '1203903958', 'Oscar Rolando', 'Posligua Solis', '2014-04-23', '0', 's/n', 's/n', 450.00, 0),
-	(106, 2, 4, 1, 1, 1, '1204465643', 'Camilo Ramon', 'Mayancha Ortega', '2014-04-23', '0', 's/n', 's/n', 450.00, 0),
-	(107, 1, 5, 16, 15, 1, '1204454464', 'Carlos Julio', 'Macias Loor', '2014-06-01', '0', 's/n', 's/n', 1676.00, 0),
-	(108, 1, 5, 17, 26, 1, '1205068982', 'Johanna Annabell', 'Proaño Tovar', '2014-06-01', '0', 's/n', 's/n', 585.00, 0),
-	(109, 1, 5, 4, 11, 1, '1205281767', 'Katiusca Rosalinda', 'Bermudez Sotomayor', '2014-06-01', '0', 's/n', 's/n', 585.00, 0),
-	(110, 1, 5, 4, 11, 1, '1206508689', 'Virginia Nabel', 'Moreira Zambrano', '2014-06-01', '0', 's/n', 's/n', 585.00, 0),
-	(111, 2, 4, 3, 7, 1, '1206245480', 'Marco Antonio', 'Moreira Nivela', '2014-07-21', '0', 's/n', 's/n', 450.00, 0),
-	(112, 2, 4, 3, 2, 1, '1202983357', 'Richard Manuel', 'Hidrovo Andrade', '2014-09-10', '0', 's/n', 's/n', 590.00, 0),
-	(113, 1, 5, 14, 21, 1, '1206247072', 'Maria Alejandra', 'Llanos Salas', '2015-02-01', '0', 's/n', 's/n', 733.00, 0),
-	(114, 2, 4, 4, 1, 1, '1206034280', 'Sergio Jose', 'Simi Benavides', '2015-02-13', '0', 's/n', 's/n', 450.00, 0),
-	(115, 1, 5, 18, 15, 1, '0920206323', 'Jim Raphael', 'Ochoa Ramos', '2015-05-01', '0', 's/n', 's/n', 1086.00, 0),
-	(116, 2, 4, 3, 4, 1, '1306285543', 'Darwin Rusdael', 'Lopez Bermello', '2015-06-22', '0', 's/n', 's/n', 450.00, 0),
-	(117, 2, 4, 3, 1, 1, '1310361033', 'Carlos Kleber', 'Rengifo Castro', '2015-07-09', '0', 's/n', 's/n', 450.00, 0),
-	(118, 1, 3, 9, 15, 1, '1205065004', 'Raul Valentin', 'Mora Yela', '2015-09-01', '0', 's/n', 's/n', 986.00, 0),
-	(119, 1, 5, 4, 24, 1, '1105115990', 'Karina Elizabeth', 'Peña Salazar', '2017-10-01', '0', 's/n', 's/n', 817.00, 0),
-	(120, 1, 3, 2, 11, 1, '0929292035', 'Denisse Lizbeth', 'Arana Sanchez', '2019-05-01', '0', 's/n', 's/n', 585.00, 0),
-	(121, 1, 5, 13, 12, 1, '1204526972', 'Mariela Azucena', 'Barahona Yude', '2019-05-01', '0', 's/n', 's/n', 817.00, 0),
-	(122, 1, 3, 4, 22, 1, '1309790242', 'Nancy Edith', 'Loor Verduga', '2019-05-01', '0', 's/n', 's/n', 901.00, 0),
-	(123, 2, 4, 1, 10, 1, '1206385823', 'Solanyi Marley', 'Tigselema Zambrano', '2020-03-01', '0', 's/n', 's/n', 555.00, 0),
-	(124, 1, 5, 14, 13, 1, '1205171018', 'Geovanna Gissela', 'Bone Castillo', '2021-04-01', '0', 's/n', 's/n', 817.00, 0),
-	(125, 1, 5, 3, 26, 1, '1718143421', 'Eliana Rocio', 'Velasquez Lucas', '2021-11-01', '0', 's/n', 's/n', 585.00, 0),
-	(126, 1, 5, 21, 17, 1, '0201854486', 'Edwin Jose', 'Borja Borja', '2022-02-01', '0', 's/n', 's/n', 1676.00, 0),
-	(127, 1, 5, 21, 36, 1, '0502292733', 'Carlos Jose', 'Erazo Checa', '2022-02-01', '0', 's/n', 's/n', 1212.00, 0),
-	(128, 1, 4, 21, 34, 1, '1205934563', 'Christopher Wilson', 'Suarez Palacios', '2022-02-01', '0', 's/n', 's/n', 986.00, 0),
-	(129, 1, 4, 21, 35, 1, '1308954856', 'Jacinto Ramon', 'Mendoza Parraga', '2022-02-01', '0', 's/n', 's/n', 1212.00, 0),
-	(130, 1, 5, 11, 24, 1, '1804086344', 'Fabian Andres', 'Reyes Salinas', '2022-02-01', '0', 's/n', 's/n', 733.00, 0),
-	(131, 1, 3, 7, 19, 1, '1204504045', 'Marjorie Dolores', 'Espinoza Roca', '2022-03-01', '0', 's/n', 's/n', 1086.00, 0),
-	(132, 1, 5, 21, 35, 1, '1311156275', 'Karen Rafaela', 'Mayorga Morejon', '2022-03-01', '0', 's/n', 's/n', 1212.00, 0),
-	(133, 1, 5, 21, 17, 1, '1718347733', 'Myrian Elizabeth', 'Herrera Centeno', '2022-03-01', '0', 's/n', 's/n', 1676.00, 0),
-	(134, 1, 4, 21, 17, 1, '1206699645', 'Ernesto Ricardo', 'Paredes Puga', '2022-04-01', '0', 's/n', 's/n', 1676.00, 0),
-	(135, 1, 5, 21, 34, 1, '0202342853', 'Liseth Mariela', 'Carvajal Guerrero', '2022-09-01', '0', 's/n', 's/n', 986.00, 0),
-	(136, 1, 4, 21, 34, 1, '0940323157', 'Byron Geovanny', 'Marin Arevalo', '2022-09-01', '0', 's/n', 's/n', 986.00, 0),
-	(137, 1, 5, 21, 17, 1, '1725033821', 'Pedro Isaias', 'Terrero Yepez', '2022-09-01', '0', 's/n', 's/n', 1676.00, 0),
-	(138, 1, 5, 21, 17, 1, '3050411770', 'Paola Manoella Andrea', 'Rodulfo Acuña', '2022-09-01', '0', 's/n', 's/n', 1676.00, 0),
-	(139, 1, 4, 21, 34, 1, '0703323816', 'Maria Mercedes', 'Beltran Salinas', '2022-10-01', '0', 's/n', 's/n', 986.00, 0),
-	(140, 1, 5, 21, 26, 1, '0927883892', 'Alexandra Mariuxi', 'Jimenez Barzola', '2023-02-01', '0', 's/n', 's/n', 585.00, 0),
-	(141, 1, 5, 21, 37, 1, '1205948332', 'Yasmina Maricela', 'Lino Ganchozo', '2023-02-01', '0', 's/n', 's/n', 1212.00, 0),
-	(142, 1, 4, 21, 26, 1, '2000047775', 'Jenny Geovanna', 'Rodriguez Gomez', '2023-02-01', '0', 's/n', 's/n', 585.00, 0),
-	(143, 1, 3, 3, 16, 1, '1203129604', 'Leandro Leonardo', 'Cansing Arichabala', '2023-03-01', '0', 's/n', 's/n', 1412.00, 0),
-	(144, 2, 4, 3, 2, 1, '1206439828', 'Ricardo Manuel', 'Arevalo Fernandez', '2023-03-01', '0', 's/n', 's/n', 570.00, 0),
-	(145, 1, 5, 21, 34, 1, '1207248079', 'Yordy Ariel', 'Arcos Palma', '2023-03-01', '0', 's/n', 's/n', 986.00, 0),
-	(146, 1, 5, 21, 35, 1, '1204129728', 'Ruben Dario', 'Vacacela Guerrero', '2023-04-01', '0', 's/n', 's/n', 1212.00, 0),
-	(147, 1, 4, 21, 17, 1, '1307037448', 'Maria Virginia', 'Mendoza Garcia', '2023-04-01', '0', 's/n', 's/n', 1676.00, 0),
-	(148, 1, 3, 14, 26, 1, '1723863732', 'Vanessa Elizabeth', 'Uchuari Prado', '2023-04-01', '0', 's/n', 's/n', 585.00, 0),
-	(149, 1, 5, 21, 35, 1, '0802107276', 'Octavio Roberto', 'Carrasco Dueñas', '2023-05-01', '0', 's/n', 's/n', 1212.00, 0),
-	(150, 2, 5, 1, 1, 1, '1205794371', 'Humberto Manuel', 'Molina Triviño', '2023-05-01', '0', 's/n', 's/n', 450.00, 0),
-	(151, 1, 5, 21, 34, 1, '1206514711', 'Willian Gerardo', 'Camacho Peralta', '2023-05-01', '0', 's/n', 's/n', 986.00, 0),
-	(152, 1, 5, 21, 34, 1, '1207243096', 'Joffre Stalin', 'Teran Macias', '2023-05-01', '0', 's/n', 's/n', 986.00, 0),
-	(153, 1, 5, 2, 15, 1, '1307792513', 'Limberg Ivan', 'Zambrano Pinargote', '2023-05-01', '0', 's/n', 's/n', 1212.00, 0);
-
+INSERT INTO `tb_employee` (`id_employee`, `id_codeType`, `id_typeContract`, `id_departament`, `id_jobTitle`, `id_abbrJob`, `ci_employee`, `name_employee`, `lastName_employee`, `startDate_employee`, `phoneNumber_employee`, `address_employee`, `email_employee`, `salary_employee`, `isBoss_employee`, `isDirector_employee`) VALUES
+	(1, 1, 1, 17, 23, 1, '1307209526', 'Carlos Alberto', 'Molina Hidrovo', '2001-01-01', '0', 's/n', 's/n', 2368.00, 0, 0),
+	(2, 1, 5, 16, 15, 1, '1204454464', 'Carlos Julio', 'Macias Loor', '2014-06-01', '0', 's/n', 's/n', 1676.00, 0, 0),
+	(3, 1, 5, 21, 17, 1, '0201854486', 'Edwin Jose', 'Borja Borja', '2022-02-01', '0', 's/n', 's/n', 1676.00, 0, 0),
+	(4, 1, 5, 21, 36, 1, '0502292733', 'Carlos Jose', 'Erazo Checa', '2022-02-01', '0', 's/n', 's/n', 1212.00, 0, 0),
+	(5, 1, 5, 21, 35, 1, '1311156275', 'Karen Rafaela', 'Mayorga Morejon', '2022-03-01', '0', 's/n', 's/n', 1212.00, 0, 0),
+	(6, 1, 5, 21, 34, 1, '0202342853', 'Liseth Mariela', 'Carvajal Guerrero', '2022-09-01', '0', 's/n', 's/n', 986.00, 0, 0),
+	(7, 1, 5, 21, 17, 1, '1725033821', 'Pedro Isaias', 'Terrero Yepez', '2022-09-01', '0', 's/n', 's/n', 1676.00, 0, 0),
+	(8, 1, 5, 21, 17, 1, '3050411770', 'Paola Manoella Andrea', 'Rodulfo Acuña', '2022-09-01', '0', 's/n', 's/n', 1676.00, 0, 0),
+	(9, 1, 5, 21, 26, 1, '0927883892', 'Alexandra Mariuxi', 'Jimenez Barzola', '2023-02-01', '0', 's/n', 's/n', 585.00, 0, 0),
+	(10, 1, 5, 21, 37, 1, '1205948332', 'Yasmina Maricela', 'Lino Ganchozo', '2023-02-01', '0', 's/n', 's/n', 1212.00, 0, 0),
+	(11, 1, 5, 21, 34, 1, '1207248079', 'Yordy Ariel', 'Arcos Palma', '2023-03-01', '0', 's/n', 's/n', 986.00, 0, 0),
+	(12, 1, 5, 21, 35, 1, '1204129728', 'Ruben Dario', 'Vacacela Guerrero', '2023-04-01', '0', 's/n', 's/n', 1212.00, 0, 0),
+	(13, 1, 5, 21, 35, 1, '0802107276', 'Octavio Roberto', 'Carrasco Dueñas', '2023-05-01', '0', 's/n', 's/n', 1212.00, 0, 0),
+	(14, 1, 5, 21, 34, 1, '1206514711', 'Willian Gerardo', 'Camacho Peralta', '2023-05-01', '0', 's/n', 's/n', 986.00, 0, 0),
+	(15, 1, 5, 16, 15, 1, '1204112229', 'Veronica Carlina', 'Zambrano Saltos', '2002-04-01', '0', 's/n', 's/n', 675.00, 0, 0);
 
 -- USUARIOS
 INSERT INTO `tb_user` (`id_user`, `id_userType`, `id_employee`, `name_user`, `password_user`, `state_user`, `createdDate_user`, `lastSession_user`) VALUES
-	(1, 2, 1, 'teresa.casanova', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(2, 2, 2, 'milton.teran', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(3, 2, 3, 'arturo.garzon', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(4, 2, 4, 'sonia.rivera', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(5, 2, 5, 'klever.sanchez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(6, 2, 6, 'juan.rosero', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(7, 2, 7, 'franklin.cedeño', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(8, 2, 8, 'manuel.carrillo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(9, 2, 9, 'john.vera', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(10, 2, 10, 'betty.rivadeneira', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(11, 2, 11, 'jinjer.coello', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(12, 2, 12, 'miranda.diaz', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(13, 2, 13, 'rey.loor', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(14, 2, 14, 'sofia.peñaherrera', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(15, 2, 15, 'zoila.solis', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(16, 2, 16, 'danilo.vera', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(17, 2, 17, 'jean.villavicencio', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(18, 2, 18, 'maira.macias', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(19, 2, 19, 'carlos.molina', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(20, 2, 20, 'galo.lara', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(21, 2, 21, 'marlon.caicedo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(22, 2, 22, 'wuellins.durango', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(23, 2, 23, 'ruth.tenesaca', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(24, 2, 24, 'veronica.zambrano', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(25, 2, 25, 'braulio.lahuathe', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(26, 2, 26, 'juan.jimenez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(27, 2, 27, 'luis.sanchez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(28, 2, 28, 'shirley.muñoz', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(29, 2, 29, 'deisy.fernandez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(30, 2, 30, 'victor.aviles', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(31, 2, 31, 'henry.castro', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(32, 2, 32, 'leonel.lorenti', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(33, 2, 33, 'justo.mayorga', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(34, 2, 34, 'edison.moran', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(35, 2, 35, 'mauricio.alvarado', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(36, 2, 36, 'jose.bustamante', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(37, 2, 37, 'alberto.aspiazu', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(38, 2, 38, 'jorge.moreira', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(39, 2, 39, 'oscar.vargas', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(40, 2, 40, 'jorge.moran', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(41, 2, 41, 'amado.lopez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(42, 2, 42, 'victor.sanchez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(43, 2, 43, 'angel.vascones', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(44, 2, 44, 'angel.mendoza', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(45, 2, 45, 'freddy.lopez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(46, 2, 46, 'gustavo.cisneros', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(47, 2, 47, 'rolando.garcia', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(48, 2, 48, 'wilter.intriago', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(49, 2, 49, 'edinson.vera', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(50, 2, 50, 'juan.mayancha', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(51, 2, 51, 'celso.cevallos', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(52, 2, 52, 'lorenzo.sanchez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(53, 2, 53, 'andres.montiel', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(54, 2, 54, 'kleber.parraga', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(55, 2, 55, 'carlos.figueroa', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(56, 2, 56, 'kleber.vera', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(57, 2, 57, 'fabricio.barcia', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(58, 2, 58, 'jorge.moreira1', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(59, 2, 59, 'rene.flores', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(60, 2, 60, 'victor.tejada', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(61, 2, 61, 'pedro.montoya', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(62, 2, 62, 'byron.flores', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(63, 2, 63, 'leonardo.catagua', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(64, 2, 64, 'juan.tubay', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(65, 2, 65, 'mario.mayancha', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(66, 2, 66, 'sixto.parraga', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(67, 2, 67, 'klever.farfan', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(68, 2, 68, 'julio.sanchez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(69, 2, 69, 'oscar.parraga', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(70, 2, 70, 'modesto.ochoa', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(71, 2, 71, 'wellington.sanchez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(72, 2, 72, 'españa.franco', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(73, 2, 73, 'maximiliano.arevalo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(74, 2, 74, 'walter.sanchez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(75, 2, 75, 'ignacio.sotomayor', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(76, 2, 76, 'elizabeth.perez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(77, 2, 77, 'carlos.muñoz', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(78, 2, 78, 'luis.vera', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(79, 2, 79, 'luis.espinoza', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(80, 2, 80, 'sergio.bustamante', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(81, 2, 81, 'simon.arguello', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(82, 2, 82, 'silvia.delgado', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(83, 2, 83, 'antonio.bustamante', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(84, 2, 84, 'mario.zurita', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(85, 2, 85, 'joseline.gavilanes', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(86, 2, 86, 'walter.sanchez1', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(87, 2, 87, 'cristino.almeida', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(88, 2, 88, 'pedro.cedeño', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(89, 2, 89, 'jose.sacon', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(90, 2, 90, 'javier.mendez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(91, 2, 91, 'pedro.flores', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(92, 2, 92, 'carlos.almeida', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(93, 2, 93, 'oscar.sanchez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(94, 2, 94, 'alejandro.flores', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(95, 2, 95, 'francisco.franco', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(96, 2, 96, 'aracelly.lopez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(97, 2, 97, 'jaime.carranza', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(98, 2, 98, 'milton.arguello', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(99, 2, 99, 'milton.carranza', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(100, 2, 100, 'maximo.cedeño', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(101, 2, 101, 'jose.bravo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(102, 2, 102, 'medardo.zambrano', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(103, 2, 103, 'jaime.parraga', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(104, 2, 104, 'gladys.rodriguez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(105, 2, 105, 'oscar.posligua', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(106, 2, 106, 'camilo.mayancha', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(107, 2, 107, 'carlos.macias', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(108, 2, 108, 'johanna.proaño', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(109, 2, 109, 'katiusca.bermudez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(110, 2, 110, 'virginia.moreira', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(111, 2, 111, 'marco.moreira', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(112, 2, 112, 'richard.hidrovo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(113, 2, 113, 'maria.llanos', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(114, 2, 114, 'sergio.simi', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(115, 2, 115, 'jim.ochoa', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(116, 2, 116, 'darwin.lopez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(117, 2, 117, 'carlos.rengifo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(118, 2, 118, 'raul.mora', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(119, 2, 119, 'karina.peña', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(120, 2, 120, 'denisse.arana', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(121, 2, 121, 'mariela.barahona', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(122, 2, 122, 'nancy.loor', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(123, 2, 123, 'solanyi.tigselema', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(124, 2, 124, 'geovanna.bone', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(125, 2, 125, 'eliana.velasquez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(126, 2, 126, 'edwin.borja', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(127, 2, 127, 'carlos.erazo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(128, 2, 128, 'christopher.suarez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(129, 2, 129, 'jacinto.mendoza', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(130, 2, 130, 'fabian.reyes', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(131, 2, 131, 'marjorie.espinoza', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(132, 2, 132, 'karen.mayorga', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(133, 2, 133, 'myrian.herrera', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(134, 2, 134, 'ernesto.paredes', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(135, 2, 135, 'liseth.carvajal', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(136, 2, 136, 'byron.marin', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(137, 2, 137, 'pedro.terrero', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(138, 2, 138, 'paola.rodulfo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(139, 2, 139, 'maria.beltran', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(140, 2, 140, 'alexandra.jimenez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(141, 2, 141, 'yasmina.lino', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(142, 2, 142, 'jenny.rodriguez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(143, 2, 143, 'leandro.cansing', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(144, 2, 144, 'ricardo.arevalo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(145, 2, 145, 'yordy.arcos', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(146, 2, 146, 'ruben.vacacela', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(147, 2, 147, 'maria.mendoza', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(148, 2, 148, 'vanessa.uchuari', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(149, 2, 149, 'octavio.carrasco', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(150, 2, 150, 'humberto.molina', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(151, 2, 151, 'willian.camacho', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(152, 2, 152, 'joffre.teran', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-	(153, 2, 153, 'limberg.zambrano', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-        (154, 1, 107, 'carlos.macias1', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
-        (155, 1, 24, 'veronica.zambrano1', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW());
+	(1, 2, 1, 'carlos.molina', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(2, 2, 2, 'carlos.macias', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+        (3, 2, 15, 'veronica.zambrano', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(4, 2, 3, 'edwin.borja', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(5, 2, 4, 'carlos.erazo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(6, 2, 5, 'karen.mayorga', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(7, 2, 6, 'liseth.carvajal', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(8, 2, 7, 'pedro.terrero', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(9, 2, 8, 'paola.rodulfo', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(10, 2, 9, 'alexandra.jimenez', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(11, 2, 10, 'yasmina.lino', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(12, 2, 11, 'yordy.arcos', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(13, 2, 12, 'ruben.vacacela', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(14, 2, 13, 'octavio.carrasco', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+	(15, 2, 14, 'willian.camacho', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+   (16, 1, 2, 'carlos.macias1', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW()),
+   (17, 1, 15, 'veronica.zambrano1', '$2y$10$9zRiLx.6vg8OXvWFePQKkeeWCkNApQpKKhZ2ct50jLOTPEwNYRfcS', 1, NOW(), NOW());
 
 
 -- ------------------------------------------- Asignar Vacaciones -----------------------------------
 
 CALL pa_assignVacationDays();
-
-
-
-

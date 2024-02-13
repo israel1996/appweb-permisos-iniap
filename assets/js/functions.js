@@ -87,7 +87,7 @@ function insertDataEmployee(idTipoCodigo, idTipoContrato, idDepartamento, idJobT
 
 }
 function updateDataEmployee(idEmployee, idTipoCodigo, idTipoContrato, idDepartamento, idJobTitle, idAbbrJob, cedulaEmpleado, nombreEmpleado,
-    apellidoEmpleado, dateInicioLaboral, telefonoEmpleado, direccionEmpleado, emailEmpleado, salary, isBoss) {
+    apellidoEmpleado, dateInicioLaboral, telefonoEmpleado, direccionEmpleado, emailEmpleado, salary, isBoss, isDirector) {
 
     toastr.options.preventDuplicates = true;
     toastr.options.positionClass = 'toast-bottom-right';
@@ -108,7 +108,8 @@ function updateDataEmployee(idEmployee, idTipoCodigo, idTipoContrato, idDepartam
         direccionEmpleado: direccionEmpleado,
         emailEmpleado: emailEmpleado,
         salary: salary,
-        isBoss: isBoss
+        isBoss: isBoss,
+        isDirector: isDirector
     };
 
     $.ajax({
@@ -155,6 +156,8 @@ function agregaform(datos) {
 
     const chIsBoss = document.getElementById("chIsBoss");
     chIsBoss.checked =  (d[14] === "1");
+    const chIsDirector = document.getElementById("chIsDirector");
+    chIsDirector.checked =  (d[15] === "1");
     
 }
 function addToModalPermiss(datos) {
@@ -455,6 +458,85 @@ function yesOrNoQuestionDisableEmployee(id) {
             toastr.error('Se canceló', "MENSAJE");
         });
 }
+//Alerta de cambio de Director
+
+function yesOrNoChangeDirector() {
+    return new Promise((resolve, reject) => {
+        // Configuración inicial de Toastr omitida para brevedad
+        toastr.options.preventDuplicates = false;
+        toastr.options.positionClass = 'toast-bottom-right';
+        toastr.options.closeButton = true;
+
+        var idEmployee = $("#idEmployeeu").val();
+        var isDirector = $("#chIsDirector").prop("checked");
+
+        var data = { idEmployee: idEmployee, isDirector: isDirector };
+
+        $.ajax({
+            type: "POST",
+            url: "./assets/php/getDataCurrentDirector.php", 
+            data: data,
+            dataType: "json",
+            success: function(response) {
+                if(response.success == true) {
+                    const message = `${response.message}, será sustituido de Director. ¿Está de acuerdo?`;
+                    alertify.confirm('Cambiar de Director', message,
+                    function() {
+                        resolve(true); 
+                    },
+                    function() {
+                        toastr.error('Se canceló', "MENSAJE");
+                        resolve(false); 
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                toastr.error('Error al obtener nombres de los directores', "ERROR");
+                reject(new Error('Error al obtener nombres de los directores'));
+            }
+        });
+    });
+}
+
+
+//Alerta de cambio de Jefe
+function yesOrNoChangeBoss() {
+    return new Promise((resolve, reject) => {
+        toastr.options.preventDuplicates = false;
+        toastr.options.positionClass = 'toast-bottom-right';
+        toastr.options.closeButton = true;
+
+        var idEmployee = $("#idEmployeeu").val();
+        var isBoss = $("#chIsBoss").prop("checked");
+
+        var data = { idEmployee: idEmployee, isBoss: isBoss };
+
+        $.ajax({
+            type: "POST",
+            url: "./assets/php/getDataCurrentBoss.php", 
+            data: data,
+            dataType: "json",
+            success: function(response) {
+                if(response.success == true) {
+                    const message = `${response.fullname}, será sustituido de Jefe en el Departamento: ${response.departament}. ¿Está de acuerdo?`;
+                    alertify.confirm('Cambiar de Jefe', message,
+                    function() {
+                        resolve(true); 
+                    },
+                    function() {
+                        toastr.error('Se canceló', "MENSAJE");
+                        resolve(false); 
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                toastr.error('Error al obtener nombres de los jefes', "ERROR");
+                reject(new Error('Error al obtener nombres de los directores'));
+            }
+        });
+    });
+}
+
 //Permisos
 function yesOrNoQuestionSendPermiss(datos) {
     toastr.options.preventDuplicates = false;

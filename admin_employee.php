@@ -445,9 +445,16 @@ require_once "assets/php/database.php";
                 <label class="form-label fw-bold" style="margin-top:12px">Activar o Desactivar</label>
                 <div class="form-inline">
                   <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="chIsBoss" style="width: 20px; height: 20px; border: 2px solid #969696;">
+                    <input class="form-check-input" type="checkbox" id="chIsDirector" onclick="toggleCheckbox(this.id)"
+                      style="width: 20px; height: 20px; border: 2px solid #969696;">
+                    <label class="form-check-label" for="chIsDirector">Director de Departamento</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="chIsBoss" onclick="toggleCheckbox(this.id)"
+                      style="width: 20px; height: 20px; border: 2px solid #969696;">
                     <label class="form-check-label" for="chIsBoss">Jefe de Departamento</label>
                   </div>
+
                 </div>
 
               </div>
@@ -473,6 +480,33 @@ require_once "assets/php/database.php";
     var titulo = "Gestión de Empleados";
     document.getElementById("institucion").innerHTML = "<span>" + titulo.toUpperCase() + "</span>";
     document.title = titulo;
+  </script>
+
+  <script>
+
+    //Funcion para habilitar la seleccion unica de los checkbox Jefe y Director
+    async function toggleCheckbox(clickedId) {
+      const checkbox1 = document.getElementById("chIsDirector");
+      const checkbox2 = document.getElementById("chIsBoss");
+
+      // Si el director está siendo marcado
+      if (clickedId === "chIsDirector" && checkbox1.checked) {
+        checkbox2.checked = false; 
+        const isConfirmed = await yesOrNoChangeDirector();
+        if (!isConfirmed) {
+          checkbox1.checked = false; 
+        } 
+      }
+      // Si el jefe está siendo marcado
+      else if (clickedId === "chIsBoss" && checkbox2.checked) {
+        checkbox1.checked = false;
+        const isConfirmed = await yesOrNoChangeBoss();
+        if (!isConfirmed) {
+          checkbox2.checked = false; 
+        }
+      }
+    }
+
   </script>
 
   <script>

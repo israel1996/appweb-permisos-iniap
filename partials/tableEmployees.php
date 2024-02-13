@@ -21,7 +21,8 @@ $columns = [
     'address_employee',
     'email_employee',
     'salary_employee',
-    'isBoss_employee'
+    'isBoss_employee',
+    'isDirector_employee'
 ];
 
 $table = "vw_Employees";
@@ -109,6 +110,7 @@ if ($num_rows > 0) {
         $emailEmployee = $row['email_employee'];
         $salario = $row['salary_employee'];
         $isBoss = $row['isBoss_employee'];
+        $isDirector = $row['isDirector_employee'];
 
         $datosArray = [
             $idEmployee,
@@ -125,7 +127,8 @@ if ($num_rows > 0) {
             $addressEmployee,
             $emailEmployee,
             $salario,
-            $isBoss
+            $isBoss,
+            $isDirector
         ];
         
         $datos = implode('||', $datosArray);

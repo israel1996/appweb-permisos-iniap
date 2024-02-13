@@ -325,6 +325,7 @@ $(document).ready(function () {
     var emailEmpleado = $("#emailEmpleadou").val();
     var salary = $("#salaryu").val();
     var isBoss = $("#chIsBoss").prop("checked");
+    var isDirector = $("#chIsDirector").prop("checked");
 
 
     if (
@@ -364,7 +365,8 @@ $(document).ready(function () {
             direccionEmpleado,
             emailEmpleado,
             salary,
-            isBoss
+            isBoss,
+            isDirector
           ); 
         } else {
           toastr.error("El correo es incorrecto", "MENSAJE");
@@ -793,6 +795,33 @@ $(document).ready(function () {
 
     var idPermiss = $("#idPermiss").val();
     var message = $("#observationBoss").val();
+    var authorizeCheckbox = $("#chStatePermissAuthorize").prop("checked");
+    var rejectCheckbox = $("#chStatePermissReject").prop("checked");
+
+    if (idPermiss != 0) {
+      if (authorizeCheckbox || rejectCheckbox) {
+        var state = authorizeCheckbox ? "A" : "R";
+        if (message.trim() != "") {
+          updateStatePermiss(idPermiss, state, message);
+        } else {
+          toastr.error("Escriba alguna observación", "MENSAJE");
+        }
+      } else {
+        toastr.error("Seleccione una acción", "MENSAJE");
+      }
+    } else {
+      toastr.error("No hay permiso seleccionado", "MENSAJE");
+    }
+  });
+  
+  //Enviar datos para validar permiso - DIRECTOR
+  $("#btnConfirmPermissDirector").click(function () {
+    //toastr.options.preventDuplicates = true;
+    toastr.options.positionClass = "toast-bottom-right";
+    toastr.options.closeButton = true;
+
+    var idPermiss = $("#idPermiss").val();
+    var message = $("#observationDirector").val();
     var authorizeCheckbox = $("#chStatePermissAuthorize").prop("checked");
     var rejectCheckbox = $("#chStatePermissReject").prop("checked");
 

@@ -72,7 +72,8 @@ if (!empty($recd_username) && !empty($recd_pass)) {
             $result1['lastName_employee'],
             $result1['id_jobTitle'],
             $result1['id_departament'],
-            $result1['isBoss_employee']
+            $result1['isBoss_employee'],
+            $result1['isDirector_employee']
         );
 
         // serializar el objeto User
@@ -157,8 +158,13 @@ if (!empty($recd_username) && !empty($recd_pass)) {
 
                 if($user->getIsBossEmployee())
                 {
-                    $subTab3 = new MenuItem('Autorizar', $url . $nombreCarpeta . '/boss_permise.php');
+                    $subTab3 = new MenuItem('Jefe - Autorizar', $url . $nombreCarpeta . '/boss_permise.php');
                     $tab2->addSubmenu($subTab3);
+                }
+                else if($user->getIsDirectorEmployee())
+                {
+                    $subTab4 = new MenuItem('Director - Autorizar', $url . $nombreCarpeta . '/director_permise.php');
+                    $tab2->addSubmenu($subTab4);
                 }
 
 
