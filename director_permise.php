@@ -118,7 +118,7 @@ include_once "assets/php/database.php";
                 </div>
 
                 <label for="observationDirector" class="form-label fw-bold">Respuesta</label>
-                <textarea name="observationBoss" id="observationBoss" class="form-control" rows="4"></textarea>
+                <textarea name="observationBoss" id="observationDirector" class="form-control" rows="4"></textarea>
 
               </div>
             </div>
