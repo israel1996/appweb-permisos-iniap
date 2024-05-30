@@ -2127,8 +2127,8 @@ BEGIN
   DECLARE v_id_vacationPeriod INT;
   DECLARE v_state_permission CHAR(1);
   DECLARE v_id_reason_vacaciones INT;
-  DECLARE v_carry_now INT;
-  DECLARE v_carry INT DEFAULT 0;
+  DECLARE v_carry_now DECIMAL(10,3);
+  DECLARE v_carry DECIMAL(10,3) DEFAULT 0;
   DECLARE v_should_deduct BOOLEAN DEFAULT FALSE;
   DECLARE v_should_return BOOLEAN DEFAULT FALSE;
   DECLARE v_earnedWorkingDays DECIMAL(10,3);
